@@ -1,4 +1,4 @@
-import Sidebar from "@/src/core/components/sidebar/Sidebar";
+import TopNavBar from "@/src/core/components/TopNavBar/TopNavBar";
 
 export default function DashboardLayout({
   children
@@ -7,7 +7,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="dash-root">
-      <Sidebar />
+      <TopNavBar/>
       <main style={{ flex: 1 }}>{children}</main>
     </div>
   );

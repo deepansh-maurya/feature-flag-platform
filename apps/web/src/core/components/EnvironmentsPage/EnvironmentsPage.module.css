@@ -1,0 +1,161 @@
+.wrapper {
+  max-width: 700px;
+  margin: 40px auto 0 auto;
+  padding: 0 18px 60px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.headerTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f6ff;
+  letter-spacing: 0.03em;
+}
+
+.addBtn {
+  background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.06rem;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 35px;
+  box-shadow: 0 2px 16px 0 rgba(44,125,237,0.08);
+  cursor: pointer;
+  transition: background 0.14s, transform 0.10s;
+}
+.addBtn:hover {
+  background: linear-gradient(90deg, #2affef 13%, #6286fd 94%);
+  transform: scale(1.04);
+}
+
+.tableWrapper {
+  background: rgba(28,34,66,0.87);
+  border-radius: 15px;
+  box-shadow: 0 2px 26px 0 rgba(30,60,120,0.09);
+  overflow-x: auto;
+  padding: 20px 6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 400px;
+}
+
+th, td {
+  padding: 17px 18px;
+  text-align: left;
+}
+
+th {
+  color: #8cc6fa;
+  font-size: 1.08rem;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  background: rgba(50,70,140,0.07);
+  border-bottom: 1.5px solid #34457a;
+}
+
+tbody tr:hover {
+  background: rgba(44, 125, 237, 0.13);
+}
+
+.envName {
+  font-weight: 700;
+  color: #25ffe7;
+  font-size: 1.08rem;
+  text-transform: lowercase;
+}
+
+.defaultTag {
+  background: linear-gradient(90deg,#20e7d1 0,#5c8efc 100%);
+  color: #252436;
+  padding: 6px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.98em;
+  box-shadow: 0 2px 14px 0 rgba(40,245,220,0.07);
+  letter-spacing: 0.03em;
+}
+
+.setDefaultBtn {
+  background: none;
+  border: 1.2px solid #28ffe1;
+  color: #23ffe0;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 6px 20px;
+  cursor: pointer;
+  font-size: 0.99em;
+  transition: background 0.13s, color 0.13s;
+}
+.setDefaultBtn:hover {
+  background: #22ffe133;
+  color: #1a222f;
+}
+
+.flagTag {
+  background: linear-gradient(90deg,#4154b7 0,#0cd8a7 100%);
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 10px;
+  font-size: 0.96em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-right: 4px;
+}
+
+.noFlags {
+  color: #4a5467;
+  font-size: 1.09em;
+}
+
+.actionCol {
+  text-align: center;
+}
+
+.deleteBtn {
+  border: none;
+  background: rgba(244,67,54,0.10);
+  font-size: 1.22rem;
+  border-radius: 7px;
+  padding: 7px 11px;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s;
+  color: #ff5b5b;
+}
+.deleteBtn[disabled] {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+.deleteBtn:hover:not([disabled]) {
+  background: rgba(244,67,54,0.20);
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .wrapper {
+    padding: 0 4px;
+  }
+  .tableWrapper {
+    padding: 7px 0;
+  }
+  .table {
+    min-width: 300px;
+  }
+  th, td {
+    padding: 10px 8px;
+    font-size: 0.97rem;
+  }
+}

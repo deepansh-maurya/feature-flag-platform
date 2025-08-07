@@ -1,0 +1,196 @@
+.wrapper {
+  max-width: 1000px;
+  margin: 40px auto 0 auto;
+  padding: 0 18px 60px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 38px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.headerTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f6ff;
+  letter-spacing: 0.03em;
+}
+
+.csvBtn {
+  background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.06rem;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 35px;
+  box-shadow: 0 2px 16px 0 rgba(44,125,237,0.08);
+  cursor: pointer;
+  transition: background 0.14s, transform 0.10s;
+}
+.csvBtn:hover {
+  background: linear-gradient(90deg, #2affef 13%, #6286fd 94%);
+  transform: scale(1.04);
+}
+
+.section {
+  background: rgba(28,34,66,0.84);
+  border-radius: 18px;
+  box-shadow: 0 2px 26px 0 rgba(30,60,120,0.09);
+  padding: 28px 22px 32px 22px;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  color: #80f7ff;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  letter-spacing: 0.05em;
+}
+
+.heatmapGrid {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.heatmapCard {
+  background: rgba(35,47,72,0.85);
+  border-radius: 13px;
+  box-shadow: 0 2px 18px 0 rgba(40,245,220,0.06);
+  padding: 21px 32px 18px 32px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.flagName {
+  font-weight: 800;
+  color: #23ffe0;
+  font-size: 1.08rem;
+  margin-bottom: 8px;
+}
+
+.usageBarWrap {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+}
+
+.usageBarBg {
+  background: #273456;
+  width: 100px;
+  height: 13px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 6px;
+}
+
+.usageBar {
+  background: linear-gradient(90deg, #28ffe1 10%, #3c8fff 85%);
+  height: 100%;
+  border-radius: 8px;
+}
+
+.usageVal {
+  color: #a3fff0;
+  font-size: 1.08em;
+  font-weight: 700;
+}
+
+.apiStat {
+  color: #9ac7fd;
+  font-size: 0.97em;
+  margin-top: 4px;
+}
+
+.simForm {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.input {
+  background: rgba(32,42,64,0.82);
+  color: #f8fcff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  padding: 10px 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  outline: none;
+  width: 230px;
+  box-shadow: 0 1.5px 10px 0 rgba(60,180,220,0.07);
+  transition: background 0.13s;
+}
+.input:focus {
+  background: rgba(46,215,245,0.11);
+}
+
+.simBtn {
+  background: linear-gradient(90deg, #2fffd9 15%, #6178f2 90%);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 23px;
+  font-size: 1em;
+  box-shadow: 0 1.5px 12px 0 rgba(44,125,237,0.07);
+  cursor: pointer;
+  transition: background 0.13s, transform 0.08s;
+}
+.simBtn:hover {
+  background: linear-gradient(90deg, #42ffef 18%, #688bfd 98%);
+  transform: scale(1.05);
+}
+
+.simResult {
+  margin-top: 8px;
+  font-size: 1.09em;
+  color: #c9faff;
+  background: rgba(35,66,75,0.47);
+  border-radius: 9px;
+  padding: 12px 18px;
+  font-weight: 500;
+}
+
+.simActive {
+  color: #24ffe0;
+  font-weight: 700;
+  margin-right: 9px;
+}
+
+.simFlag {
+  background: linear-gradient(90deg,#20e7d1 0,#5c8efc 100%);
+  color: #181a27;
+  padding: 5px 16px;
+  border-radius: 11px;
+  font-size: 1.01em;
+  font-weight: 700;
+  margin-right: 7px;
+  margin-top: 2px;
+  display: inline-block;
+}
+
+@media (max-width: 700px) {
+  .wrapper {
+    padding: 0 4px;
+  }
+  .section {
+    padding: 14px 7px 19px 7px;
+  }
+  .heatmapCard {
+    min-width: 130px;
+    padding: 11px 14px 11px 14px;
+  }
+}
