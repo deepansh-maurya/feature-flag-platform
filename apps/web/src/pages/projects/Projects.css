@@ -1,0 +1,272 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+.proj-list-bg,
+.proj-detail-bg {
+  min-height: 100vh;
+  background: linear-gradient(120deg, #181827 0%, #221f37 100%);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 50px 0;
+}
+.glass {
+  background: rgba(32,32,44,0.81);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 18px;
+  border: 1.5px solid rgba(168, 130, 255, 0.13);
+  box-shadow: 0 8px 32px 0 rgba(41,32,78,0.15);
+}
+.proj-list {
+  padding: 40px 40px 30px 40px;
+  max-width: 900px;
+  width: 98vw;
+}
+.proj-list h2 {
+  font-size: 1.6rem;
+  color: #bda9ff;
+  font-weight: 700;
+  margin-bottom: 34px;
+  text-align: left;
+}
+.proj-list table {
+  width: 100%;
+  border-spacing: 0;
+  margin-bottom: 18px;
+}
+.proj-list th, .proj-list td {
+  text-align: left;
+  padding: 13px 9px;
+  font-size: 1.06rem;
+}
+.proj-list th {
+  color: #a2e6ff;
+  font-weight: 700;
+  border-bottom: 1.7px solid #272444;
+}
+.proj-list td {
+  color: #ecebff;
+  border-bottom: 1.1px solid #282843;
+  vertical-align: middle;
+}
+.proj-name {
+  color: #89ecff;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.env-tag {
+  display: inline-block;
+  padding: 2.5px 13px;
+  border-radius: 12px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  margin-right: 6px;
+  margin-bottom: 2px;
+  background: #21213a;
+  border: 1.2px solid #3f3676;
+  color: #a6b9ff;
+}
+.env-dev { background: #282d4b; color: #83e0ff; border-color: #269be6; }
+.env-staging { background: #292a40; color: #f9da7e; border-color: #e6c026; }
+.env-prod { background: #292038; color: #fdabce; border-color: #e62595; }
+
+.proj-action {
+  background: rgba(120,110,255,0.13);
+  color: #a49aff;
+  border: none;
+  border-radius: 7px;
+  margin-right: 4px;
+  cursor: pointer;
+  font-size: 1.13rem;
+  padding: 4px 7px;
+  transition: background .12s;
+}
+.proj-action:hover {
+  background: rgba(200,180,255,0.22);
+  color: #fff;
+}
+
+.proj-create-cta {
+  margin-top: 24px;
+  text-align: right;
+}
+.proj-btn {
+  padding: 11px 22px;
+  border-radius: 8px;
+  background: linear-gradient(92deg, #72e6ff 10%, #aa7cff 90%);
+  color: #181827;
+  border: none;
+  font-size: 1.09rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background .13s, color .12s;
+}
+.proj-btn.primary { background: linear-gradient(92deg, #72e6ff 10%, #aa7cff 90%);}
+.proj-btn.small { padding: 7px 17px; font-size: 1.02rem;}
+.proj-btn.tiny { padding: 3px 13px; font-size: 0.95rem; margin-top: 7px;}
+
+.proj-detail {
+  padding: 34px 32px 30px 32px;
+  max-width: 900px;
+  width: 98vw;
+}
+.proj-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 19px;
+}
+.proj-back {
+  background: none;
+  color: #a6e0ff;
+  font-size: 1.07rem;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  margin-bottom: 6px;
+}
+.proj-detail-title {
+  font-size: 1.31rem;
+  font-weight: 700;
+  color: #89ecff;
+  margin-right: 9px;
+}
+.proj-detail-envs { margin-left: 4px; }
+.proj-tabs {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 18px;
+}
+.proj-tab {
+  padding: 11px 21px;
+  border-radius: 10px 10px 0 0;
+  background: rgba(89,74,170,0.17);
+  color: #ada0ff;
+  font-size: 1.03rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-right: 3px;
+  transition: background .13s, color .13s;
+}
+.proj-tab.active, .proj-tab:hover {
+  background: linear-gradient(92deg, #72e6ff33 10%, #aa7cff33 90%);
+  color: #fff;
+}
+.proj-tab-panel {
+  background: rgba(30,34,58,0.72);
+  border-radius: 0 0 16px 16px;
+  padding: 32px 22px 26px 22px;
+  min-height: 220px;
+}
+.env-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 11px;
+}
+.env-edit, .env-del {
+  padding: 2px 9px;
+  font-size: 0.98rem;
+  border: none;
+  border-radius: 6px;
+  margin-right: 3px;
+  background: rgba(120,110,255,0.12);
+  color: #f2e6ff;
+  cursor: pointer;
+  transition: background .12s;
+}
+.env-edit:hover, .env-del:hover { background: rgba(255,255,255,0.18); color: #fff;}
+.env-sdk-key { color: #94defc; margin-left: 19px; font-size: 0.98rem;}
+.flags-table, .audit-table {
+  width: 100%;
+  margin-bottom: 9px;
+  border-spacing: 0;
+}
+.flags-table th, .flags-table td, .audit-table th, .audit-table td {
+  text-align: left;
+  padding: 9px 8px;
+  font-size: 1.01rem;
+  border-bottom: 1.1px solid #282843;
+}
+.flags-table th, .audit-table th {
+  color: #a2e6ff;
+  font-weight: 700;
+}
+.flags-table td, .audit-table td {
+  color: #ecebff;
+}
+.rule-block {
+  background: rgba(89,74,170,0.11);
+  border-radius: 11px;
+  padding: 13px 18px 10px 18px;
+  margin-bottom: 15px;
+}
+.rule-flag { color: #a2e6ff; font-weight: 600; margin-bottom: 7px;}
+.rule-list { margin-left: 13px;}
+.rule { display: flex; align-items: center; gap: 7px; margin-bottom: 5px;}
+.rule-num { color: #bda9ff; width: 18px; display: inline-block;}
+.rule-on { color: #89ffb0; font-weight: 700;}
+.rule-half { color: #f9da7e; font-weight: 700;}
+.rule-edit, .rule-del {
+  padding: 1px 8px;
+  font-size: 0.98rem;
+  border: none;
+  border-radius: 6px;
+  background: rgba(120,110,255,0.11);
+  color: #cec1fa;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: background .12s;
+}
+.rule-edit:hover, .rule-del:hover { background: rgba(255,255,255,0.18); color: #fff;}
+
+.sdk-keys { margin-bottom: 17px;}
+.sdk-key-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 7px;
+}
+.sdk-key { color: #94defc; font-size: 0.97rem;}
+.sdk-snippets pre {
+  background: rgba(44, 38, 75, 0.24);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 0.99rem;
+  color: #e0e5ff;
+  margin-bottom: 6px;
+  margin-top: 0;
+  font-family: "Fira Mono", "Consolas", "Menlo", monospace;
+  overflow-x: auto;
+}
+.analytics-cards {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+.analytics-card {
+  background: rgba(60,66,118,0.22);
+  border-radius: 9px;
+  padding: 15px 25px 13px 20px;
+  min-width: 140px;
+  color: #bda9ff;
+  font-weight: 700;
+}
+.analytics-num {
+  font-size: 1.25rem;
+  color: #a2e6ff;
+  margin-top: 4px;
+}
+
+@media (max-width: 700px) {
+  .proj-list, .proj-detail {
+    padding: 18px 4vw 16px 4vw;
+  }
+  .proj-tab-panel {
+    padding: 20px 2vw 18px 2vw;
+  }
+}

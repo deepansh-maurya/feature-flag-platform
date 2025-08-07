@@ -15,24 +15,6 @@ const recent = [
 
 export default function Dashboard() {
   return (
-    <div className="dash-root">
-      {/* Sidebar */}
-      <aside className="dash-sidebar glass">
-        <div className="dash-logo">Flagly</div>
-        <nav className="dash-nav">
-          <a href="#" className="active">🏠 Dashboard</a>
-          <a href="#">📁 Projects</a>
-          <a href="#">🚩 Feature Flags</a>
-          <a href="#">📜 Audit Logs</a>
-          <a href="#">👥 Team</a>
-          <a href="#">⚙️ Settings</a>
-          <div className="dash-nav-footer">
-            <a href="#">📄 Docs</a>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main */}
       <div className="dash-main">
         {/* Topbar */}
         <header className="dash-topbar glass">
@@ -85,6 +67,5 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-    </div>
   );
 }
