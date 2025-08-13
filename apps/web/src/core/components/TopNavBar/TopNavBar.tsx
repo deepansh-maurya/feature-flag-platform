@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import styles from "./TopNavBar.module.css";
 import { Routes } from "../../constants/routes";
 import { useRouter } from "next/navigation";
+import Observer from "../../producer/observer";
+import Link from "next/link";
 
 const projects = [
   { name: "MainApp" },
@@ -30,7 +32,10 @@ export default function TopNavBar() {
   const [selectedProject, setSelectedProject] = useState(projects[0]);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(tabs[0]);
+  const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  console.log(activeTab);
+
   return (
     <header className={styles.navbar}>
       {/* LEFT: Project dropdown */}
@@ -45,7 +50,12 @@ export default function TopNavBar() {
           </span>
           <span className={styles.dropdownArrow}>▼</span>
         </div>
-        <button className={styles.addProjectBtn}>+</button>
+        <button
+          onClick={() => Observer.seData({ openCreateProjectModel: true })}
+          className={styles.addProjectBtn}
+        >
+          +
+        </button>
         {projectMenuOpen && (
           <div className={styles.projectMenu}>
             {projects.map((p) => (
@@ -55,13 +65,18 @@ export default function TopNavBar() {
                 onClick={() => {
                   setSelectedProject(p);
                   setProjectMenuOpen(false);
-                  router.push("/dashboard")
+                  router.push("/dashboard");
                 }}
               >
                 {p.name}
               </div>
             ))}
-            <div className={styles.projectMenuAdd}>+ Add Project</div>
+            <div
+              onClick={() => Observer.seData({ openCreateProjectModel: true })}
+              className={styles.projectMenuAdd}
+            >
+              + Add Project
+            </div>
           </div>
         )}
       </div>
@@ -69,14 +84,14 @@ export default function TopNavBar() {
       {/* MIDDLE: Horizontal tabs */}
       <nav className={styles.tabs}>
         {tabs.map((tab) => (
-          <a
+          <Link
             href={tab.route}
             key={tab.tab}
-            className={`${styles.tab} ${activeTab === tab ? styles.activeTab : ""}`}
+            className={`${styles.tab} ${activeTab.tab === tab.tab ? styles.activeTab : ""}`}
             onClick={() => setActiveTab(tab)}
           >
             {tab.tab}
-          </a>
+          </Link>
         ))}
       </nav>
 

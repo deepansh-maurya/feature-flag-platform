@@ -1,9 +1,16 @@
 // DashboardHome.tsx
+// TODO toggle optional from client sdk key
+// did not get the tags
+// Conventions & Integrations did not get the posthog datadog, segment, \
+// amplitude
+// sdk platforms to prep
+
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
 import CreateProjectModal from "../CreateProjectModal/CreateProjectModal";
+import Observer from "../../producer/observer";
 
 // ---- Types ----
 export type ActivityItem = {
@@ -30,14 +37,22 @@ export default function DashboardHome({
   username = "Deepansh",
   stats = { projects: 0, flags: 0, apiCalls30d: 0 },
   activity = [],
-  onCreateFlag,
+  onCreateFlag
 }: DashboardHomeProps) {
   const hasProjects = (stats?.projects ?? 0) > 0;
-  const [isOpen,setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
-  const onCreateProject = ()=>{
-    setIsOpen(!isOpen)
-  }
+  const onCreateProject = () => {
+    setIsOpen(!isOpen);
+  };
+  useEffect(() => {
+    Observer.add("model", (obj: any) => {
+      if (obj.openCreateProjectModel) {
+        setIsOpen(true);
+      }
+    });
+    return () => Observer.remove("model");
+  });
 
   return (
     <div className={styles.wrapper}>
@@ -174,18 +189,18 @@ export default function DashboardHome({
         </div>
       )}
 
-        <CreateProjectModal
-          open={isOpen}
-          onClose={() => setIsOpen(false)}
-          onCreate={async (payload) => {
-            // POST to your API then close + refresh
-            // await api.createProject(payload)
-            console.log(payload);
-            setIsOpen(false);
-          }}
-          defaultTimezone="Asia/Kolkata"
-          defaultRegion="US"
-        />
+      <CreateProjectModal
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        onCreate={async (payload) => {
+          // POST to your API then close + refresh
+          // await api.createProject(payload)
+          console.log(payload);
+          setIsOpen(false);
+        }}
+        defaultTimezone="Asia/Kolkata"
+        defaultRegion="US"
+      />
     </div>
   );
 }

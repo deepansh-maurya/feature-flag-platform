@@ -168,3 +168,198 @@
         font-size: 0.97rem;
     }
 }
+
+
+
+/* ---------------------------------------------------------------------------
+   EnvironmentsPage.module.css — append these modal styles to your file
+--------------------------------------------------------------------------- */
+
+/* Backdrop & modal */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 12, 20, .6);
+    display: grid;
+    place-items: center;
+    z-index: 50;
+}
+
+.modal {
+    width: min(720px, 94vw);
+    background: linear-gradient(180deg, rgba(15, 20, 36, .98), rgba(22, 28, 52, .98));
+    border: 1px solid rgba(98, 134, 253, .18);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, .35);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(98, 134, 253, .18);
+}
+
+.modalTitle {
+    font-weight: 800;
+    color: #e9f2ff;
+    font-size: 1.2rem;
+}
+
+.closeBtn {
+    background: transparent;
+    border: none;
+    color: #cfe3ff;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.modalBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px;
+}
+
+.modalFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px 14px 16px;
+    border-top: 1px solid rgba(98, 134, 253, .18);
+}
+
+/* Form layout */
+.grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.rowSplit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.inputCol {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.inputColSmall {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+}
+
+.label {
+    color: #cfe3ff;
+    font-weight: 600;
+    font-size: .95rem;
+}
+
+.input {
+    width: 100%;
+    background: rgba(18, 24, 44, 0.8);
+    color: #e4eaff;
+    border: 1px solid rgba(120, 160, 255, 0.22);
+    border-radius: 10px;
+    padding: 10px 12px;
+    outline: none;
+}
+
+.input:focus {
+    border-color: #5c8efc;
+    box-shadow: 0 0 0 3px rgba(92, 142, 252, .18);
+}
+
+.inputErr {
+    border-color: #ff6f80;
+}
+
+.hint {
+    color: #9dc7ff;
+    font-size: .88rem;
+}
+
+.error {
+    color: #ff90a2;
+    font-size: .86rem;
+}
+
+/* Keys */
+.sectionTitleSm {
+    font-weight: 800;
+    color: #d9e6ff;
+    margin-top: 4px;
+}
+
+.keyGenBtn {
+    background: rgba(92, 142, 252, .15);
+    border: 1px solid rgba(92, 142, 252, .32);
+    color: #cfe3ff;
+    border-radius: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+}
+
+.clientKeyRow {
+    display: flex;
+    gap: 8px;
+    align-items: end;
+}
+
+.keyRowLeft {
+    display: inline-flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Buttons */
+.primaryBtn {
+    background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.primaryBtn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.secondaryBtn {
+    background: rgba(92, 142, 252, .15);
+    border: 1px solid rgba(92, 142, 252, .32);
+    color: #cfe3ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.checkboxLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #d1def8;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+    .grid2 {
+        grid-template-columns: 1fr;
+    }
+
+    .rowSplit {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
