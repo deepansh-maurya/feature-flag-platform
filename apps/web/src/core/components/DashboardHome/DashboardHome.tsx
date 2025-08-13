@@ -1,90 +1,209 @@
-"use client"
+// DashboardHome.tsx
+"use client";
 
-import React from 'react';
-import styles from './DashboardHome.module.css';
+import React, { useState } from "react";
+import styles from "./DashboardHome.module.css";
+import CreateProjectModal from "../CreateProjectModal/CreateProjectModal";
 
-const kpis = [
-  { label: "Projects", value: 4 },
-  { label: "Feature Flags", value: 23 },
-  { label: "API Calls (30d)", value: "37,200" }
-];
+// ---- Types ----
+export type ActivityItem = {
+  type: "flag" | "project" | "rule";
+  desc: string;
+  user: string;
+  time: string;
+};
 
-const recentActivity = [
-  {
-    type: 'flag',
-    desc: "Toggled ON: `dark_mode_v2`",
-    user: "Deepansh",
-    time: "4 min ago"
-  },
-  {
-    type: 'rule',
-    desc: "Updated targeting rule for `onboarding_flow`",
-    user: "Deepansh",
-    time: "20 min ago"
-  },
-  {
-    type: 'project',
-    desc: "Created project: `Payments`",
-    user: "Deepansh",
-    time: "1 hr ago"
-  },
-  {
-    type: 'flag',
-    desc: "Toggled OFF: `referral_program`",
-    user: "Deepansh",
-    time: "2 hr ago"
+export interface DashboardHomeProps {
+  username?: string;
+  stats?: {
+    projects: number;
+    flags: number;
+    apiCalls30d: number | string;
+  };
+  activity?: ActivityItem[];
+  onCreateFlag?: () => void;
+  onCreateProject?: () => void;
+}
+
+// ---- Component ----
+export default function DashboardHome({
+  username = "Deepansh",
+  stats = { projects: 0, flags: 0, apiCalls30d: 0 },
+  activity = [],
+  onCreateFlag,
+}: DashboardHomeProps) {
+  const hasProjects = (stats?.projects ?? 0) > 0;
+  const [isOpen,setIsOpen] = useState(false)
+
+  const onCreateProject = ()=>{
+    setIsOpen(!isOpen)
   }
-];
 
-export default function DashboardHome() {
   return (
     <div className={styles.wrapper}>
       {/* Welcome */}
       <div className={styles.welcome}>
-        <span>👋</span> Welcome back, <span className={styles.username}>Deepansh</span>
+        <span aria-hidden>👋</span> Welcome back,{" "}
+        <span className={styles.username}>{username}</span>
       </div>
 
-      {/* KPIs */}
-      <div className={styles.kpiGrid}>
-        {kpis.map(kpi => (
-          <div className={styles.kpiCard} key={kpi.label}>
-            <div className={styles.kpiValue}>{kpi.value}</div>
-            <div className={styles.kpiLabel}>{kpi.label}</div>
+      {/* Main content switches on whether any project exists */}
+      {hasProjects ? (
+        <>
+          {/* KPIs */}
+          <div className={styles.kpiGrid} role="list" aria-label="Key metrics">
+            <KpiCard label="Projects" value={String(stats.projects)} />
+            <KpiCard label="Feature Flags" value={String(stats.flags)} />
+            <KpiCard
+              label="API Calls (30d)"
+              value={String(stats.apiCalls30d)}
+            />
           </div>
-        ))}
-      </div>
 
-      {/* Recent Activity */}
-      <div className={styles.sectionHeader}>Recent Activity</div>
-      <div className={styles.activityTimeline}>
-        {recentActivity.map((item, i) => (
-          <div className={styles.activityItem} key={i}>
-            <div className={styles.activityType}>{getTypeIcon(item.type)}</div>
-            <div className={styles.activityDesc}>
-              <span className={styles.activityText}>{item.desc}</span>
-              <span className={styles.activityUser}>by {item.user}</span>
-              <span className={styles.activityTime}>{item.time}</span>
+          {/* Recent Activity */}
+          <div className={styles.sectionHeader}>Recent Activity</div>
+          <div className={styles.activityTimeline} aria-live="polite">
+            {activity.length === 0 ? (
+              <div className={styles.emptyInline}>No activity yet.</div>
+            ) : (
+              activity.map((item, i) => (
+                <div className={styles.activityItem} key={i} role="listitem">
+                  <div className={styles.activityType}>
+                    {getTypeIcon(item.type)}
+                  </div>
+                  <div className={styles.activityDesc}>
+                    <span className={styles.activityText}>{item.desc}</span>
+                    <span className={styles.activityMeta}>
+                      <span className={styles.activityUser}>
+                        by {item.user}
+                      </span>
+                      <span className={styles.activityTime}>{item.time}</span>
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className={styles.actions}>
+            <button
+              className={styles.createBtn}
+              onClick={onCreateProject}
+              aria-label="Create a new project"
+            >
+              + Create Project
+            </button>
+            <button
+              className={styles.createBtn}
+              onClick={onCreateFlag}
+              aria-label="Create a new feature flag"
+            >
+              + Create Feature Flag
+            </button>
+          </div>
+        </>
+      ) : (
+        // ------- EMPTY STATE (no projects yet) -------
+        <div
+          className={styles.emptyCard}
+          role="region"
+          aria-label="Get started"
+        >
+          <div className={styles.illu} aria-hidden>
+            🚀
+          </div>
+          <h2 className={styles.emptyTitle}>Create your first project</h2>
+          <p className={styles.emptyDesc}>
+            Projects are containers for your environments, flags, rules, and SDK
+            keys. Start by creating a project—then add environments (prod, dev),
+            and create your first flag.
+          </p>
+
+          <div className={styles.steps}>
+            <div className={styles.step}>
+              <span className={styles.stepBadge}>1</span>
+              <div>
+                <div className={styles.stepTitle}>Create a project</div>
+                <div className={styles.stepText}>
+                  Name it (e.g., <code>Payments</code>) and choose default
+                  environments.
+                </div>
+              </div>
+            </div>
+            <div className={styles.step}>
+              <span className={styles.stepBadge}>2</span>
+              <div>
+                <div className={styles.stepTitle}>Add a feature flag</div>
+                <div className={styles.stepText}>
+                  Configure targeting rules and rollout %.
+                </div>
+              </div>
+            </div>
+            <div className={styles.step}>
+              <span className={styles.stepBadge}>3</span>
+              <div>
+                <div className={styles.stepTitle}>Install the SDK</div>
+                <div className={styles.stepText}>
+                  Use your client/server keys to evaluate flags in code.
+                </div>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Actions */}
-      <div className={styles.actions}>
-        <button className={styles.createBtn}>+ Create Project</button>
-        <button className={styles.createBtn}>+ Create Feature Flag</button>
-      </div>
+          <div className={styles.emptyActions}>
+            <button
+              className={styles.createBtn}
+              onClick={onCreateProject}
+              autoFocus
+            >
+              + Create Project
+            </button>
+            <button
+              className={`${styles.createBtn} ${styles.mutedBtn}`}
+              disabled
+            >
+              + Create Feature Flag
+            </button>
+          </div>
+
+          <div className={styles.tip}>
+            Pro tip: you’ll unlock flags, rules and SDK keys after creating a
+            project.
+          </div>
+        </div>
+      )}
+
+        <CreateProjectModal
+          open={isOpen}
+          onClose={() => setIsOpen(false)}
+          onCreate={async (payload) => {
+            // POST to your API then close + refresh
+            // await api.createProject(payload)
+            console.log(payload);
+            setIsOpen(false);
+          }}
+          defaultTimezone="Asia/Kolkata"
+          defaultRegion="US"
+        />
     </div>
   );
 }
 
-// Simple icon helper
-function getTypeIcon(type: string) {
-  if (type === 'flag')
-    return <span className={styles.flagIcon}>🚩</span>;
-  if (type === 'project')
-    return <span className={styles.projectIcon}>📁</span>;
-  if (type === 'rule')
-    return <span className={styles.ruleIcon}>⚡</span>;
+// ---- Subcomponents ----
+function KpiCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className={styles.kpiCard} role="listitem" tabIndex={0}>
+      <div className={styles.kpiValue}>{value}</div>
+      <div className={styles.kpiLabel}>{label}</div>
+    </div>
+  );
+}
+
+// Simple icon helper (kept from your original)
+function getTypeIcon(type: "flag" | "project" | "rule") {
+  if (type === "flag") return <span className={styles.flagIcon}>🚩</span>;
+  if (type === "project") return <span className={styles.projectIcon}>📁</span>;
+  if (type === "rule") return <span className={styles.ruleIcon}>⚡</span>;
   return null;
 }

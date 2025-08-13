@@ -1,3 +1,5 @@
+/* Keep your existing styles; below includes them plus the new empty state bits */
+
 .wrapper {
   max-width: 1080px;
   margin: 38px auto 0 auto;
@@ -11,10 +13,10 @@
   font-size: 2rem;
   font-weight: 700;
   color: #f6f7fb;
-  background: rgba(34,42,66,0.70);
+  background: rgba(34, 42, 66, 0.7);
   border-radius: 16px;
   padding: 26px 36px;
-  box-shadow: 0 2px 16px 0 rgba(50,120,180,0.07);
+  box-shadow: 0 2px 16px 0 rgba(50, 120, 180, 0.07);
   letter-spacing: 0.03em;
   display: flex;
   align-items: center;
@@ -35,9 +37,9 @@
 }
 
 .kpiCard {
-  background: rgba(26,36,66,0.74);
+  background: rgba(26, 36, 66, 0.74);
   border-radius: 16px;
-  box-shadow: 0 1.5px 14px 0 rgba(60,180,220,0.07);
+  box-shadow: 0 1.5px 14px 0 rgba(60, 180, 220, 0.07);
   padding: 34px 26px 26px 26px;
   text-align: left;
   display: flex;
@@ -48,7 +50,7 @@
 }
 .kpiCard:hover {
   transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 4px 36px 0 rgba(80,150,255,0.10);
+  box-shadow: 0 4px 36px 0 rgba(80, 150, 255, 0.1);
 }
 
 .kpiValue {
@@ -74,9 +76,9 @@
 }
 
 .activityTimeline {
-  background: rgba(32,42,74,0.73);
+  background: rgba(32, 42, 74, 0.73);
   border-radius: 14px;
-  box-shadow: 0 1.5px 12px 0 rgba(44,125,237,0.08);
+  box-shadow: 0 1.5px 12px 0 rgba(44, 125, 237, 0.08);
   padding: 21px 12px 9px 12px;
   display: flex;
   flex-direction: column;
@@ -114,17 +116,19 @@
   font-size: 1.08rem;
   font-weight: 600;
 }
+
+.activityMeta { display: inline-flex; gap: .7rem; align-items: center; }
+
 .activityUser {
   color: #90fff3;
   font-size: 0.98rem;
-  margin-right: 14px;
   font-weight: 500;
 }
+
 .activityTime {
   color: #b6bee7;
   font-size: 0.98rem;
   font-weight: 500;
-  margin-left: 0.7em;
 }
 
 .actions {
@@ -142,11 +146,71 @@
   border: none;
   border-radius: 10px;
   padding: 13px 38px;
-  box-shadow: 0 2px 20px 0 rgba(44,125,237,0.07);
+  box-shadow: 0 2px 20px 0 rgba(44, 125, 237, 0.07);
   cursor: pointer;
-  transition: background 0.14s, transform 0.10s;
+  transition: background 0.14s, transform 0.1s, opacity 0.1s;
 }
 .createBtn:hover {
   background: linear-gradient(90deg, #2affef 13%, #6286fd 94%);
   transform: scale(1.05);
+}
+
+/* ---- Empty state styles ---- */
+.emptyCard {
+  background: linear-gradient(180deg, rgba(21,30,54,0.85), rgba(30,35,66,0.6));
+  border: 1px solid rgba(98,134,253,0.18);
+  border-radius: 16px;
+  padding: 34px 28px;
+  box-shadow: 0 6px 40px 0 rgba(40, 120, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.illu {
+  font-size: 2rem;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: rgba(98,134,253,0.15);
+  border-radius: 10px;
+}
+
+.emptyTitle {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #e9f2ff;
+}
+
+.emptyDesc {
+  color: #cfe3ff;
+  line-height: 1.65;
+}
+
+.steps { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
+.step { display: flex; gap: 12px; align-items: flex-start; }
+.stepBadge {
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+  font-weight: 800; background: rgba(71,255,231,0.18); color: #47ffe7; flex: 0 0 auto;
+}
+.stepTitle { font-weight: 700; color: #e8f0ff; }
+.stepText { color: #c8d8ff; }
+
+.emptyActions { display: flex; gap: 14px; margin-top: 8px; }
+.mutedBtn { opacity: 0.55; cursor: not-allowed; }
+
+.tip { color: #9dc7ff; font-size: .95rem; margin-top: 4px; }
+
+.emptyInline { color: #a9b6da; }
+
+/* Icons (optional hooks for future styling) */
+.flagIcon, .projectIcon, .ruleIcon { filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+
+/* ---- Responsive tweaks ---- */
+@media (max-width: 860px) {
+  .kpiGrid { grid-template-columns: 1fr; }
+  .actions { justify-content: stretch; }
+  .createBtn { width: 100%; text-align: center; }
 }

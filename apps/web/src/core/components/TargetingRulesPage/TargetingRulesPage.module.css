@@ -53,12 +53,12 @@
   min-width: 800px;
 }
 
-th, td {
+.head th,.body td {
   padding: 17px 18px;
   text-align: left;
 }
 
-th {
+.head th {
   color: #8cc6fa;
   font-size: 1.08rem;
   letter-spacing: 0.04em;
@@ -67,7 +67,7 @@ th {
   border-bottom: 1.5px solid #34457a;
 }
 
-tbody tr:hover {
+.body tr:hover {
   background: rgba(44, 125, 237, 0.11);
 }
 
@@ -204,7 +204,7 @@ tbody tr:hover {
   .table {
     min-width: 600px;
   }
-  th, td {
+ .head th,.body td {
     padding: 10px 8px;
     font-size: 0.97rem;
   }

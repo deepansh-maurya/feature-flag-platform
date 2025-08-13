@@ -79,8 +79,8 @@ export default function TargetingRulesPage() {
       </div>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
-            <tr>
+          <thead className='head'>
+            <tr >
               <th>Priority</th>
               <th>Rule Name</th>
               <th>Conditions</th>
@@ -89,7 +89,7 @@ export default function TargetingRulesPage() {
               <th style={{textAlign:"center"}}>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='body'>
             {rules.map((rule, idx) => (
               <tr key={rule.name + idx}>
                 <td>

@@ -47,7 +47,7 @@ export default function SdkKeysPage() {
       </div>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
+          <thead className='head'>
             <tr>
               <th>Environment</th>
               <th>SDK Key</th>
@@ -57,7 +57,7 @@ export default function SdkKeysPage() {
               <th style={{textAlign:'center'}}>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='body'>
             {sdkKeys.map(k => (
               <tr key={k.env}>
                 <td>

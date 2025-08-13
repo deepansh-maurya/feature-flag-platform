@@ -1,142 +1,150 @@
 .wrapper {
-  max-width: 750px;
-  margin: 40px auto 0 auto;
-  padding: 0 18px 60px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 34px;
+    max-width: 750px;
+    margin: 40px auto 0 auto;
+    padding: 0 18px 60px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 34px;
 }
 
 .headerRow {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 16px;
 }
 
 .headerTitle {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #f1f6ff;
-  letter-spacing: 0.03em;
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f1f6ff;
+    letter-spacing: 0.03em;
 }
 
 .tableWrapper {
-  background: rgba(28,34,66,0.87);
-  border-radius: 15px;
-  box-shadow: 0 2px 26px 0 rgba(30,60,120,0.09);
-  overflow-x: auto;
-  padding: 20px 6px;
+    background: rgba(28, 34, 66, 0.87);
+    border-radius: 15px;
+    box-shadow: 0 2px 26px 0 rgba(30, 60, 120, 0.09);
+    overflow-x: auto;
+    padding: 20px 6px;
 }
 
 .table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  min-width: 600px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 600px;
 }
 
-th, td {
-  padding: 17px 18px;
-  text-align: left;
+.head th,
+.body td {
+    padding: 17px 18px;
+    text-align: left;
 }
 
-th {
-  color: #8cc6fa;
-  font-size: 1.08rem;
-  letter-spacing: 0.04em;
-  font-weight: 700;
-  background: rgba(50,70,140,0.07);
-  border-bottom: 1.5px solid #34457a;
+.head th {
+    color: #8cc6fa;
+    font-size: 1.08rem;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    background: rgba(50, 70, 140, 0.07);
+    border-bottom: 1.5px solid #34457a;
 }
 
-tbody tr:hover {
-  background: rgba(44, 125, 237, 0.13);
+.body tr:hover {
+    background: rgba(44, 125, 237, 0.13);
 }
 
 .envTag {
-  background: linear-gradient(90deg,#24ffd1 0,#5c8efc 100%);
-  color: #2b2446;
-  padding: 6px 20px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1em;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  box-shadow: 0 2px 14px 0 rgba(40,245,220,0.07);
+    background: linear-gradient(90deg, #24ffd1 0, #5c8efc 100%);
+    color: #2b2446;
+    padding: 6px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1em;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    box-shadow: 0 2px 14px 0 rgba(40, 245, 220, 0.07);
 }
 
 .sdkKeyCell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: 'Fira Mono', 'Consolas', monospace;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Fira Mono', 'Consolas', monospace;
 }
 
 .sdkKey {
-  color: #bffaff;
-  font-size: 1.03em;
-  font-weight: 600;
+    color: #bffaff;
+    font-size: 1.03em;
+    font-weight: 600;
 }
 
 .copyBtn {
-  background: none;
-  border: none;
-  color: #6be2ff;
-  font-size: 1.15em;
-  padding: 2px 7px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.12s;
+    background: none;
+    border: none;
+    color: #6be2ff;
+    font-size: 1.15em;
+    padding: 2px 7px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s;
 }
+
 .copyBtn:hover {
-  background: rgba(66,245,222,0.15);
+    background: rgba(66, 245, 222, 0.15);
 }
 
 .usageVal {
-  color: #19ffe5;
-  font-size: 1.09em;
-  font-weight: 700;
-  margin-right: 3px;
+    color: #19ffe5;
+    font-size: 1.09em;
+    font-weight: 700;
+    margin-right: 3px;
 }
+
 .usageLimit {
-  color: #b8bede;
-  font-size: 0.98em;
+    color: #b8bede;
+    font-size: 0.98em;
 }
 
 .actionCol {
-  text-align: center;
+    text-align: center;
 }
 
 .regenBtn {
-  background: linear-gradient(90deg, #2fffd9 15%, #6178f2 90%);
-  color: #fff;
-  font-weight: 700;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 23px;
-  font-size: 1em;
-  box-shadow: 0 1.5px 12px 0 rgba(44,125,237,0.06);
-  cursor: pointer;
-  transition: background 0.13s, transform 0.08s;
+    background: linear-gradient(90deg, #2fffd9 15%, #6178f2 90%);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 23px;
+    font-size: 1em;
+    box-shadow: 0 1.5px 12px 0 rgba(44, 125, 237, 0.06);
+    cursor: pointer;
+    transition: background 0.13s, transform 0.08s;
 }
+
 .regenBtn:hover {
-  background: linear-gradient(90deg, #42ffef 18%, #688bfd 98%);
-  transform: scale(1.05);
+    background: linear-gradient(90deg, #42ffef 18%, #688bfd 98%);
+    transform: scale(1.05);
 }
 
 @media (max-width: 700px) {
-  .wrapper {
-    padding: 0 4px;
-  }
-  .tableWrapper {
-    padding: 7px 0;
-  }
-  .table {
-    min-width: 400px;
-  }
-  th, td {
-    padding: 10px 8px;
-    font-size: 0.98rem;
-  }
+    .wrapper {
+        padding: 0 4px;
+    }
+
+    .tableWrapper {
+        padding: 7px 0;
+    }
+
+    .table {
+        min-width: 400px;
+    }
+
+    .head th,
+    .body td {
+        padding: 10px 8px;
+        font-size: 0.98rem;
+    }
 }

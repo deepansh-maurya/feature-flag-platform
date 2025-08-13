@@ -33,7 +33,7 @@ export default function ProjectsPage() {
       </div>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
+          <thead className='head'>
             <tr>
               <th>Project Name</th>
               <th>SDK Key</th>
@@ -42,7 +42,7 @@ export default function ProjectsPage() {
               <th style={{ textAlign: 'center' }}>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='body'>
             {projects.map((p, i) => (
               <tr key={p.name}>
                 <td className={styles.projectName}>{p.name}</td>

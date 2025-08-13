@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import styles from "./TopNavBar.module.css";
 import { Routes } from "../../constants/routes";
+import { useRouter } from "next/navigation";
 
 const projects = [
   { name: "MainApp" },
@@ -21,7 +22,7 @@ const tabs = [
   { tab: "Targeting Rules", route: Routes.Rules },
   { tab: "SDK Keys", route: Routes.SdkKeys },
   { tab: "Analytics", route: Routes.Analytics },
-  { tab: "Audit Logs", route: Routes.Analytics }
+  { tab: "Audit Logs", route: Routes.AuditLogs }
 ];
 
 export default function TopNavBar() {
@@ -29,7 +30,7 @@ export default function TopNavBar() {
   const [selectedProject, setSelectedProject] = useState(projects[0]);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(tabs[0]);
-
+  const router = useRouter();
   return (
     <header className={styles.navbar}>
       {/* LEFT: Project dropdown */}
@@ -54,6 +55,7 @@ export default function TopNavBar() {
                 onClick={() => {
                   setSelectedProject(p);
                   setProjectMenuOpen(false);
+                  router.push("/dashboard")
                 }}
               >
                 {p.name}

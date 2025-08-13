@@ -5,6 +5,6 @@ export  enum Routes {
     Featureflag = "/dashboard/feature-flag",
     Projects = "/dashboard/projects",
     Rules = "/dashboard/rules",
-    SdkKeys = "/dashboard/sdk-keys"
-
+    SdkKeys = "/dashboard/sdk-keys",
+    AuditLogs = "/dashboard/audit-logs"
 }

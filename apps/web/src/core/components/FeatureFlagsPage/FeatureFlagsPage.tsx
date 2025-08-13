@@ -1,5 +1,4 @@
 "use client"
-
 import React, { useState } from 'react';
 import styles from './FeatureFlagsPage.module.css';
 
@@ -75,17 +74,17 @@ export default function FeatureFlagsPage() {
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Flag Name</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Targeting Rules</th>
-              <th>Last Modified</th>
-              <th style={{textAlign:"center"}}>Toggle</th>
+          <thead  className='head'>
+            <tr>    
+              <th  >Flag Name</th>
+              <th  >Type</th>
+              <th  >Status</th>
+              <th  >Targeting Rules</th>
+              <th  >Last Modified</th>
+              <th   style={{textAlign:"center"}}>Toggle</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='body'> 
             {flags.map((f, i) => (
               <tr key={f.name}>
                 <td className={styles.flagName}>{f.name}</td>

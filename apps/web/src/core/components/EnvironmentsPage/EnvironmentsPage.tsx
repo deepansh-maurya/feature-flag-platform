@@ -44,7 +44,7 @@ export default function EnvironmentsPage() {
       </div>
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
-          <thead>
+          <thead className='head'>
             <tr>
               <th>Name</th>
               <th>Default</th>
@@ -52,7 +52,7 @@ export default function EnvironmentsPage() {
               <th style={{textAlign:'center'}}>Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className='body'>
             {envs.map((env, idx) => (
               <tr key={env.name}>
                 <td className={styles.envName}>{env.name}</td>

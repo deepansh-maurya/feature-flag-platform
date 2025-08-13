@@ -1,0 +1,139 @@
+.wrapper {
+  max-width: 850px;
+  margin: 40px auto 0 auto;
+  padding: 0 18px 60px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 13px;
+}
+
+.headerTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f6ff;
+  letter-spacing: 0.03em;
+}
+
+.filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 18px;
+  padding-left: 4px;
+}
+
+.filterSelect {
+  background: rgba(36,44,80,0.85);
+  color: #e3f5fe;
+  border: none;
+  font-size: 1rem;
+  padding: 10px 23px 10px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 8px 0 rgba(60,180,220,0.06);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  outline: none;
+  transition: background 0.13s;
+}
+.filterSelect:focus {
+  background: rgba(66,135,250,0.14);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.logItem {
+  background: rgba(28,34,66,0.85);
+  border-radius: 15px;
+  box-shadow: 0 2px 18px 0 rgba(44,125,237,0.06);
+  padding: 23px 28px 19px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  position: relative;
+}
+
+.logMeta {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  font-size: 1.02em;
+}
+
+.logUser {
+  color: #25ffe7;
+  font-weight: 700;
+}
+.logType {
+  color: #8cc6fa;
+  font-weight: 600;
+}
+.logFlag {
+  color: #ffd250;
+  font-weight: 600;
+}
+.logTime {
+  color: #b8bede;
+  margin-left: auto;
+  font-size: 0.99em;
+}
+
+.logChange {
+  color: #e2e8ff;
+  font-weight: 700;
+  font-size: 1.1em;
+  letter-spacing: 0.01em;
+}
+
+.logDiff {
+  display: flex;
+  gap: 26px;
+  margin-top: 5px;
+}
+
+.beforeTag, .afterTag {
+  font-weight: 700;
+  font-size: 1.01em;
+  margin-right: 6px;
+}
+.beforeTag {
+  color: #ff7272;
+}
+.afterTag {
+  color: #39ffc1;
+}
+.diffVal {
+  background: rgba(38,40,80,0.53);
+  color: #f1f6ff;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  padding: 4px 13px;
+  border-radius: 9px;
+  font-size: 0.98em;
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .wrapper {
+    padding: 0 4px;
+  }
+  .logItem {
+    padding: 11px 7px 11px 7px;
+  }
+  .logMeta {
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.99em;
+  }
+  .logDiff {
+    gap: 12px;
+    font-size: 0.95em;
+  }
+}

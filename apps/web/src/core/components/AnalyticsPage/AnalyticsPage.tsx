@@ -1,4 +1,4 @@
-"use clientc"
+"use client"
 import React, { useState } from 'react';
 import styles from './AnalyticsPage.module.css';
 
