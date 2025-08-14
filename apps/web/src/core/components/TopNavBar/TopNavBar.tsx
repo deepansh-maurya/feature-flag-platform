@@ -65,6 +65,7 @@ export default function TopNavBar() {
                 onClick={() => {
                   setSelectedProject(p);
                   setProjectMenuOpen(false);
+                  setActiveTab(tabs[0])
                   router.push("/dashboard");
                 }}
               >

@@ -1,141 +1,213 @@
-"use client"
+// TargetingRulesPage.tsx
+"use client";
 
-import React, { useState } from 'react';
-import styles from './TargetingRulesPage.module.css';
+import React, { useState } from "react";
+import styles from "./TargetingRulesPage.module.css";
+import { rid } from "./utils";
+import FlagRulesBuilder from "./FlagRulesBuilder";
 
-type Rule = {
+// -----------------------------------------------------------------------------
+// Types
+// -----------------------------------------------------------------------------
+export type EnvKey = "dev" | "stage" | "prod";
+
+export type Rule = {
+  id: string;
   name: string;
+  text?: string;
   conditions: string[];
-  flag: string;
   priority: number;
   enabled: boolean;
+  source?:
+    | { kind: "local" }
+    | { kind: "segment"; key: string; linked: boolean };
 };
 
-const initialRules: Rule[] = [
+export type Flag = {
+  key: string;
+  envRules: Record<EnvKey, Rule[]>;
+  updatedAt: string;
+};
+
+export type Segment = {
+  key: string;
+  name: string;
+  hint: string;
+  tokens: string[];
+};
+export type Version = {
+  id: string;
+  ts: string;
+  author: string;
+  note?: string;
+  snapshot: Flag;
+};
+
+// -----------------------------------------------------------------------------
+// Demo data
+// -----------------------------------------------------------------------------
+export const SEGMENTS: Segment[] = [
   {
-    name: "Pro Users in US",
-    conditions: ["plan=pro", "region=US"],
-    flag: "dark_mode_v2",
-    priority: 1,
-    enabled: true
+    key: "beta_testers",
+    name: "Beta Testers",
+    hint: "email endsWith @company.com",
+    tokens: ["email*@company.com"]
   },
   {
-    name: "All India Free Users",
-    conditions: ["plan=free", "region=IN"],
-    flag: "referral_program",
-    priority: 2,
-    enabled: false
+    key: "in_india",
+    name: "Users in India",
+    hint: "region = IN",
+    tokens: ["region=IN"]
   },
   {
-    name: "Default",
-    conditions: ["*"],
-    flag: "onboarding_ui",
-    priority: 3,
-    enabled: true
+    key: "pro_plan",
+    name: "Pro plan",
+    hint: "plan = pro",
+    tokens: ["plan=pro"]
   }
 ];
 
+const initialFlag1: Flag = {
+  key: "dark_mode_v2",
+  envRules: {
+    dev: [
+      {
+        id: rid(),
+        name: "Dev: everyone",
+        text: "turn on for all in dev",
+        conditions: ["*"],
+        priority: 1,
+        enabled: true,
+        source: { kind: "local" }
+      }
+    ],
+    stage: [
+      {
+        id: rid(),
+        name: "Stage: pro users",
+        text: "enable for pro users",
+        conditions: ["plan=pro"],
+        priority: 1,
+        enabled: true,
+        source: { kind: "local" }
+      }
+    ],
+    prod: []
+  },
+  updatedAt: "2 min ago"
+};
+
+const initialFlag2: Flag = {
+  key: "beta_feature_x",
+  envRules: {
+    dev: [
+      {
+        id: rid(),
+        name: "Dev: India only",
+        text: "enable for users in India",
+        conditions: ["region=IN"],
+        priority: 1,
+        enabled: true,
+        source: { kind: "local" }
+      }
+    ],
+    stage: [
+      {
+        id: rid(),
+        name: "Stage: free plan",
+        text: "turn on for free plan users",
+        conditions: ["plan=free"],
+        priority: 1,
+        enabled: true,
+        source: { kind: "local" }
+      }
+    ],
+    prod: []
+  },
+  updatedAt: "5 min ago"
+};
+
+const initialFlag3: Flag = {
+  key: "new_dashboard_ui",
+  envRules: {
+    dev: [
+      {
+        id: rid(),
+        name: "Dev: Android users",
+        text: "enable for Android users only",
+        conditions: ["platform=Android"],
+        priority: 1,
+        enabled: true,
+        source: { kind: "local" }
+      }
+    ],
+    stage: [
+      {
+        id: rid(),
+        name: "Stage: US Pro users",
+        text: "turn on for Pro users in US",
+        conditions: ["plan=pro", "region=US"],
+        priority: 1,
+        enabled: true,
+        source: { kind: "local" }
+      }
+    ],
+    prod: []
+  },
+  updatedAt: "10 min ago"
+};
+
+const INITIAL_FLAGS: Flag[] = [initialFlag1, initialFlag2, initialFlag3];
+
+// -----------------------------------------------------------------------------
+// Page: renders ALL flags as an accordion
+// -----------------------------------------------------------------------------
 export default function TargetingRulesPage() {
-  const [rules, setRules] = useState(initialRules);
+  const [flags, setFlags] = useState<Flag[]>(INITIAL_FLAGS);
+  const [openKeys, setOpenKeys] = useState<Record<string, boolean>>({
+    [INITIAL_FLAGS[0].key]: true
+  });
 
-  // Demo reorder logic (move rule up)
-  function moveRule(idx: number, dir: 'up' | 'down') {
-    let arr = [...rules];
-    if (
-      (dir === 'up' && idx === 0) ||
-      (dir === 'down' && idx === arr.length - 1)
-    )
-      return;
-    const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
-    [arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]];
-    setRules(arr.map((r, i) => ({ ...r, priority: i + 1 })));
-  }
-
-  // Enable/disable rule
-  function toggleEnable(idx: number) {
-    setRules(rules =>
-      rules.map((r, i) =>
-        i === idx ? { ...r, enabled: !r.enabled } : r
-      )
-    );
-  }
-
-  // Dummy edit/delete
-  function editRule(idx: number) {
-    alert("Edit Rule - not implemented in static demo");
-  }
-  function deleteRule(idx: number) {
-    setRules(rules => rules.filter((_, i) => i !== idx));
-  }
-  function addRule() {
-    alert("Add Rule - not implemented in static demo");
+  function updateFlag(updated: Flag) {
+    setFlags((prev) => prev.map((f) => (f.key === updated.key ? updated : f)));
   }
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.headerRow}>
-        <div className={styles.headerTitle}>Targeting Rules</div>
-        <button className={styles.addBtn} onClick={addRule}>+ Add Rule</button>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerTitle}>Targeting Rules</div>
+          <span className={styles.updatedAt}>
+            Manage rules per flag & environment
+          </span>
+        </div>
       </div>
-      <div className={styles.tableWrapper}>
-        <table className={styles.table}>
-          <thead className='head'>
-            <tr >
-              <th>Priority</th>
-              <th>Rule Name</th>
-              <th>Conditions</th>
-              <th>Assigned Flag</th>
-              <th>Status</th>
-              <th style={{textAlign:"center"}}>Actions</th>
-            </tr>
-          </thead>
-          <tbody className='body'>
-            {rules.map((rule, idx) => (
-              <tr key={rule.name + idx}>
-                <td>
-                  <div className={styles.priorityBox}>
-                    #{rule.priority}
-                    <button
-                      className={styles.reorderBtn}
-                      onClick={() => moveRule(idx, 'up')}
-                      disabled={idx === 0}
-                      title="Move Up"
-                    >▲</button>
-                    <button
-                      className={styles.reorderBtn}
-                      onClick={() => moveRule(idx, 'down')}
-                      disabled={idx === rules.length - 1}
-                      title="Move Down"
-                    >▼</button>
-                  </div>
-                </td>
-                <td className={styles.ruleName}>{rule.name}</td>
-                <td>
-                  {rule.conditions.map((c, i) => (
-                    <span className={styles.condTag} key={i}>{c}</span>
-                  ))}
-                </td>
-                <td>
-                  <span className={styles.flagTag}>{rule.flag}</span>
-                </td>
-                <td>
-                  <label className={styles.switch}>
-                    <input
-                      type="checkbox"
-                      checked={rule.enabled}
-                      onChange={() => toggleEnable(idx)}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                </td>
-                <td className={styles.actionCol}>
-                  <button className={styles.editBtn} onClick={() => editRule(idx)} title="Edit Rule">✏️</button>
-                  <button className={styles.deleteBtn} onClick={() => deleteRule(idx)} title="Delete Rule">🗑️</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className={styles.accordion}>
+        {flags.map((f) => {
+          const isOpen = !!openKeys[f.key];
+          return (
+            <div key={f.key} className={styles.flagItem}>
+              <button
+                className={styles.flagHeader}
+                onClick={() => setOpenKeys((o) => ({ [f.key]: !o[f.key] }))}
+                aria-expanded={isOpen}
+              >
+                <span className={styles.caret}>{isOpen ? "▾" : "▸"}</span>
+                <span className={styles.flagKey}>{f.key}</span>
+                <span className={styles.flagMeta}>
+                  Last updated {f.updatedAt}
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className={styles.flagBody}>
+                  <FlagRulesBuilder flag={f} onChange={updateFlag} />
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
