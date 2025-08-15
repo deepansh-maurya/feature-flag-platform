@@ -1,0 +1,726 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+enum BillingStatus {
+  active
+  past_due
+  grace
+  frozen
+}
+
+enum RoleKey {
+  owner
+  admin
+  developer
+  ops
+  viewer
+  custom
+}
+
+enum UserStatus {
+  invited
+  active
+  disabled
+}
+
+// ---------- Core ----------
+model Workspace {
+  id            String        @id @default(uuid())
+  name          String
+  slug          String        @unique
+  ownerUserId   String
+  owner         User          @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  planKey       String        @default("free")
+  billingStatus BillingStatus @default(active)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  projects         Project[]               @relation("WorkspaceProjects")
+  members          WorkspaceMember[]       @relation("WorkspaceMembers")
+  invites          Invite[]                @relation("WorkspaceInvites")
+  roles            Role[]                  @relation("WorkspaceRoles")
+  projectOverrides MemberProjectOverride[] @relation("WorkspaceProjectOverrides")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  key         String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace       Workspace               @relation("WorkspaceProjects", fields: [workspaceId], references: [id], onDelete: Cascade)
+  environments    Environment[]           @relation("ProjectEnvironments")
+  memberOverrides MemberProjectOverride[] @relation("ProjectMemberOverrides")
+  flags           Flag[]                  @relation("ProjectFlags")
+  segments        Segment[]               @relation("ProjectSegments")
+  SdkKey          SdkKey[]
+  AllowlistEntry  AllowlistEntry[]
+  ConfigSnapshot  ConfigSnapshot[]
+
+  @@unique([workspaceId, key]) // (workspace_id, key) unique
+  @@index([workspaceId])
+}
+
+model Environment {
+  id          String   @id @default(uuid())
+  projectId   String
+  key         String // e.g. dev|stage|prod|canary...
+  displayName String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation("ProjectEnvironments", fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, key]) // (project_id, key) unique
+  @@index([projectId])
+}
+
+// ---------- Users & Membership ----------
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  name         String
+  passwordHash String?
+  externalIdp  String?
+  status       UserStatus @default(invited)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // opposite side of Workspace.owner
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+
+  // other relations to Workspace through join tables
+  memberships      WorkspaceMember[]       @relation("UserMemberships")
+  invites          Invite[]                @relation("UserInvitesByEmail")
+  projectOverrides MemberProjectOverride[] @relation("UserProjectOverrides")
+}
+
+model WorkspaceMember {
+  workspaceId String
+  userId      String
+  roleKey     RoleKey  @default(viewer)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation("WorkspaceMembers", fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, userId]) // (workspace_id, user_id) unique
+  @@index([userId])
+}
+
+// Optional overrides
+model MemberProjectOverride {
+  workspaceId     String
+  projectId       String
+  userId          String
+  roleKeyOverride RoleKey
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  workspace Workspace @relation("WorkspaceProjectOverrides", fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation("ProjectMemberOverrides", fields: [projectId], references: [id], onDelete: Cascade)
+  user      User      @relation("UserProjectOverrides", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+// ---------- Invites ----------
+model Invite {
+  id          String   @id @default(uuid())
+  workspaceId String
+  email       String
+  roleKey     RoleKey  @default(viewer)
+  token       String   @unique
+  status      String   @default("pending") // or enum
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace   Workspace @relation("WorkspaceInvites", fields: [workspaceId], references: [id], onDelete: Cascade)
+  // relate by email (allowed because User.email is @unique)
+  invitedUser User?     @relation("UserInvitesByEmail", fields: [email], references: [email])
+
+  @@unique([workspaceId, email]) // (workspace_id, email) unique
+  @@index([workspaceId])
+}
+
+// ---------- Custom Roles ----------
+model Role {
+  id          String   @id @default(uuid())
+  workspaceId String
+  key         String
+  name        String
+  permissions Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation("WorkspaceRoles", fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, key]) // (workspace_id, key) unique
+  @@index([workspaceId])
+}
+
+/////////////////////////////////////
+
+// =======================================
+// Enums
+// =======================================
+enum FlagType {
+  boolean
+  multivariate
+}
+
+enum FlagVersionStatus {
+  active
+  draft
+  archived
+}
+
+enum SegmentType {
+  rule
+  list
+}
+
+enum ChangeRequestStatus {
+  open
+  approved
+  rejected
+}
+
+// =======================================
+// Core
+// =======================================
+
+// =======================================
+// Feature Flags / Versions / Segments
+// =======================================
+model Flag {
+  id          String   @id @default(uuid())
+  projectId   String
+  key         String
+  type        FlagType
+  description String?
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project  Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
+  versions FlagVersion[]   @relation("FlagVersions")
+  changes  ChangeRequest[] @relation("FlagChangeRequests")
+
+  @@unique([projectId, key]) // (project_id, key) unique
+  @@index([projectId])
+}
+
+// Per-environment, per-version snapshot of a flag’s rules/config
+model FlagVersion {
+  id        String            @id @default(uuid())
+  flagId    String
+  envKey    String // "dev" | "stage" | "prod" | ...
+  version   Int
+  dataJson  Json // rules, fallthrough, variants, salt, segment keys...
+  status    FlagVersionStatus @default(draft)
+  createdBy String // user id string (keep as String to avoid extra FKs)
+  createdAt DateTime          @default(now())
+
+  flag Flag @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
+
+  @@unique([flagId, envKey, version]) // rollback-friendly
+  @@index([flagId, envKey])
+}
+
+model ChangeRequest {
+  id          String              @id @default(uuid())
+  flagId      String
+  envKey      String
+  fromVersion Int?
+  toVersion   Int
+  status      ChangeRequestStatus @default(open)
+  createdBy   String
+  reviewerId  String?
+  comment     String?
+  approvedAt  DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  flag Flag @relation("FlagChangeRequests", fields: [flagId], references: [id], onDelete: Cascade)
+
+  @@index([flagId, envKey, status]) // (flag_id, env_key, status)
+  @@index([envKey])
+}
+
+model Segment {
+  id        String      @id @default(uuid())
+  projectId String
+  key       String
+  type      SegmentType
+  rulesJson Json // used for type=rule; ignored for list-type
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  project Project         @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
+  members SegmentMember[]
+
+  @@unique([projectId, key]) // (project_id, key) unique
+  @@index([projectId])
+}
+
+model SegmentMember {
+  segmentId String
+  userId    String // or rename to "identifier" if that’s your SDK context key
+  addedAt   DateTime @default(now())
+
+  segment Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([segmentId, userId]) // (segment_id, user_id)
+  @@index([userId])
+}
+
+//////////////////////////////
+
+// =============================
+// Enums
+// =============================
+enum SdkKeyType {
+  client
+  server
+}
+
+enum KeyStatus {
+  active
+  revoked
+}
+
+enum AllowlistKind {
+  ip
+  referrer
+}
+
+enum OutboxStatus {
+  pending
+  sent
+  failed
+}
+
+// =============================
+// SDK Keys (for SDKs)
+// =============================
+model SdkKey {
+  id         String     @id @default(uuid())
+  projectId  String
+  envKey     String
+  type       SdkKeyType
+  keyHash    String
+  status     KeyStatus  @default(active)
+  lastUsedAt DateTime?
+  rotatedAt  DateTime?
+  createdBy  String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  // Simple FK; no custom relation name (avoids needing an opposite field)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, envKey, type, status]) // matches: (project_id, env_key, type, status)
+  @@index([projectId])
+}
+
+// =============================
+// API Tokens (admin/CLI)
+// =============================
+model ApiToken {
+  id          String    @id @default(uuid())
+  workspaceId String
+  tokenHash   String    @unique
+  scopes      Json
+  status      String    @default("active") // keep string for flexibility
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Keep it scalar-only to avoid adding opposite fields on Workspace
+  // (If you want a FK later: add `workspace Workspace @relation(fields:[workspaceId], references:[id])`)
+  @@index([workspaceId, status])
+}
+
+// =============================
+// Allowlists (IP / Referrer)
+// =============================
+model AllowlistEntry {
+  projectId String
+  envKey    String
+  kind      AllowlistKind
+  value     String
+  createdAt DateTime      @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, envKey, kind, value]) // prevent duplicates
+  @@index([projectId, envKey, kind]) // matches requested index
+}
+
+// =============================
+// Config Snapshots (for SDK backend / cache warmup)
+// =============================
+model ConfigSnapshot {
+  projectId   String
+  envKey      String
+  version     Int
+  payloadJson Json
+  etag        String
+  generatedAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, envKey, version]) // matches: (project_id, env_key, version)
+  @@index([projectId, envKey])
+}
+
+// =============================
+// Outbox Events (reliable cache updates)
+// =============================
+model OutboxEvent {
+  id          String       @id @default(uuid())
+  topic       String // e.g. "flag.updated"
+  payloadJson Json
+  status      OutboxStatus @default(pending)
+  attempts    Int          @default(0)
+  nextRetryAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  // Optional scoping for convenience (kept scalar to avoid extra relations)
+  workspaceId String?
+  projectId   String?
+
+  @@index([status, nextRetryAt])
+  @@index([topic])
+}
+
+///////////////////////////
+
+// =============================
+// Enums
+// =============================
+enum AuditActionType {
+  workspace_created
+  workspace_updated
+  project_created
+  project_updated
+  flag_created
+  flag_updated
+  flag_published
+  flag_archived
+  segment_created
+  segment_updated
+  member_invited
+  member_added
+  member_removed
+  token_created
+  token_revoked
+  // add more as needed
+}
+
+enum EvalSource {
+  web
+  ios
+  android
+  backend
+}
+
+// =============================
+// Audit (append-only)
+// =============================
+model AuditLog {
+  id          String          @id @default(uuid())
+  workspaceId String
+  projectId   String? // nullable per your "project_id?" note
+  envKey      String? // nullable per your "env_key?"
+  actorUserId String
+  actorName   String
+  actionType  AuditActionType
+  entityType  String // e.g., "flag" | "segment" | "project"
+  entityId    String
+  title       String
+  beforeJson  Json?
+  afterJson   Json?
+  ip          String?
+  ua          String?
+  createdAt   DateTime        @default(now())
+
+  // Indexes requested:
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([projectId, createdAt])
+  @@index([actionType, createdAt])
+}
+
+// =============================
+// Evaluation events (raw, optional for MVP)
+// =============================
+model EvalEventRaw {
+  // large-volume table; keep it lean
+  id          String     @id @default(uuid())
+  ts          DateTime // event time
+  projectId   String
+  envKey      String
+  flagKey     String
+  variant     String
+  userKeyHash String // hashed identifier
+  source      EvalSource
+
+  // Helpful composite indexes for querying
+  @@index([projectId, envKey, flagKey, ts])
+  @@index([projectId, ts])
+  @@index([ts])
+}
+
+// =============================
+// Rollups (hourly / daily)
+// =============================
+model EvalRollupHourly {
+  // Primary key across the grain
+  dateHour  DateTime // truncate to hour (e.g., 2025-08-15T10:00:00Z)
+  projectId String
+  envKey    String
+  flagKey   String
+  variant   String
+  count     Int      @default(0)
+
+  @@id([dateHour, projectId, envKey, flagKey, variant])
+  @@index([projectId, envKey, flagKey, dateHour])
+}
+
+model EvalRollupDaily {
+  // Primary key across the grain
+  date      DateTime // truncate to day (e.g., 2025-08-15T00:00:00Z)
+  projectId String
+  envKey    String
+  flagKey   String
+  variant   String
+  count     Int      @default(0)
+
+  @@id([date, projectId, envKey, flagKey, variant])
+  @@index([projectId, envKey, flagKey, date])
+}
+
+/////////////////////////////////
+
+// =============================
+// Enums
+// =============================
+enum PlanKey {
+  free
+  pro
+  business
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  grace
+  frozen
+  canceled
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+}
+
+// =============================
+// Plans (catalog)
+// =============================
+model Plan {
+  key          PlanKey  @id // free | pro | business
+  priceMonthly Int      @default(0) // cents
+  priceYearly  Int      @default(0) // cents
+  limitsJson   Json // { api, flags, members, envs }
+  featuresJson Json // arbitrary feature switches
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// =============================
+// Subscriptions (per workspace)
+// =============================
+model Subscription {
+  id               String             @id @default(uuid())
+  workspaceId      String
+  planKey          PlanKey
+  status           SubscriptionStatus @default(active)
+  periodStart      DateTime
+  periodEnd        DateTime
+  billingCycle     BillingCycle
+  stripeCustomerId String?
+  stripeSubId      String?            @unique
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, periodStart, periodEnd])
+}
+
+// =============================
+// Invoices (per workspace)
+// =============================
+model Invoice {
+  id              String   @id @default(uuid())
+  workspaceId     String
+  stripeInvoiceId String?  @unique
+  amountCents     Int
+  currency        String   @default("USD") // ISO code, e.g. "USD", "INR"
+  status          String // keep flexible: "open" | "paid" | "void" | ...
+  periodStart     DateTime
+  periodEnd       DateTime
+  pdfUrl          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([workspaceId, periodStart, periodEnd])
+  @@index([workspaceId, status])
+}
+
+// =============================
+// Monthly Usage Counters
+// =============================
+// Use first day of month UTC in `month`, e.g., 2025-08-01T00:00:00Z
+model UsageCountersMonthly {
+  workspaceId String
+  month       DateTime
+  apiRequests Int      @default(0)
+  activeFlags Int      @default(0)
+  members     Int      @default(0)
+  envs        Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@id([workspaceId, month]) // one row per workspace per month
+  @@index([workspaceId, month])
+}
+
+//////////////////////////////////////////////
+
+// ============ Enums ============
+enum WebhookEndpointStatus {
+  active
+  disabled
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  sent
+  failed
+}
+
+// ============ Notification Settings ============
+model NotificationSetting {
+  // one row per workspace
+  workspaceId     String   @id
+  emailAlerts     Boolean  @default(false)
+  webhookEnabled  Boolean  @default(false)
+  slackWebhookUrl String?
+  updatedAt       DateTime @updatedAt
+
+  @@index([webhookEnabled])
+}
+
+// ============ Webhook Endpoints ============
+model WebhookEndpoint {
+  id              String                @id @default(uuid())
+  workspaceId     String
+  url             String
+  secret          String
+  events          String[] // e.g. ["flag.published","segment.updated"]
+  status          WebhookEndpointStatus @default(active)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  WebhookDelivery WebhookDelivery[]
+
+  // (No back-relation to deliveries to keep things simple/stable)
+  @@index([workspaceId, status])
+  @@index([workspaceId])
+}
+
+// ============ Webhook Deliveries ============
+model WebhookDelivery {
+  id           String                @id @default(uuid())
+  endpointId   String
+  eventType    String // e.g. "flag.published"
+  payloadJson  Json
+  status       WebhookDeliveryStatus @default(pending)
+  responseCode Int?
+  attempts     Int                   @default(0)
+  nextRetryAt  DateTime?
+  createdAt    DateTime              @default(now())
+
+  // Single-sided FK to avoid “missing opposite relation” errors
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId, status, nextRetryAt])
+  @@index([createdAt])
+}
+
+//////////////////////////////////
+
+// =============================
+// Rate Limits (forensics snapshot)
+// Use Redis for real-time; DB is optional audit trail.
+// =============================
+model RateLimit {
+  // e.g. sdk_{hash} or ip_203.0.113.10
+  key         String
+  windowStart DateTime // start of the bucket (e.g., minute)
+  count       Int      @default(0)
+  recordedAt  DateTime @default(now()) // when this snapshot row was written
+
+  @@id([key, windowStart]) // one row per key per window
+  @@index([windowStart])
+}
+
+// =============================
+// Sessions (cookie-based sessions)
+// If you use JWT-only, you can skip this table.
+// =============================
+model Session {
+  sessionId    String   @id // random, opaque token (hash it if needed)
+  userId       String
+  expiresAt    DateTime
+  metadataJson Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt]) // cleanup/expiry sweeps
+}
+
+// =============================
+// Migrations (only if NOT using Prisma Migrate)
+// Prisma already manages its own migration history table.
+// Use this only if you run custom SQL migrations outside Prisma.
+// =============================
+model AppMigration {
+  id          String   @id @default(uuid())
+  version     String   @unique // e.g. "2025-08-15T10-23-add-xyz"
+  checksum    String // hash of the SQL file / content
+  description String?
+  appliedAt   DateTime @default(now())
+  tookMs      Int?
+  success     Boolean  @default(true)
+}
