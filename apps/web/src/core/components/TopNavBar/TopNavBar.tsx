@@ -65,7 +65,7 @@ export default function TopNavBar() {
                 onClick={() => {
                   setSelectedProject(p);
                   setProjectMenuOpen(false);
-                  setActiveTab(tabs[0])
+                  setActiveTab(tabs[0]);
                   router.push("/dashboard");
                 }}
               >
@@ -108,9 +108,24 @@ export default function TopNavBar() {
         </div>
         {userMenuOpen && (
           <div className={styles.userMenu}>
-            <div className={styles.userMenuItem}>Account Settings</div>
-            <div className={styles.userMenuItem}>Team Management</div>
-            <div className={styles.userMenuItem}>Billing</div>
+            <div
+              onClick={() => router.push(Routes.Account)}
+              className={styles.userMenuItem}
+            >
+              Account Settings
+            </div>
+            <div
+              onClick={() => router.push(Routes.Team)}
+              className={styles.userMenuItem}
+            >
+              Team Management
+            </div>
+            <div
+              onClick={() => router.push(Routes.Billing)}
+              className={styles.userMenuItem}
+            >
+              Billing
+            </div>
             <div className={styles.userMenuItem}>Logout</div>
           </div>
         )}

@@ -1,16 +1,16 @@
 .wrapper {
-  max-width: 850px;
-  margin: 40px auto 0 auto;
-  padding: 0 18px 60px 18px;
+  max-width: 1000px;
+  margin: 40px auto 0;
+  padding: 0 18px 60px;
   display: flex;
   flex-direction: column;
-  gap: 34px;
+  gap: 16px;
 }
 
 .headerRow {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 13px;
 }
 
 .headerTitle {
@@ -20,120 +20,274 @@
   letter-spacing: 0.03em;
 }
 
+.headerActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.search {
+  background: rgba(36, 44, 80, 0.85);
+  color: #e3f5fe;
+  border: 1px solid #34457a;
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  width: 260px;
+}
+
+.csvBtn {
+  background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.98rem;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  box-shadow: 0 2px 16px 0 rgba(44, 125, 237, 0.08);
+  cursor: pointer;
+}
+
+.csvBtn:hover {
+  filter: brightness(1.05);
+}
+
 .filters {
   display: flex;
-  gap: 15px;
-  margin-bottom: 18px;
-  padding-left: 4px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .filterSelect {
-  background: rgba(36,44,80,0.85);
+  background: rgba(36, 44, 80, 0.85);
   color: #e3f5fe;
-  border: none;
+  border: 1px solid #34457a;
   font-size: 1rem;
-  padding: 10px 23px 10px 12px;
+  padding: 9px 12px;
   border-radius: 8px;
-  box-shadow: 0 1px 8px 0 rgba(60,180,220,0.06);
   font-weight: 600;
-  letter-spacing: 0.03em;
-  outline: none;
-  transition: background 0.13s;
-}
-.filterSelect:focus {
-  background: rgba(66,135,250,0.14);
 }
 
+/* timeline */
 .timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  display: grid;
+  gap: 12px;
 }
 
 .logItem {
-  background: rgba(28,34,66,0.85);
-  border-radius: 15px;
-  box-shadow: 0 2px 18px 0 rgba(44,125,237,0.06);
-  padding: 23px 28px 19px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 13px;
-  position: relative;
+  background: rgba(28, 34, 66, 0.85);
+  border-radius: 14px;
+  box-shadow: 0 2px 18px 0 rgba(44, 125, 237, 0.06);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
 }
 
 .logMeta {
-  display: flex;
-  gap: 18px;
+  display: grid;
+  grid-template-columns: auto auto auto 1fr auto auto;
+  gap: 8px 10px;
   align-items: center;
-  font-size: 1.02em;
+}
+
+.logTitle {
+  color: #e2e8ff;
+  font-weight: 800;
 }
 
 .logUser {
   color: #25ffe7;
   font-weight: 700;
 }
-.logType {
-  color: #8cc6fa;
-  font-weight: 600;
-}
-.logFlag {
-  color: #ffd250;
-  font-weight: 600;
-}
+
 .logTime {
   color: #b8bede;
-  margin-left: auto;
-  font-size: 0.99em;
+  font-size: 0.95rem;
 }
 
-.logChange {
-  color: #e2e8ff;
-  font-weight: 700;
-  font-size: 1.1em;
-  letter-spacing: 0.01em;
+/* badges */
+.badgeCat {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  border: 1px solid;
 }
 
-.logDiff {
+.cat_flag {
+  background: rgba(47, 255, 217, 0.12);
+  color: #24ffd1;
+  border-color: rgba(36, 255, 209, 0.35);
+}
+
+.cat_targeting {
+  background: rgba(255, 179, 71, 0.12);
+  color: #ffd48a;
+  border-color: rgba(255, 179, 71, 0.35);
+}
+
+.cat_sdkkeys {
+  background: rgba(108, 207, 246, 0.12);
+  color: #bfe9ff;
+  border-color: rgba(108, 207, 246, 0.35);
+}
+
+.cat_members {
+  background: rgba(255, 99, 132, 0.12);
+  color: #ff9dad;
+  border-color: rgba(255, 99, 132, 0.35);
+}
+
+.cat_workspace {
+  background: rgba(140, 198, 250, 0.12);
+  color: #8cc6fa;
+  border-color: rgba(140, 198, 250, 0.3);
+}
+
+.cat_approvals {
+  background: rgba(123, 237, 159, 0.12);
+  color: #8cfac7;
+  border-color: rgba(123, 237, 159, 0.35);
+}
+
+.envTag {
+  background: linear-gradient(90deg, #24ffd1 0, #5c8efc 100%);
+  color: #2b2446;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 900;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.flagTag {
+  background: rgba(255, 210, 80, 0.18);
+  border: 1px solid rgba(255, 210, 80, 0.35);
+  color: #ffd250;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.8rem;
+}
+
+.logControls {
   display: flex;
-  gap: 26px;
-  margin-top: 5px;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.beforeTag, .afterTag {
-  font-weight: 700;
-  font-size: 1.01em;
-  margin-right: 6px;
+.eventId {
+  color: #9ac7fd;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.beforeTag {
-  color: #ff7272;
+
+.copyBtn {
+  background: none;
+  border: 1px solid #34457a;
+  color: #bfe9ff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
 }
-.afterTag {
-  color: #39ffc1;
+
+.detailBtn {
+  background: rgba(32, 42, 64, 0.82);
+  color: #cfe5ff;
+  border: 1px solid #34457a;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 800;
+  cursor: pointer;
 }
-.diffVal {
-  background: rgba(38,40,80,0.53);
+
+.details {
+  display: grid;
+  gap: 10px;
+}
+
+.detailCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.detailLabel {
+  color: #8cc6fa;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.pre {
+  background: rgba(38, 40, 80, 0.53);
   color: #f1f6ff;
   font-family: 'Fira Mono', 'Consolas', monospace;
-  padding: 4px 13px;
-  border-radius: 9px;
-  font-size: 0.98em;
-  font-weight: 600;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 44px;
+  border: 1px solid #34457a;
 }
 
-@media (max-width: 700px) {
-  .wrapper {
-    padding: 0 4px;
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metaItem {
+  background: rgba(35, 47, 72, 0.85);
+  border: 1px solid #34457a;
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.metaKey {
+  color: #98a0c6;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.metaVal {
+  color: #bffaff;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 0.85rem;
+}
+
+.empty {
+  color: #b8bede;
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* responsive: no horizontal scroll */
+@media (max-width: 980px) {
+  .detailCols {
+    grid-template-columns: 1fr;
   }
-  .logItem {
-    padding: 11px 7px 11px 7px;
+
+  .metaGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+@media (max-width: 600px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
   .logMeta {
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 0.99em;
+    grid-template-columns: auto auto 1fr auto;
   }
-  .logDiff {
-    gap: 12px;
-    font-size: 0.95em;
+
+  .flagTag {
+    display: none;
   }
+
+  /* save space */
 }

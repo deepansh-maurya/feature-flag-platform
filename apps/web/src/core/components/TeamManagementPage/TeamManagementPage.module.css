@@ -1,0 +1,429 @@
+.wrapper {
+    max-width: 1000px;
+    margin: 40px auto 0;
+    padding: 0 18px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Header */
+.headerRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.titleGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.headerTitle {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #f1f6ff;
+    letter-spacing: 0.03em;
+}
+
+.subTitle {
+    color: #9ac7fd;
+}
+
+.headerActions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Buttons */
+.primaryBtn,
+.secondaryBtn,
+.dangerBtn,
+.smallBtn,
+.smallDanger {
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.primaryBtn {
+    background: linear-gradient(90deg, #2fffd9 15%, #6178f2 90%);
+    color: #fff;
+    padding: 10px 16px;
+}
+
+.secondaryBtn {
+    background: rgba(32, 42, 64, 0.82);
+    color: #cfe5ff;
+    padding: 10px 16px;
+    border: 1px solid #34457a;
+}
+
+.dangerBtn {
+    background: rgba(255, 99, 132, 0.18);
+    color: #ff9dad;
+    padding: 10px 16px;
+    border: 1px solid rgba(255, 99, 132, 0.35);
+}
+
+.smallBtn {
+    background: rgba(32, 42, 64, 0.82);
+    color: #cfe5ff;
+    padding: 6px 12px;
+    border: 1px solid #34457a;
+    border-radius: 8px;
+}
+
+.smallDanger {
+    background: transparent;
+    color: #ff9dad;
+    padding: 6px 12px;
+    border: 1px solid rgba(255, 99, 132, 0.35);
+    border-radius: 8px;
+}
+
+/* Toast */
+.toast {
+    align-self: flex-start;
+    background: rgba(36, 255, 209, 0.15);
+    color: #b8fffb;
+    border: 1px solid rgba(36, 255, 209, 0.35);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 700;
+}
+
+/* Sections */
+.section {
+    background: rgba(28, 34, 66, 0.84);
+    border-radius: 18px;
+    box-shadow: 0 2px 26px 0 rgba(30, 60, 120, 0.09);
+    padding: 16px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.sectionTitle {
+    color: #80f7ff;
+    font-size: 1.2rem;
+    font-weight: 800;
+}
+
+/* Roles Grid */
+.rolesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.roleCard {
+    background: rgba(35, 47, 72, 0.85);
+    border-radius: 14px;
+    padding: 14px;
+    border: 1px solid #34457a;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.roleHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.roleName {
+    font-weight: 900;
+    color: #bffaff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sysBadge {
+    background: rgba(140, 198, 250, 0.12);
+    border: 1px solid rgba(140, 198, 250, 0.3);
+    color: #8cc6fa;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+.roleKey {
+    color: #98a0c6;
+    font-size: 0.9rem;
+}
+
+.roleDesc {
+    color: #cfe5ff;
+}
+
+.permList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.permChipOn,
+.permChipOff {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.82rem;
+    border: 1px solid;
+}
+
+.permChipOn {
+    background: rgba(36, 255, 209, 0.15);
+    color: #24ffd1;
+    border-color: rgba(36, 255, 209, 0.35);
+}
+
+.permChipOff {
+    background: rgba(70, 80, 120, 0.18);
+    color: #aab3dd;
+    border-color: rgba(80, 90, 130, 0.4);
+}
+
+.roleActions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Members */
+.memberControls {
+    display: flex;
+    gap: 8px;
+}
+
+.search {
+    background: rgba(32, 42, 64, 0.82);
+    color: #f8fcff;
+    border: 1px solid #34457a;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-weight: 700;
+    width: 260px;
+}
+
+.membersList {
+    display: grid;
+    gap: 10px;
+}
+
+.memberRow {
+    display: grid;
+    grid-template-columns: 2fr 2fr auto;
+    align-items: center;
+    gap: 10px;
+    background: rgba(28, 34, 66, 0.55);
+    border: 1px solid #34457a;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.memberInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.memberName {
+    color: #e7fbff;
+    font-weight: 900;
+}
+
+.memberEmail {
+    color: #9ac7fd;
+    font-size: 0.92rem;
+}
+
+.memberMeta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.roleBadge {
+    background: linear-gradient(90deg, #24ffd1 0, #5c8efc 100%);
+    color: #2b2446;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+
+.statusActive,
+.statusInvited {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.statusActive {
+    background: rgba(36, 255, 209, 0.18);
+    color: #24ffd1;
+    border: 1px solid rgba(36, 255, 209, 0.35);
+}
+
+.statusInvited {
+    background: rgba(255, 179, 71, 0.2);
+    color: #ffd48a;
+    border: 1px solid rgba(255, 179, 71, 0.35);
+}
+
+.memberActions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.dim {
+    color: #98a0c6;
+    font-size: 0.86em;
+}
+
+/* Modals */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+}
+
+.modal,
+.modalSmall {
+    background: rgba(18, 24, 48, 0.98);
+    border: 1px solid #34457a;
+    border-radius: 16px;
+    padding: 14px;
+    width: min(680px, 92vw);
+}
+
+.modalSmall {
+    width: min(520px, 92vw);
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalTitle {
+    color: #bffaff;
+    font-weight: 900;
+    font-size: 1.2rem;
+}
+
+.closeBtn {
+    background: transparent;
+    border: 1px solid #34457a;
+    color: #bfe9ff;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.formCol {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.label {
+    color: #8cc6fa;
+    font-weight: 800;
+}
+
+.input,
+.textarea,
+.select {
+    background: rgba(32, 42, 64, 0.82);
+    color: #f8fcff;
+    border: 1px solid #34457a;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-weight: 700;
+    width: 100%;
+}
+
+.textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.select {
+    appearance: none;
+}
+
+.permGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.cbRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.inline {
+    display: flex;
+    gap: 16px;
+}
+
+.radioRow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #cfe5ff;
+}
+
+.modalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Responsive: no horizontal scroll */
+@media (max-width: 980px) {
+    .rolesGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .memberRow {
+        grid-template-columns: 1fr;
+    }
+
+    .memberActions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 600px) {
+    .rolesGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .permGrid {
+        grid-template-columns: 1fr;
+    }
+}
