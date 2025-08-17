@@ -97,6 +97,7 @@ model User {
   email        String     @unique
   name         String
   passwordHash String?
+  isDeleted    Boolean    @default(false)
   externalIdp  String?
   status       UserStatus @default(invited)
   createdAt    DateTime   @default(now())
@@ -109,6 +110,17 @@ model User {
   memberships      WorkspaceMember[]       @relation("UserMemberships")
   invites          Invite[]                @relation("UserInvitesByEmail")
   projectOverrides MemberProjectOverride[] @relation("UserProjectOverrides")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model WorkspaceMember {

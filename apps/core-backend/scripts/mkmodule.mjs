@@ -140,7 +140,7 @@ export class ${Name} {
   constructor(id) { this.id = id; }
 }
 `;
-
+  
 writeOnce(`${base}/${name}.module.ts`, modTs);
 writeOnce(`${base}/interface/${name}.controller.ts`, controllerTs);
 writeOnce(`${base}/application/${name}.service.ts`, serviceTs);

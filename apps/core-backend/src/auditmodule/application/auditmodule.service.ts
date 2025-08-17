@@ -9,4 +9,3 @@ export class AuditmoduleService {
   async get(id) { return this.repo.get(id); }
   async create(dto) { return this.repo.create(dto); }
 }
-
