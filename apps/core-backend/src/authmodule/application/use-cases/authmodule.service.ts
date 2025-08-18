@@ -2,19 +2,18 @@ import { Inject, Injectable } from '@nestjs/common';
 import { AuthmoduleRepo, AuthmoduleRepoToken } from '../ports/authmodule.repo';
 import { AuthEntity } from 'src/authmodule/domain/authmodule.entity';
 import * as jwt from "jsonwebtoken";
+import { LoginDto, RegisterDto } from 'src/authmodule/interface/dto/create-authmodule.dto';
 @Injectable()
 export class AuthmoduleService {
   constructor(@Inject(AuthmoduleRepoToken) private readonly repo: AuthmoduleRepo) { }
 
-  async register(data: AuthEntity) {
+  async register(data: RegisterDto) {
     const user = AuthEntity.create(data)
     const id = await this.repo.register(user)
     return this.issueTokens(id, { sub: id })
-
-
   }
 
-  async login(data: AuthEntity) {
+  async login(data: LoginDto) {
     const user = AuthEntity.create(data)
     const id = await this.repo.login(user)
 

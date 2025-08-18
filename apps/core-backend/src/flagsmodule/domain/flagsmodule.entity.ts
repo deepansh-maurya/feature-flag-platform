@@ -1,4 +1,4 @@
-export class Flagsmodule {
-  constructor(id) { this.id = id; }
-}
+// export class Flagsmodule {
+//   constructor(id) { this.id = id; }
+// }
 

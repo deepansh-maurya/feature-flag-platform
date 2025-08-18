@@ -8,6 +8,7 @@
   "scripts": {
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:reset": "prisma migrate reset",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "mkmod:esm": "node scripts/mkmodule.mjs",
@@ -33,6 +34,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "ioredis": "^5.7.0",
     "jsonwebtoken": "^9.0.2",

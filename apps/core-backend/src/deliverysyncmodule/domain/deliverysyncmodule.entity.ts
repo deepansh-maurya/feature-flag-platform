@@ -1,4 +1,4 @@
-export class Deliverysyncmodule {
-  constructor(id) { this.id = id; }
-}
+// export class Deliverysyncmodule {
+//   constructor(id) { this.id = id; }
+// }
 

@@ -1,4 +1,4 @@
-export class Billingmodule {
-  constructor(id) { this.id = id; }
-}
+// export class Billingmodule {
+//   constructor(id) { this.id = id; }
+// }
 

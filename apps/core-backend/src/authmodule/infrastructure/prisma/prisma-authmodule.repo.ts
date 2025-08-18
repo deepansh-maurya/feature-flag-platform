@@ -49,7 +49,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
       data: {
         email,
         passwordHash,
-        name:user.fullName
+        name:user.fullName!
       },
     });
 

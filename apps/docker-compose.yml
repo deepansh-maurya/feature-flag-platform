@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./core-backend
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  db:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypass
+      POSTGRES_DB: mydb
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # 👈 correct key is `volumes`
+
+volumes:   # 👈 declare at root (not inside services)
+  pgdata:

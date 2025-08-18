@@ -1,4 +1,4 @@
-export class Healthmodule {
-  constructor(id) { this.id = id; }
-}
+// export class Healthmodule {
+//   constructor(id) { this.id = id; }
+// }
 

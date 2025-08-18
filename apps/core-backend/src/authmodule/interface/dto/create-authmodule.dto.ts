@@ -1,1 +1,44 @@
+import { IsEmail, IsJWT, IsString, IsUUID, MinLength } from 'class-validator';
 
+export class RegisterDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsString()
+  @MinLength(8)
+  confirmPassword: string;
+
+  @IsString()
+  fullName: string;
+}
+export class LoginDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
+}
+
+export class LogoutDto {
+  @IsString()
+  @IsJWT()
+  refreshToken: string;
+}
+export class ChangePasswordDto {
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsString()
+  @MinLength(8)
+  confirmPassword: string;
+}
+
+export class DeleteUserDto {
+  @IsUUID()
+  userId: string;
+}
