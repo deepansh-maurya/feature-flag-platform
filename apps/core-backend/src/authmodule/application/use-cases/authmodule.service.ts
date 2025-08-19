@@ -28,7 +28,7 @@ export class AuthmoduleService {
     await this.repo.delete(data)
   }
 
-  async changePassword(data: { password: string, confirmPassword: string }) {
+  async changePassword(data: { userId: string, password: string, confirmPassword: string }) {
     await this.repo.changePassword(data)
   }
 

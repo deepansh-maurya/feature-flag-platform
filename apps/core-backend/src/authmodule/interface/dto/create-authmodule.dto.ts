@@ -29,6 +29,7 @@ export class LogoutDto {
   refreshToken: string;
 }
 export class ChangePasswordDto {
+
   @IsString()
   @MinLength(8)
   password: string;
