@@ -10,6 +10,7 @@ export class AuthmoduleService {
   async register(data: RegisterDto) {
     const user = AuthEntity.create(data)
     const id = await this.repo.register(user)
+    //TODO create workspace after account
     return this.issueTokens(id, { sub: id })
   }
 

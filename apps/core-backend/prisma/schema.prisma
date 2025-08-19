@@ -39,21 +39,54 @@ enum UserStatus {
 
 // ---------- Core ----------
 model Workspace {
-  id            String        @id @default(uuid())
-  name          String
-  slug          String        @unique
-  ownerUserId   String
-  owner         User          @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
-  planKey       String        @default("free")
-  billingStatus BillingStatus @default(active)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String        @id @default(uuid())
+  name             String
+  slug             String        @unique
+  stripeCustomerId String
+  ownerUserId      String
+  owner            User          @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  planKey          String        @default("free")
+  billingStatus    BillingStatus @default(active)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
+  flags            Flag[]                  @relation("WorkspaceFlags")
   projects         Project[]               @relation("WorkspaceProjects")
   members          WorkspaceMember[]       @relation("WorkspaceMembers")
   invites          Invite[]                @relation("WorkspaceInvites")
   roles            Role[]                  @relation("WorkspaceRoles")
   projectOverrides MemberProjectOverride[] @relation("WorkspaceProjectOverrides")
+  environment      Environment[]           @relation("WorkspaceEnvironments")
+  refreshTokens    RefreshToken[]
+  subscriptions    Subscription[]
+  invoices         Invoice[]
+  usageCounters    UsageCountersMonthly[]
+  notification     NotificationSetting?
+  webhookEndpoints WebhookEndpoint[]
+  apiTokens        ApiToken[]
+  auditLogs        AuditLog[]
+  FlagVersion      FlagVersion[]
+  ChangeRequest    ChangeRequest[]
+  Segment          Segment[]
+  SegmentMember    SegmentMember[]
+  SdkKey           SdkKey[]
+  AllowlistEntry   AllowlistEntry[]
+  ConfigSnapshot   ConfigSnapshot[]
+  OutboxEvent      OutboxEvent[]
+  EvalEventRaw     EvalEventRaw[]
+  EvalRollupHourly EvalRollupHourly[]
+  EvalRollupDaily  EvalRollupDaily[]
+  WebhookDelivery  WebhookDelivery[]
+  RateLimit        RateLimit[]
+  Session          Session[]
+  WebhookEvent     WebhookEvent[]
+}
+
+model WebhookEvent {
+  id          String    @id // Stripe event.id (e.g. "evt_123...")
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
 }
 
 model Project {
@@ -84,8 +117,10 @@ model Environment {
   displayName String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  workspaceId String
 
-  project Project @relation("ProjectEnvironments", fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation("WorkspaceEnvironments", fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation("ProjectEnvironments", fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, key]) // (project_id, key) unique
   @@index([projectId])
@@ -113,14 +148,18 @@ model User {
 }
 
 model RefreshToken {
-  id        String    @id @default(cuid())
-  userId    String
-  tokenHash String    @unique
-  expiresAt DateTime
-  revokedAt DateTime?
-  createdAt DateTime  @default(now())
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([workspaceId])
 }
 
 model WorkspaceMember {
@@ -133,11 +172,10 @@ model WorkspaceMember {
   workspace Workspace @relation("WorkspaceMembers", fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@id([workspaceId, userId]) // (workspace_id, user_id) unique
+  @@id([workspaceId, userId])
   @@index([userId])
 }
 
-// Optional overrides
 model MemberProjectOverride {
   workspaceId     String
   projectId       String
@@ -162,15 +200,14 @@ model Invite {
   email       String
   roleKey     RoleKey  @default(viewer)
   token       String   @unique
-  status      String   @default("pending") // or enum
+  status      String   @default("pending")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   workspace   Workspace @relation("WorkspaceInvites", fields: [workspaceId], references: [id], onDelete: Cascade)
-  // relate by email (allowed because User.email is @unique)
   invitedUser User?     @relation("UserInvitesByEmail", fields: [email], references: [email])
 
-  @@unique([workspaceId, email]) // (workspace_id, email) unique
+  @@unique([workspaceId, email])
   @@index([workspaceId])
 }
 
@@ -186,7 +223,7 @@ model Role {
 
   workspace Workspace @relation("WorkspaceRoles", fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@unique([workspaceId, key]) // (workspace_id, key) unique
+  @@unique([workspaceId, key])
   @@index([workspaceId])
 }
 
@@ -227,6 +264,7 @@ enum ChangeRequestStatus {
 model Flag {
   id          String   @id @default(uuid())
   projectId   String
+  workspaceId String
   key         String
   type        FlagType
   description String?
@@ -234,34 +272,40 @@ model Flag {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project  Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
-  versions FlagVersion[]   @relation("FlagVersions")
-  changes  ChangeRequest[] @relation("FlagChangeRequests")
+  workspace Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
+  versions  FlagVersion[]   @relation("FlagVersions")
+  changes   ChangeRequest[] @relation("FlagChangeRequests")
 
-  @@unique([projectId, key]) // (project_id, key) unique
+  @@unique([projectId, key])
+  @@index([workspaceId])
   @@index([projectId])
 }
 
 // Per-environment, per-version snapshot of a flag’s rules/config
 model FlagVersion {
-  id        String            @id @default(uuid())
-  flagId    String
-  envKey    String // "dev" | "stage" | "prod" | ...
-  version   Int
-  dataJson  Json // rules, fallthrough, variants, salt, segment keys...
-  status    FlagVersionStatus @default(draft)
-  createdBy String // user id string (keep as String to avoid extra FKs)
-  createdAt DateTime          @default(now())
+  id          String            @id @default(uuid())
+  flagId      String
+  workspaceId String
+  envKey      String
+  version     Int
+  dataJson    Json
+  status      FlagVersionStatus @default(draft)
+  createdBy   String
+  createdAt   DateTime          @default(now())
 
-  flag Flag @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  flag      Flag      @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
 
-  @@unique([flagId, envKey, version]) // rollback-friendly
+  @@unique([flagId, envKey, version])
+  @@index([workspaceId])
   @@index([flagId, envKey])
 }
 
 model ChangeRequest {
   id          String              @id @default(uuid())
   flagId      String
+  workspaceId String
   envKey      String
   fromVersion Int?
   toVersion   Int
@@ -273,36 +317,43 @@ model ChangeRequest {
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 
-  flag Flag @relation("FlagChangeRequests", fields: [flagId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  flag      Flag      @relation("FlagChangeRequests", fields: [flagId], references: [id], onDelete: Cascade)
 
-  @@index([flagId, envKey, status]) // (flag_id, env_key, status)
-  @@index([envKey])
+  @@index([workspaceId])
+  @@index([flagId, envKey, status])
 }
 
 model Segment {
-  id        String      @id @default(uuid())
-  projectId String
-  key       String
-  type      SegmentType
-  rulesJson Json // used for type=rule; ignored for list-type
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id          String      @id @default(uuid())
+  projectId   String
+  workspaceId String
+  key         String
+  type        SegmentType
+  rulesJson   Json
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  project Project         @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
-  members SegmentMember[]
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project         @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
+  members   SegmentMember[]
 
-  @@unique([projectId, key]) // (project_id, key) unique
+  @@unique([projectId, key])
+  @@index([workspaceId])
   @@index([projectId])
 }
 
 model SegmentMember {
-  segmentId String
-  userId    String // or rename to "identifier" if that’s your SDK context key
-  addedAt   DateTime @default(now())
+  segmentId   String
+  workspaceId String
+  userId      String
+  addedAt     DateTime @default(now())
 
-  segment Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  segment   Segment   @relation(fields: [segmentId], references: [id], onDelete: Cascade)
 
-  @@id([segmentId, userId]) // (segment_id, user_id)
+  @@id([segmentId, userId])
+  @@index([workspaceId])
   @@index([userId])
 }
 
@@ -336,27 +387,28 @@ enum OutboxStatus {
 // SDK Keys (for SDKs)
 // =============================
 model SdkKey {
-  id         String     @id @default(uuid())
-  projectId  String
-  envKey     String
-  type       SdkKeyType
-  keyHash    String
-  status     KeyStatus  @default(active)
-  lastUsedAt DateTime?
-  rotatedAt  DateTime?
-  createdBy  String
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id          String     @id @default(uuid())
+  projectId   String
+  workspaceId String
+  envKey      String
+  type        SdkKeyType
+  keyHash     String
+  status      KeyStatus  @default(active)
+  lastUsedAt  DateTime?
+  rotatedAt   DateTime?
+  createdBy   String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  // Simple FK; no custom relation name (avoids needing an opposite field)
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@index([projectId, envKey, type, status]) // matches: (project_id, env_key, type, status)
-  @@index([projectId])
+  @@index([workspaceId])
+  @@index([projectId, envKey, type, status])
 }
 
 // =============================
-// API Tokens (admin/CLI)
+// API Tokens (admin/CLI)     
 // =============================
 model ApiToken {
   id          String    @id @default(uuid())
@@ -368,8 +420,9 @@ model ApiToken {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  // Keep it scalar-only to avoid adding opposite fields on Workspace
-  // (If you want a FK later: add `workspace Workspace @relation(fields:[workspaceId], references:[id])`)
+  // link back to Workspace
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@index([workspaceId, status])
 }
 
@@ -377,16 +430,18 @@ model ApiToken {
 // Allowlists (IP / Referrer)
 // =============================
 model AllowlistEntry {
-  projectId String
-  envKey    String
-  kind      AllowlistKind
-  value     String
-  createdAt DateTime      @default(now())
+  projectId   String
+  workspaceId String
+  envKey      String
+  kind        AllowlistKind
+  value       String
+  createdAt   DateTime      @default(now())
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, envKey, kind, value]) // prevent duplicates
-  @@index([projectId, envKey, kind]) // matches requested index
+  @@id([projectId, envKey, kind, value])
+  @@index([workspaceId])
 }
 
 // =============================
@@ -394,33 +449,37 @@ model AllowlistEntry {
 // =============================
 model ConfigSnapshot {
   projectId   String
+  workspaceId String
   envKey      String
   version     Int
   payloadJson Json
   etag        String
   generatedAt DateTime @default(now())
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  @@id([projectId, envKey, version]) // matches: (project_id, env_key, version)
-  @@index([projectId, envKey])
+  @@id([projectId, envKey, version])
+  @@index([workspaceId])
 }
 
 // =============================
-// Outbox Events (reliable cache updates)
+// Outbox Events (reliable cache updates)    
 // =============================
 model OutboxEvent {
   id          String       @id @default(uuid())
   topic       String // e.g. "flag.updated"
   payloadJson Json
   status      OutboxStatus @default(pending)
+  workspaceId String
   attempts    Int          @default(0)
   nextRetryAt DateTime?
   createdAt   DateTime     @default(now())
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   // Optional scoping for convenience (kept scalar to avoid extra relations)
-  workspaceId String?
-  projectId   String?
+  projectId String?
 
   @@index([status, nextRetryAt])
   @@index([topic])
@@ -458,7 +517,7 @@ enum EvalSource {
 }
 
 // =============================
-// Audit (append-only)
+// Audit (append-only)   
 // =============================
 model AuditLog {
   id          String          @id @default(uuid())
@@ -477,7 +536,9 @@ model AuditLog {
   ua          String?
   createdAt   DateTime        @default(now())
 
-  // Indexes requested:
+  // link back to Workspace
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@index([workspaceId, createdAt(sort: Desc)])
   @@index([projectId, createdAt])
   @@index([actionType, createdAt])
@@ -487,49 +548,54 @@ model AuditLog {
 // Evaluation events (raw, optional for MVP)
 // =============================
 model EvalEventRaw {
-  // large-volume table; keep it lean
   id          String     @id @default(uuid())
-  ts          DateTime // event time
+  workspaceId String
+  ts          DateTime
   projectId   String
   envKey      String
   flagKey     String
   variant     String
-  userKeyHash String // hashed identifier
+  userKeyHash String
   source      EvalSource
 
-  // Helpful composite indexes for querying
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
   @@index([projectId, envKey, flagKey, ts])
-  @@index([projectId, ts])
-  @@index([ts])
 }
 
 // =============================
 // Rollups (hourly / daily)
 // =============================
+
 model EvalRollupHourly {
-  // Primary key across the grain
-  dateHour  DateTime // truncate to hour (e.g., 2025-08-15T10:00:00Z)
-  projectId String
-  envKey    String
-  flagKey   String
-  variant   String
-  count     Int      @default(0)
+  dateHour    DateTime
+  projectId   String
+  workspaceId String
+  envKey      String
+  flagKey     String
+  variant     String
+  count       Int      @default(0)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@id([dateHour, projectId, envKey, flagKey, variant])
-  @@index([projectId, envKey, flagKey, dateHour])
+  @@index([workspaceId])
 }
 
 model EvalRollupDaily {
-  // Primary key across the grain
-  date      DateTime // truncate to day (e.g., 2025-08-15T00:00:00Z)
-  projectId String
-  envKey    String
-  flagKey   String
-  variant   String
-  count     Int      @default(0)
+  date        DateTime
+  projectId   String
+  workspaceId String
+  envKey      String
+  flagKey     String
+  variant     String
+  count       Int      @default(0)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@id([date, projectId, envKey, flagKey, variant])
-  @@index([projectId, envKey, flagKey, date])
+  @@index([workspaceId])
 }
 
 /////////////////////////////////
@@ -538,9 +604,9 @@ model EvalRollupDaily {
 // Enums
 // =============================
 enum PlanKey {
-  free
-  pro
-  business
+  STARTER
+  GROWTH
+  ENTERPRISE
 }
 
 enum SubscriptionStatus {
@@ -586,8 +652,9 @@ model Subscription {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@index([workspaceId, status])
-  @@index([workspaceId, periodStart, periodEnd])
 }
 
 // =============================
@@ -598,15 +665,16 @@ model Invoice {
   workspaceId     String
   stripeInvoiceId String?  @unique
   amountCents     Int
-  currency        String   @default("USD") // ISO code, e.g. "USD", "INR"
-  status          String // keep flexible: "open" | "paid" | "void" | ...
+  currency        String   @default("USD")
+  status          String
   periodStart     DateTime
   periodEnd       DateTime
   pdfUrl          String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([workspaceId, periodStart, periodEnd])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@index([workspaceId, status])
 }
 
@@ -623,8 +691,9 @@ model UsageCountersMonthly {
   envs        Int      @default(0)
   updatedAt   DateTime @updatedAt
 
-  @@id([workspaceId, month]) // one row per workspace per month
-  @@index([workspaceId, month])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@id([workspaceId, month])
 }
 
 //////////////////////////////////////////////
@@ -643,38 +712,38 @@ enum WebhookDeliveryStatus {
 
 // ============ Notification Settings ============
 model NotificationSetting {
-  // one row per workspace
   workspaceId     String   @id
   emailAlerts     Boolean  @default(false)
   webhookEnabled  Boolean  @default(false)
   slackWebhookUrl String?
   updatedAt       DateTime @updatedAt
 
-  @@index([webhookEnabled])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 // ============ Webhook Endpoints ============
 model WebhookEndpoint {
-  id              String                @id @default(uuid())
-  workspaceId     String
-  url             String
-  secret          String
-  events          String[] // e.g. ["flag.published","segment.updated"]
-  status          WebhookEndpointStatus @default(active)
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
+  id          String                @id @default(uuid())
+  workspaceId String
+  url         String
+  secret      String
+  events      String[]
+  status      WebhookEndpointStatus @default(active)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   WebhookDelivery WebhookDelivery[]
 
-  // (No back-relation to deliveries to keep things simple/stable)
   @@index([workspaceId, status])
-  @@index([workspaceId])
 }
 
 // ============ Webhook Deliveries ============
 model WebhookDelivery {
   id           String                @id @default(uuid())
   endpointId   String
-  eventType    String // e.g. "flag.published"
+  workspaceId  String
+  eventType    String
   payloadJson  Json
   status       WebhookDeliveryStatus @default(pending)
   responseCode Int?
@@ -682,11 +751,10 @@ model WebhookDelivery {
   nextRetryAt  DateTime?
   createdAt    DateTime              @default(now())
 
-  // Single-sided FK to avoid “missing opposite relation” errors
-  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  endpoint  WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
 
-  @@index([endpointId, status, nextRetryAt])
-  @@index([createdAt])
+  @@index([workspaceId])
 }
 
 //////////////////////////////////
@@ -696,14 +764,16 @@ model WebhookDelivery {
 // Use Redis for real-time; DB is optional audit trail.
 // =============================
 model RateLimit {
-  // e.g. sdk_{hash} or ip_203.0.113.10
   key         String
-  windowStart DateTime // start of the bucket (e.g., minute)
+  workspaceId String
+  windowStart DateTime
   count       Int      @default(0)
-  recordedAt  DateTime @default(now()) // when this snapshot row was written
+  recordedAt  DateTime @default(now())
 
-  @@id([key, windowStart]) // one row per key per window
-  @@index([windowStart])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@id([key, windowStart, workspaceId])
+  @@index([workspaceId])
 }
 
 // =============================
@@ -711,15 +781,19 @@ model RateLimit {
 // If you use JWT-only, you can skip this table.
 // =============================
 model Session {
-  sessionId    String   @id // random, opaque token (hash it if needed)
+  sessionId    String   @id
   userId       String
+  workspaceId  String
   expiresAt    DateTime
   metadataJson Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   @@index([userId])
-  @@index([expiresAt]) // cleanup/expiry sweeps
+  @@index([workspaceId])
+  @@index([expiresAt])
 }
 
 // =============================
