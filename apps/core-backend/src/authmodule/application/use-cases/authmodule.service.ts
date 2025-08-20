@@ -11,14 +11,14 @@ export class AuthmoduleService {
     const user = AuthEntity.create(data)
     const id = await this.repo.register(user)
     //TODO create workspace after account
-    return this.issueTokens(id, { sub: id })
+    return this.issueTokens(id, { sub: id },data.workspaceId)
   }
 
   async login(data: LoginDto) {
     const user = AuthEntity.create(data)
     const id = await this.repo.login(user)
 
-    return this.issueTokens(id, { sub: id })
+    return this.issueTokens(id, { sub: id },data.workspaceId)
   }
 
   async logout(data: string) {
@@ -33,7 +33,7 @@ export class AuthmoduleService {
     await this.repo.changePassword(data)
   }
 
-  private async issueTokens(userId: string, payload: object) {
+  private async issueTokens(userId: string, payload: object,workspaceId: string) {
     // Access token
     const accessToken = jwt.sign(
       { sub: userId, ...payload },
@@ -53,6 +53,7 @@ export class AuthmoduleService {
       userId,
       refreshToken,
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      workspaceId
     );
 
     return { accessToken, refreshToken };

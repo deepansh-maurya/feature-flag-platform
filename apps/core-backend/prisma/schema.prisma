@@ -79,13 +79,10 @@ model Workspace {
   WebhookDelivery  WebhookDelivery[]
   RateLimit        RateLimit[]
   Session          Session[]
-  WebhookEvent     WebhookEvent[]
 }
 
 model WebhookEvent {
   id          String    @id // Stripe event.id (e.g. "evt_123...")
-  workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
 }
 
@@ -640,17 +637,19 @@ model Plan {
 // Subscriptions (per workspace)
 // =============================
 model Subscription {
-  id               String             @id @default(uuid())
-  workspaceId      String
-  planKey          PlanKey
-  status           SubscriptionStatus @default(active)
-  periodStart      DateTime
-  periodEnd        DateTime
-  billingCycle     BillingCycle
-  stripeCustomerId String?
-  stripeSubId      String?            @unique
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  id                String             @id @default(uuid())
+  workspaceId       String
+  planKey           PlanKey
+  status            SubscriptionStatus @default(active)
+  periodStart       DateTime
+  periodEnd         DateTime
+  billingCycle      BillingCycle
+  cancelAtPeriodEnd Boolean            @default(false)
+  cancelsAt         DateTime?
+  stripeCustomerId  String?
+  stripeSubId       String?            @unique
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 

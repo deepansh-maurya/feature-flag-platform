@@ -42,7 +42,7 @@ export class StripeWebhookController {
                 case 'customer.subscription.created':
                 case 'customer.subscription.updated':
                 case 'customer.subscription.deleted': {
-                    const sub = event.data.object as Stripe.Subscription;
+                    const sub = event.data.object as Stripe.Subscription;   
                     const dto = await this.mapStripeSubscriptionToDto(sub);
                     await this.repo.upsertFromStripeSubscription(dto as any);
 
@@ -87,7 +87,7 @@ export class StripeWebhookController {
                     break;
             }
 
-            await this.repo.markWebhookEventProcessed(event.id,req.);
+            await this.repo.markWebhookEventProcessed(event.id);
             return res.send(); // 200 OK
         } catch (err) {
             // Let Stripe retry by returning 5xx on failures

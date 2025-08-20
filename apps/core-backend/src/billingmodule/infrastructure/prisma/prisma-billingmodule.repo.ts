@@ -5,9 +5,18 @@ import {
     BillingmoduleRepo,
     BillingCycle,
     PlanKey,
+    SubscriptionStatus,
 } from 'src/billingmodule/application/ports/billingmodule.repo';
 import {
+    CancelDto,
+    ChangePlanDto,
+    EntitlementsDto,
+    PortalDto,
+    ReconciliationSubscriptionItemDto,
+    ResumeDto,
     StartCheckoutDto,
+    SubscriptionDto,
+    UpsertFromStripeSubscriptionDto,
 } from 'src/billingmodule/interface/dto/create-billingmodule.dto';
 
 @Injectable()
@@ -139,19 +148,182 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
     // -------------------------------------------------------------------
 
     // stubs to satisfy interface for now; we’ll fill them in later
-    async changePlan(): Promise<void> { throw new Error('Not implemented'); }
-    async cancel(): Promise<void> { throw new Error('Not implemented'); }
-    async resume(): Promise<void> { throw new Error('Not implemented'); }
-    async createPortalSession(): Promise<{ url: string }> { throw new Error('Not implemented'); }
+    async changePlan(input: ChangePlanDto): Promise<void> {
+        const { workspaceId, newPlanKey, cycle, proration = 'create_prorations' } = input;
 
-    async getCurrentSubscription(): Promise<any> { throw new Error('Not implemented'); }
-    async getEntitlements(): Promise<any> { throw new Error('Not implemented'); }
+        // load current sub (needs stripeSubId)
+        const sub = await this.prisma.subscription.findFirst({
+            where: { workspaceId, stripeSubId: { not: null }, status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
+            orderBy: { createdAt: 'desc' },
+            select: { stripeSubId: true },
+        });
+        if (!sub?.stripeSubId) throw new Error('No existing Stripe subscription for this workspace');
 
-    async upsertFromStripeSubscription(): Promise<void> { throw new Error('Not implemented'); }
-    async setStatusActiveByStripeSubId(): Promise<void> { throw new Error('Not implemented'); }
-    async setStatusPastDueByStripeSubId(): Promise<void> { throw new Error('Not implemented'); }
-    async setCanceledByStripeSubId(): Promise<void> { throw new Error('Not implemented'); }
+        const live = await this.stripe.subscriptions.retrieve(sub.stripeSubId, { expand: ['items.data.price'] });
+        const currentItem = live.items.data[0];
+        if (!currentItem) throw new Error('Subscription has no items');
 
+        // pick new price id
+        const priceId = this.getPriceId(newPlanKey as PlanKey, cycle as BillingCycle);
+
+        await this.stripe.subscriptions.update(live.id, {
+            items: [{ id: currentItem.id, price: priceId }],
+            proration_behavior: proration,
+            // NOTE: do NOT set billing_cycle_anchor here → keeps renewal date (anchor)
+        });
+        // DB will update via webhook customer.subscription.updated
+        //? doubts in prorartion
+    }
+
+    async cancel(input: CancelDto): Promise<void> {
+        const { workspaceId, atPeriodEnd } = input;
+
+        const sub = await this.prisma.subscription.findFirst({
+            where: { workspaceId, stripeSubId: { not: null }, status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
+            orderBy: { createdAt: 'desc' },
+            select: { stripeSubId: true },
+        });
+        if (!sub?.stripeSubId) throw new Error('No active Stripe subscription to cancel');
+
+        if (atPeriodEnd) {
+            await this.stripe.subscriptions.update(sub.stripeSubId, { cancel_at_period_end: true });
+        } else {
+            await this.stripe.subscriptions.cancel(sub.stripeSubId);
+        }
+        // DB updates via webhook (updated/deleted)
+    }
+
+    async resume(input: ResumeDto): Promise<void> {
+        const { workspaceId } = input;
+
+        const sub = await this.prisma.subscription.findFirst({
+            where: { workspaceId, stripeSubId: { not: null } },
+            orderBy: { createdAt: 'desc' },
+            select: { stripeSubId: true },
+        });
+        if (!sub?.stripeSubId) throw new Error('No Stripe subscription for this workspace');
+
+        await this.stripe.subscriptions.update(sub.stripeSubId, { cancel_at_period_end: false });
+        // DB updates via webhook
+    }
+
+
+    async createPortalSession(input: PortalDto): Promise<{ url: string }> {
+        const { workspaceId, returnUrl } = input;
+        const customerId = await this.ensureStripeCustomerForWorkspace(workspaceId);
+
+        const session = await this.stripe.billingPortal.sessions.create({
+            customer: customerId,
+            return_url: returnUrl ?? `${process.env.APP_URL}/billing/portal-return?ws=${workspaceId}`,
+        });
+
+        if (!session.url) throw new Error('Stripe did not return a portal URL');
+        return { url: session.url };
+    }
+
+
+    async getCurrentSubscription(workspaceId: string): Promise<SubscriptionDto | null> {
+        const row = await this.prisma.subscription.findFirst({
+            where: { workspaceId },
+            orderBy: [{ createdAt: 'desc' }],
+        });
+        return row as any; // or map to DTO if needed
+    }
+
+    async getEntitlements(workspaceId: string): Promise<EntitlementsDto> {
+        const sub = await this.getCurrentSubscription(workspaceId);
+
+        // defaults for free if no sub
+        const plan = sub?.planKey ?? ('STARTER' as PlanKey);
+        const status = (sub?.status ?? 'canceled') as SubscriptionStatus;
+
+        // example plan config (tweak to your product)
+        const PLAN_LIMITS: Record<PlanKey, Record<string, number | boolean>> = {
+            STARTER: { projects: 3, customDomain: false, aiTokens: 100_000 },
+            GROWTH: { projects: 20, customDomain: true, aiTokens: 1_000_000 },
+            ENTERPRISE: { projects: 999, customDomain: true, aiTokens: 99_999_999 },
+        };
+
+        // simple status-based downgrade sample:
+        const effectivePlan: PlanKey =
+            status === 'canceled' || status === 'frozen' ? 'STARTER' : plan;
+
+        const limits = PLAN_LIMITS[effectivePlan];
+        const features: Record<string, boolean> = {
+            customDomain: !!limits.customDomain,
+        };
+
+        return {
+            workspaceId,
+            effectivePlan,
+            status,
+            limits,
+            features,
+        } as EntitlementsDto;
+    }
+
+
+    async upsertFromStripeSubscription(payload: UpsertFromStripeSubscriptionDto): Promise<void> {
+        const {
+            stripeSubId, stripeCustomerId, workspaceId,
+            planKey, billingCycle, status, periodStart, periodEnd,
+            cancelAtPeriodEnd, cancelsAt,
+        } = payload;
+
+        await this.prisma.subscription.upsert({
+            where: { stripeSubId },
+            create: {
+                workspaceId,
+                planKey,
+                billingCycle,
+                status,
+                periodStart,
+                periodEnd,
+                stripeCustomerId,
+                stripeSubId,
+                cancelAtPeriodEnd: !!cancelAtPeriodEnd,
+                cancelsAt: cancelsAt ?? null,
+            },
+            update: {
+                workspaceId,
+                planKey,
+                billingCycle,
+                status,
+                periodStart,
+                periodEnd,
+                stripeCustomerId,
+                cancelAtPeriodEnd: !!cancelAtPeriodEnd,
+                cancelsAt: cancelsAt ?? null,
+            },
+        });
+    }
+
+    async setStatusActiveByStripeSubId(stripeSubId: string): Promise<void> {
+        await this.prisma.subscription.updateMany({
+            where: { stripeSubId },
+            data: { status: 'active' },
+        });
+    }
+
+    async setStatusPastDueByStripeSubId(stripeSubId: string): Promise<void> {
+        await this.prisma.subscription.updateMany({
+            where: { stripeSubId },
+            data: { status: 'past_due' },
+        });
+    }
+
+    async setCanceledByStripeSubId(input: { stripeSubId: string; periodEnd?: Date }): Promise<void> {
+        const { stripeSubId, periodEnd } = input;
+        await this.prisma.subscription.updateMany({
+            where: { stripeSubId },
+            data: {
+                status: 'canceled',
+                periodEnd: periodEnd ?? new Date(),
+                cancelAtPeriodEnd: false,
+                cancelsAt: periodEnd ?? new Date(),
+            },
+        });
+    }
 
     /**
      * Return true if this Stripe event.id was already processed (for dedupe)
@@ -162,7 +334,7 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
 
         try {
             const found = await this.prisma.webhookEvent.findUnique({
-                where: { id: eventId }, //Todo insert the workspace id
+                where: { id: eventId },
                 select: { id: true },
             });
             return !!found;
@@ -178,12 +350,12 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
     /**
       * Persist that a Stripe event.id has been processed (pair to the check above)
       */
-    async markWebhookEventProcessed(eventId: string, workspaceId: string): Promise<void> {
+    async markWebhookEventProcessed(eventId: string): Promise<void> {
         if (!eventId) return;
 
         try {
             await this.prisma.webhookEvent.create({
-                data: { id: eventId, workspaceId: workspaceId },    //Todo insert the workspace id
+                data: { id: eventId,},  
             });
         } catch (err: any) {
             // If called twice for the same event, unique PK on id will throw — that’s fine.
@@ -197,11 +369,44 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         }
     }
 
-    async listSubscriptionsForReconciliation(): Promise<any[]> { throw new Error('Not implemented'); }
-    async patchSubscriptionByStripeSubId(): Promise<void> { throw new Error('Not implemented'); }
+    async listSubscriptionsForReconciliation(): Promise<ReconciliationSubscriptionItemDto[]> {
+        const rows = await this.prisma.subscription.findMany({
+            where: { status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
+            select: { workspaceId: true, stripeSubId: true },
+        });
+        return rows.filter(r => !!r.stripeSubId) as any;
+    }
 
-    async getStripeCustomerId(): Promise<string | null> { throw new Error('Not implemented'); }
-    async setStripeCustomerId(): Promise<void> { throw new Error('Not implemented'); }
+    async patchSubscriptionByStripeSubId(patch: Partial<SubscriptionDto> & { stripeSubId: string }): Promise<void> {
+        const { stripeSubId, ...data } = patch;
+        await this.prisma.subscription.updateMany({
+            where: { stripeSubId },
+            data: data as any,
+        });
+    }
+
+    async getStripeCustomerId(workspaceId: string): Promise<string | null> {
+        try {
+            const ws = await this.prisma.workspace.findUnique({
+                where: { id: workspaceId },
+                select: { stripeCustomerId: true },
+            });
+            return ws?.stripeCustomerId ?? null;
+        } catch {
+            return null;
+        }
+    }
+
+    async setStripeCustomerId(workspaceId: string, stripeCustomerId: string): Promise<void> {
+        try {
+            await this.prisma.workspace.update({
+                where: { id: workspaceId },
+                data: { stripeCustomerId },
+            });
+        } catch {
+            // if you don't store it on workspace, ignore or store elsewhere
+        }
+    }
 
     async mapPriceId(priceId: string): Promise<{ planKey: PlanKey; cycle: BillingCycle }> {
         // Example mapping (replace with your real Stripe price IDs)
@@ -220,5 +425,4 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         }
         return found;
     }
-
 }

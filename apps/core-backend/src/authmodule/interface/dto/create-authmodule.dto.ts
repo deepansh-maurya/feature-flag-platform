@@ -1,6 +1,9 @@
 import { IsEmail, IsJWT, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class RegisterDto {
+  @IsUUID()
+  workspaceId: string;
+
   @IsEmail()
   email: string;
 
@@ -16,6 +19,10 @@ export class RegisterDto {
   fullName: string;
 }
 export class LoginDto {
+  @IsUUID()
+  workspaceId: string;
+
+
   @IsEmail()
   email: string;
 

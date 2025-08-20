@@ -62,7 +62,7 @@ export interface BillingmoduleRepo {
   isWebhookEventProcessed(eventId: string): Promise<boolean>;
 
   /** Persist that a Stripe event.id has been processed */
-  markWebhookEventProcessed(eventId: string, workspaceId: string): Promise<void>;
+  markWebhookEventProcessed(eventId: string): Promise<void>;
 
   /** For nightly jobs: list all known subscriptions that appear "active-ish" */
   listSubscriptionsForReconciliation(): Promise<Array<ReconciliationSubscriptionItemDto>>;

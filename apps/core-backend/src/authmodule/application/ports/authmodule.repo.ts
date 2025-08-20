@@ -8,6 +8,6 @@ export interface AuthmoduleRepo {
   logout(refreshToken: string): Promise<void>
   changePassword(user: { password: string, confirmPassword: string }): Promise<void>
   delete(userId: string): Promise<void>
-  storeRefreshToken(userId: string, refreshToken: string, expiresAt: Date): Promise<void>
+  storeRefreshToken(userId: string, refreshToken: string, expiresAt: Date, workspaceId: string): Promise<void>
 }
 

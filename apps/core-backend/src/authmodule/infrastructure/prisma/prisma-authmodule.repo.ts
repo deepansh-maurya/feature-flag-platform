@@ -22,7 +22,7 @@ function sha256(input: string): string {
 
 @Injectable()
 export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Register a user.
@@ -45,11 +45,11 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
 
     const passwordHash = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
 
-  const dbuser =  await this.prisma.user.create({
+    const dbuser = await this.prisma.user.create({
       data: {
         email,
         passwordHash,
-        name:user.fullName!
+        name: user.fullName!
       },
     });
 
@@ -192,11 +192,12 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    */
 
   // Example: store refresh token (hash only)
-  async storeRefreshToken(userId: string, refreshToken: string, expiresAt: Date): Promise<void> {
+  async storeRefreshToken(userId: string, refreshToken: string, expiresAt: Date, workspaceId: string): Promise<void> {
     await this.prisma.refreshToken.create({
       data: {
         userId,
         tokenHash: sha256(refreshToken),
+        workspaceId: workspaceId,
         expiresAt,
       },
     });
