@@ -44,6 +44,7 @@ model Workspace {
   slug             String        @unique
   stripeCustomerId String
   ownerUserId      String
+  archivedAt       DateTime?
   owner            User          @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
   planKey          String        @default("free")
   billingStatus    BillingStatus @default(active)
@@ -82,8 +83,8 @@ model Workspace {
 }
 
 model WebhookEvent {
-  id          String    @id // Stripe event.id (e.g. "evt_123...")
-  createdAt   DateTime  @default(now())
+  id        String   @id // Stripe event.id (e.g. "evt_123...")
+  createdAt DateTime @default(now())
 }
 
 model Project {
@@ -160,6 +161,7 @@ model RefreshToken {
 }
 
 model WorkspaceMember {
+  id          String   @id @default(cuid())
   workspaceId String
   userId      String
   roleKey     RoleKey  @default(viewer)
@@ -169,8 +171,8 @@ model WorkspaceMember {
   workspace Workspace @relation("WorkspaceMembers", fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
 
-  @@id([workspaceId, userId])
-  @@index([userId])
+  @@unique([workspaceId, userId])
+  @@index([workspaceId, createdAt, id])
 }
 
 model MemberProjectOverride {
@@ -192,14 +194,16 @@ model MemberProjectOverride {
 
 // ---------- Invites ----------
 model Invite {
-  id          String   @id @default(uuid())
-  workspaceId String
-  email       String
-  roleKey     RoleKey  @default(viewer)
-  token       String   @unique
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  workspaceId     String
+  email           String
+  roleKey         RoleKey  @default(viewer)
+  tokenHash          String   @unique
+  status          String   @default("pending")
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  invitedByUserId String
 
   workspace   Workspace @relation("WorkspaceInvites", fields: [workspaceId], references: [id], onDelete: Cascade)
   invitedUser User?     @relation("UserInvitesByEmail", fields: [email], references: [email])
