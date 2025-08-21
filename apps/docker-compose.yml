@@ -17,7 +17,7 @@ services:
       POSTGRES_PASSWORD: mypass
       POSTGRES_DB: mydb
     volumes:
-      - pgdata:/var/lib/postgresql/data   # 👈 correct key is `volumes`
+      - pgdata:/var/lib/postgresql/data   
 
-volumes:   # 👈 declare at root (not inside services)
+volumes:   
   pgdata:

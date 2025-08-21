@@ -37,6 +37,22 @@ enum UserStatus {
   disabled
 }
 
+enum IntegrationProvider {
+  POSTHOG
+  SEGMENT
+  DATADOG
+  AMPLITUDE
+}
+
+
+enum IntegrationStatus {
+  coming_soon  // visible in UI but not functional yet
+  active       // configured + working
+  error        // misconfigured or failing
+  disabled     // explicitly turned off
+}
+
+
 // ---------- Core ----------
 model Workspace {
   id               String        @id @default(uuid())
@@ -103,9 +119,43 @@ model Project {
   SdkKey          SdkKey[]
   AllowlistEntry  AllowlistEntry[]
   ConfigSnapshot  ConfigSnapshot[]
-
+  projectSettings ProjectSettings[]
+  integrationConfig IntegrationConfig[]
   @@unique([workspaceId, key]) // (workspace_id, key) unique
   @@index([workspaceId])
+}
+
+model ProjectSettings {
+  projectId       String   @id
+  flagNameRegex   String   @default("^[a-z0-9_]{3,50}$")
+  defaultFlagType FlagType @default(boolean)
+  userIdField     String   @default("userId")
+  bucketSeed      String? // null => default to project key
+  policies        Json // {maxRamp:20, minHold:30, requireApproval:true, ...}
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+
+
+model IntegrationConfig {
+  id            String              @id @default(uuid())
+  projectId     String
+  provider      IntegrationProvider
+  status        IntegrationStatus   @default(coming_soon) // coming_soon | active | error | disabled
+  apiKey        String? // encrypted if stored
+  endpoint      String? // for self-hosted
+  sendExposures Boolean             @default(true)
+  sendChanges   Boolean             @default(true)
+  sendMetrics   Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, provider])
 }
 
 model Environment {
@@ -198,7 +248,7 @@ model Invite {
   workspaceId     String
   email           String
   roleKey         RoleKey  @default(viewer)
-  tokenHash          String   @unique
+  tokenHash       String   @unique
   status          String   @default("pending")
   expiresAt       DateTime
   createdAt       DateTime @default(now())
@@ -369,8 +419,9 @@ enum SdkKeyType {
 }
 
 enum KeyStatus {
-  active
+  active  
   revoked
+  disabled
 }
 
 enum AllowlistKind {
