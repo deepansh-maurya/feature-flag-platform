@@ -303,6 +303,7 @@ enum ChangeRequestStatus {
   open
   approved
   rejected
+  applied
 }
 
 // =======================================

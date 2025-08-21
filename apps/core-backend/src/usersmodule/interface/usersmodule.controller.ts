@@ -1,23 +1,34 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { UsersmoduleService } from '../application/usersmodule.service';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { UserService } from '../application/use-cases/usersmodule.service';
+import { CreateUserDto, GetUserByEmailDto, SoftDeleteUserDto, UpdateUserDto } from './dto/create-usersmodule.dto';
 
-@Controller('usersmodule')
-export class UsersmoduleController {
-  constructor(private readonly svc: UsersmoduleService) {}
-
-  @Get()
-  async list() {
-    return this.svc.list();
-  }
+@Controller('users')
+export class UserController {
+  constructor(private readonly svc: UserService) {}
 
   @Post()
-  async create(@Body() dto: any) {
-    return this.svc.create(dto);
+  create(@Body() dto: CreateUserDto) {
+    return this.svc.createUser(dto);
   }
 
   @Get(':id')
-  async get(@Param('id') id: string) {
-    return this.svc.get(id);
+  getById(@Param('id') id: string) {
+    return this.svc.findById(id);
+  }
+
+  @Get()
+  getByEmail(@Query() q: GetUserByEmailDto) {
+    return this.svc.findByEmail(q);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.svc.updateUser({ ...dto, id });
+  }
+
+  @Delete(':id')
+  softDelete(@Param('id') id: string) {
+    const dto: SoftDeleteUserDto = { id };
+    return this.svc.softDeleteUser(dto);
   }
 }
-

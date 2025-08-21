@@ -1,16 +1,17 @@
-// import { Module } from '@nestjs/common';
-// import { UsersmoduleController } from './interface/usersmodule.controller';
-// import { UsersmoduleService } from './application/usersmodule.service';
-// import { UsersmoduleRepoToken } from './application/ports/usersmodule.repo';
-// import { PrismaUsersmoduleRepo } from './infrastructure/prisma/prisma-usersmodule.repo';
+import { Module } from '@nestjs/common';
+import PrismaService from 'src/infra/prisma/prisma.service';
+import { USER_REPO } from './application/ports/usersmodule.repo';
+import { PrismaUserRepository } from './infrastructure/prisma/prisma-usersmodule.repo';
+import { UserService } from './application/use-cases/usersmodule.service';
+import { UserController } from './interface/usersmodule.controller';
 
-// @Module({
-//   controllers: [UsersmoduleController],
-//   providers: [
-//     UsersmoduleService,
-//     { provide: UsersmoduleRepoToken, useClass: PrismaUsersmoduleRepo },
-//   ],
-//   exports: [UsersmoduleService],
-// })
-// export class UsersmoduleModule {}
-
+@Module({
+  providers: [
+    PrismaService,
+    { provide: USER_REPO, useClass: PrismaUserRepository },
+    UserService,
+  ],
+  controllers: [UserController],
+  exports: [UserService, USER_REPO], // so Auth module can call create/find
+})
+export class UserModule {}
