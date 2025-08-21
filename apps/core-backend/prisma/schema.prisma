@@ -44,14 +44,12 @@ enum IntegrationProvider {
   AMPLITUDE
 }
 
-
 enum IntegrationStatus {
-  coming_soon  // visible in UI but not functional yet
-  active       // configured + working
-  error        // misconfigured or failing
-  disabled     // explicitly turned off
+  coming_soon // visible in UI but not functional yet
+  active // configured + working
+  error // misconfigured or failing
+  disabled // explicitly turned off
 }
-
 
 // ---------- Core ----------
 model Workspace {
@@ -82,7 +80,6 @@ model Workspace {
   webhookEndpoints WebhookEndpoint[]
   apiTokens        ApiToken[]
   auditLogs        AuditLog[]
-  FlagVersion      FlagVersion[]
   ChangeRequest    ChangeRequest[]
   Segment          Segment[]
   SegmentMember    SegmentMember[]
@@ -111,16 +108,17 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  workspace       Workspace               @relation("WorkspaceProjects", fields: [workspaceId], references: [id], onDelete: Cascade)
-  environments    Environment[]           @relation("ProjectEnvironments")
-  memberOverrides MemberProjectOverride[] @relation("ProjectMemberOverrides")
-  flags           Flag[]                  @relation("ProjectFlags")
-  segments        Segment[]               @relation("ProjectSegments")
-  SdkKey          SdkKey[]
-  AllowlistEntry  AllowlistEntry[]
-  ConfigSnapshot  ConfigSnapshot[]
-  projectSettings ProjectSettings[]
+  workspace         Workspace               @relation("WorkspaceProjects", fields: [workspaceId], references: [id], onDelete: Cascade)
+  environments      Environment[]           @relation("ProjectEnvironments")
+  memberOverrides   MemberProjectOverride[] @relation("ProjectMemberOverrides")
+  flags             Flag[]                  @relation("ProjectFlags")
+  segments          Segment[]               @relation("ProjectSegments")
+  SdkKey            SdkKey[]
+  AllowlistEntry    AllowlistEntry[]
+  ConfigSnapshot    ConfigSnapshot[]
+  projectSettings   ProjectSettings[]
   integrationConfig IntegrationConfig[]
+
   @@unique([workspaceId, key]) // (workspace_id, key) unique
   @@index([workspaceId])
 }
@@ -137,8 +135,6 @@ model ProjectSettings {
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
-
-
 
 model IntegrationConfig {
   id            String              @id @default(uuid())
@@ -283,16 +279,6 @@ model Role {
 // =======================================
 // Enums
 // =======================================
-enum FlagType {
-  boolean
-  multivariate
-}
-
-enum FlagVersionStatus {
-  active
-  draft
-  archived
-}
 
 enum SegmentType {
   rule
@@ -306,6 +292,26 @@ enum ChangeRequestStatus {
   applied
 }
 
+enum FlagType {
+  boolean
+  multivariate
+  json
+}
+
+enum EnvKey {
+  dev
+  stage
+  prod
+}
+
+enum FlagVersionStatus {
+  draft
+  active
+  superseded
+  rolled_back
+}
+
+
 // =======================================
 // Core
 // =======================================
@@ -313,46 +319,73 @@ enum ChangeRequestStatus {
 // =======================================
 // Feature Flags / Versions / Segments
 // =======================================
+
+
 model Flag {
-  id          String   @id @default(uuid())
+  id          String          @id @default(uuid())
   projectId   String
   workspaceId String
   key         String
   type        FlagType
   description String?
-  archived    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  archived    Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  createdBy   String?
 
-  workspace Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
-  project   Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
-  versions  FlagVersion[]   @relation("FlagVersions")
-  changes   ChangeRequest[] @relation("FlagChangeRequests")
+  workspace   Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
+  project     Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
+  versions    FlagVersion[]   @relation("FlagVersions")
+  changes     ChangeRequest[] @relation("FlagChangeRequests")
+
+  // 1-1 metadata (display name + tags)
+  flagMeta    FlagMeta?
 
   @@unique([projectId, key])
   @@index([workspaceId])
   @@index([projectId])
 }
 
-// Per-environment, per-version snapshot of a flag’s rules/config
-model FlagVersion {
-  id          String            @id @default(uuid())
-  flagId      String
-  workspaceId String
-  envKey      String
-  version     Int
-  dataJson    Json
-  status      FlagVersionStatus @default(draft)
-  createdBy   String
-  createdAt   DateTime          @default(now())
+model FlagMeta {
+  flagId String  @id
+  name   String
+  tags   String[]
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  flag      Flag      @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
-
-  @@unique([flagId, envKey, version])
-  @@index([workspaceId])
-  @@index([flagId, envKey])
+  flag   Flag    @relation(fields: [flagId], references: [id], onDelete: Cascade)
 }
+
+model FlagVersion {
+  id        String              @id @default(uuid())
+  flagId    String
+  version   Int
+  comment   String?
+  status    FlagVersionStatus   @default(draft)
+  createdBy String
+  createdAt DateTime            @default(now())
+
+  flag        Flag              @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
+  envConfigs  FlagEnvConfig[]
+
+  @@unique([flagId, version])
+  @@index([flagId])
+}
+
+model FlagEnvConfig {
+  id            String       @id @default(uuid())
+  flagVersionId String
+  envKey        EnvKey
+  enabled       Boolean
+  variantKey    String?
+  jsonValue     Json?
+  rollout       Int?         // 0..100
+  rules         Json?
+
+  flagVersion   FlagVersion  @relation(fields: [flagVersionId], references: [id], onDelete: Cascade)
+
+  @@unique([flagVersionId, envKey])
+  @@index([envKey])
+}
+
 
 model ChangeRequest {
   id          String              @id @default(uuid())
@@ -420,7 +453,7 @@ enum SdkKeyType {
 }
 
 enum KeyStatus {
-  active  
+  active
   revoked
   disabled
 }
