@@ -19,6 +19,10 @@ import InlineAdd from "./InlineAdd";
 import SegmentsDrawer from "./SegmentDrawer";
 import VersionHistoryModal from "./VersionHistoryModel";
 import RulesTestModal from "./RulesTestModal";
+import PrerequisitesPicker, {
+  FlagMeta,
+  Prereq
+} from "./PrerequisitesPicker/PrerequisitesPicker";
 
 // -----------------------------------------------------------------------------
 export default function FlagRulesBuilder({
@@ -28,6 +32,31 @@ export default function FlagRulesBuilder({
   flag: Flag;
   onChange: (f: Flag) => void;
 }) {
+  const flags: FlagMeta[] = [
+    {
+      key: "enable_checkout",
+      name: "Enable Checkout",
+      variations: [{ key: "on" }, { key: "off" }]
+    },
+    {
+      key: "checkout_redesign",
+      name: "Checkout Redesign",
+      variations: [{ key: "control" }, { key: "new" }]
+    },
+    {
+      key: "dark_mode",
+      name: "Dark Mode",
+      variations: [{ key: "on" }, { key: "off" }]
+    },
+    {
+      key: "ios_gate",
+      name: "iOS Gate",
+      variations: [{ key: "allow" }, { key: "deny" }]
+    }
+  ];
+
+  const [state, setState] = useState<Prereq[]>([]);
+
   const [activeEnv, setActiveEnv] = useState<EnvKey>("dev");
   const [showSegments, setShowSegments] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -261,6 +290,24 @@ export default function FlagRulesBuilder({
           >
             Manage segments →
           </button>
+
+          <div>
+            <PrerequisitesPicker
+              availableFlags={flags}
+              value={state}
+              onChange={setState}
+            />
+            {/* <pre
+              style={{
+                marginTop: 12,
+                fontSize: 12,
+                background: "#f7f7f7",
+                padding: 8
+              }}
+            >
+              {JSON.stringify(state, null, 2)}
+            </pre> */}
+          </div>
         </aside>
 
         {/* Center: rule stack */}

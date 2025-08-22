@@ -1,7 +1,5 @@
-// apps/core-backend/src/flagsmodule/infrastructure/prisma/prisma-flagsmodule.repo.ts
-import { Inject, Injectable } from '@nestjs/common';
-import { FLAGS_REPO, FlagsRepository, FlagMetaDTO } from '../../application/ports/flagsmodule.repo';
-import { Prisma  } from '@prisma/client';
+import {  Injectable } from '@nestjs/common';
+import { FlagsRepository, FlagMetaDTO } from '../../application/ports/flagsmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import { EnvKey } from 'generated/prisma';
 import { CreateFlagDto, CreateVersionDto } from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';

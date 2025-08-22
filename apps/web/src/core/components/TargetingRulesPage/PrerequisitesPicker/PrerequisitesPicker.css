@@ -1,0 +1,227 @@
+.prq-container {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+    max-width: 780px;
+    background-color: #191e39;
+}
+
+.prq-header {
+    margin-bottom: 8px;
+}
+
+.prq-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.prq-sub {
+    color: #666;
+    font-size: 12px;
+}
+
+.prq-actions {
+    position: relative;
+    display: inline-block;
+    background-color: #232f55;
+}
+
+.prq-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+
+    background-color: #232f55;
+
+    cursor: pointer;
+}
+
+.prq-btn:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+.prq-caret {
+    margin-left: 4px;
+}
+
+.prq-dropdown {
+    position: absolute;
+    z-index: 20;
+    margin-top: 6px;
+    width: 360px;
+    border: 1px solid var(--border-color);
+
+    background-color: #191e39;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+}
+
+.prq-search {
+    width: calc(100% - 16px);
+    margin: 8px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+
+    border-radius: 8px;
+    background-color: #191e39;
+}
+
+.prq-options {
+    max-height: 220px;
+    overflow: auto;
+}
+
+.prq-option {
+    width: 100%;
+    text-align: left;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+
+    background: #191e39;
+
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+
+.prq-option:hover {
+    background: #232f55;
+}
+
+.prq-opt-name {
+    font-weight: 500;
+}
+
+.prq-opt-key {
+    color: #888;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+}
+
+.prq-empty {
+    padding: 16px;
+    color: #777;
+}
+
+.prq-footer {
+    padding: 8px 12px;
+    color: #666;
+    font-size: 12px;
+    border-top: 1px solid #eee;
+}
+
+.prq-list {
+    list-style: none;
+    margin: 12px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #232f55;
+
+}
+
+.prq-item {
+    border: 1px solid var(--border-color);
+
+    border-radius: 10px;
+    padding: 10px;
+    background: #fcfcfc;
+    background-color: #232f55;
+
+}
+
+.prq-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.prq-item-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.prq-flag-name {
+    font-weight: 600;
+}
+
+.prq-flag-key {
+    color: #888;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+}
+
+.prq-item-ctrls {
+    display: flex;
+    gap: 6px;
+}
+
+.prq-icon {
+    border: 1px solid var(--border-color);
+
+    background: #232f55;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.prq-icon:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.prq-danger {
+    border-color: #f3d1d1;
+}
+
+.prq-var-row {
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.prq-var-label {
+    width: 140px;
+    color: #555;
+    font-size: 12px;
+    padding-top: 6px;
+}
+
+.prq-var-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.prq-chip {
+    border: 1px solid var(--border-color);
+
+    background: #fff;
+    border-radius: 999px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.prq-chip.is-selected {
+    background: #eef3ff;
+    border-color: #9bb4ff;
+}
+
+@media (max-width: 520px) {
+    .prq-dropdown {
+        width: 92vw;
+    }
+
+    .prq-var-label {
+        width: 100px;
+    }
+}
