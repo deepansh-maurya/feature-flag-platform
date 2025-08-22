@@ -23,6 +23,10 @@ import PrerequisitesPicker, {
   FlagMeta,
   Prereq
 } from "./PrerequisitesPicker/PrerequisitesPicker";
+import RuleSetPreview from "./RuleSetPreview/RuleSetPreview";
+import { withModal } from "../WithModel/withModal";
+
+const RuleSetPreviewModal = withModal(RuleSetPreview);
 
 // -----------------------------------------------------------------------------
 export default function FlagRulesBuilder({
@@ -56,7 +60,7 @@ export default function FlagRulesBuilder({
   ];
 
   const [state, setState] = useState<Prereq[]>([]);
-
+  const [openModel, setOpenModel] = useState(false);
   const [activeEnv, setActiveEnv] = useState<EnvKey>("dev");
   const [showSegments, setShowSegments] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -212,6 +216,12 @@ export default function FlagRulesBuilder({
           </span>
         </div>
         <div className={styles.headerActions}>
+          <button
+            className={styles.secondaryBtn}
+            onClick={() => setOpenModel(true)}
+          >
+            Preview
+          </button>
           <button
             className={styles.secondaryBtn}
             onClick={() => setShowSegments(true)}
@@ -459,6 +469,15 @@ export default function FlagRulesBuilder({
           onClose={() => setShowTester(false)}
         />
       )}
+      <RuleSetPreviewModal
+        isOpen={openModel}
+        onOpenChange={() => {
+          setOpenModel(!openModel);
+        }}
+        trigger={undefined}
+        modalTitle="RuleSet Preview"
+        componentProps={{ ruleSet: null, segmentsById: null }}
+      />
     </>
   );
 }

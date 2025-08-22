@@ -1,0 +1,124 @@
+        :root {
+            --rsp-border: #283462;
+            --rsp-bg: #fff;
+            --rsp-muted: #666;
+            --rsp-chip: #eef3ff;
+        }
+
+        .rsp-card {
+            border: 1px solid var(--rsp-border);
+            border-radius: 12px;
+            background: var(--rsp-bg);
+            padding: 14px;
+            max-width: 1100px;
+        }
+
+        .rsp-head {
+            margin-bottom: 6px;
+        }
+
+        .rsp-title {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .rsp-sub {
+            color: var(--rsp-muted);
+            font-size: 12px;
+        }
+
+        .rsp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .rsp-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .rsp-pane {
+            border: 1px solid var(--rsp-border);
+            border-radius: 10px;
+            padding: 10px;
+            background: #fcfcfc;
+        }
+
+        .rsp-pane-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .rsp-pre {
+            white-space: pre;
+            overflow: auto;
+            max-height: 420px;
+            border: 1px solid var(--rsp-border);
+            border-radius: 8px;
+            padding: 8px;
+            background: #f7f7f7;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 12px;
+        }
+
+        .rsp-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .rsp-btn {
+            border: 1px solid var(--rsp-border);
+            background: #fff;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .rsp-copied {
+            font-size: 12px;
+            color: green;
+        }
+
+        .rsp-empty {
+            color: var(--rsp-muted);
+            font-size: 12px;
+        }
+
+        .rsp-list {
+            list-style: none;
+            padding: 0;
+            margin: 6px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .rsp-li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--rsp-border);
+            background: #fff;
+            border-radius: 8px;
+            padding: 6px 8px;
+        }
+
+        .rsp-attr {
+            font-weight: 600;
+        }
+
+        .rsp-hint {
+            font-size: 12px;
+            color: #333;
+            background: var(--rsp-chip);
+            border-radius: 999px;
+            padding: 2px 8px;
+        }
+
+        .rsp-prereq {
+            margin-top: 10px;
+        }

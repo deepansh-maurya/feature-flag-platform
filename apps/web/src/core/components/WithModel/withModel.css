@@ -1,0 +1,77 @@
+:root {
+    --wm-border: #283462;
+    --wm-bg: #ffffff;
+    --wm-overlay: rgba(0, 0, 0, .45);
+}
+
+.wm-trigger {
+    border: 1px solid var(--wm-border);
+    background: #fff;
+    padding: 8px 12px;
+    color: black;
+
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.wm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: var(--wm-overlay);
+
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.wm-dialog {
+    width: min(1000px, 92vw);
+    max-height: 90vh;
+    overflow: auto;
+
+    color: black;
+    background: var(--wm-bg);
+    border: 1px solid var(--wm-border);
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+    outline: none;
+}
+
+.wm-head {
+    display: flex;
+    align-items: center;
+
+    color: black;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--wm-border);
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+}
+
+.wm-title {
+    font-weight: 700;
+
+    color: black;
+    font-size: 16px;
+}
+
+.wm-close {
+    border: 1px solid var(--wm-border);
+    background: #fff;
+
+    color: black;
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.wm-body {
+
+    color: black;
+    padding: 12px;
+}
