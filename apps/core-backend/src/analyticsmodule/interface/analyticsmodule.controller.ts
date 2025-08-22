@@ -1,23 +1,27 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { AnalyticsmoduleService } from '../application/analyticsmodule.service';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { AnalyticsmoduleService } from '../application/use-cases/analyticsmodule.service';
+import { GetFlagMetricsDto, GetOverviewDto, RecordEvaluationDto } from './dto/create-analyticsmodule.dto';
 
-@Controller('analyticsmodule')
+@Controller('analytics')
 export class AnalyticsmoduleController {
   constructor(private readonly svc: AnalyticsmoduleService) {}
 
-  @Get()
-  async list() {
-    return this.svc.list();
+  // Record flag evaluation (called by SDK backend)
+  @Post('record')
+  async recordEvaluation(@Body() dto: RecordEvaluationDto) {
+    await this.svc.recordEvaluation(dto);
+    return { success: true };
   }
 
-  @Post()
-  async create(@Body() dto: any) {
-    return this.svc.create(dto);
+  // Overview metrics (all flags, one env, timeframe)
+  @Get('overview')
+  async getOverview(@Query() dto: GetOverviewDto) {
+    return this.svc.getOverview(dto);
   }
 
-  @Get(':id')
-  async get(@Param('id') id: string) {
-    return this.svc.get(id);
+  // Per-flag metrics
+  @Get('flag-metrics')
+  async getFlagMetrics(@Query() dto: GetFlagMetricsDto) {
+    return this.svc.getFlagMetrics(dto);
   }
 }
-

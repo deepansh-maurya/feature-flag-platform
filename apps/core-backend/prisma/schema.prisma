@@ -499,7 +499,19 @@ model FlagOverride {
   @@index([workspaceId, flagId, envKey, targetType, targetKey])
 }
 
+model FlagEvaluation {
+  id          String   @id @default(uuid())
+  flagId      String
+  envKey      String
+  userId      String
+  enabled     Boolean
+  variant     String?
+  ruleMatched String?
+  evaluatedAt DateTime @default(now())
 
+  @@index([flagId, envKey, evaluatedAt])
+  @@index([userId])
+}
 
 //////////////////////////////
 
