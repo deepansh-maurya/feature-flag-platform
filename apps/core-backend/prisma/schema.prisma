@@ -281,8 +281,8 @@ model Role {
 // =======================================
 
 enum SegmentType {
-  rule
-  list
+  dynamic   // uses rulesJson (traits-based predicate)
+  static    // uses SegmentMember rows
 }
 
 enum ChangeRequestStatus {
@@ -310,7 +310,11 @@ enum FlagVersionStatus {
   superseded
   rolled_back
 }
-
+enum TargetType {
+  user
+  account
+  service
+}
 
 // =======================================
 // Core
@@ -409,38 +413,93 @@ model ChangeRequest {
   @@index([flagId, envKey, status])
 }
 
+
 model Segment {
-  id          String      @id @default(uuid())
-  projectId   String
-  workspaceId String
-  key         String
-  type        SegmentType
-  rulesJson   Json
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id            String      @id @default(uuid())
+  workspaceId   String
+  projectId     String?     // allow workspace‑level segments; null = workspace-global
+  key           String      // machine key (used in RuleSet JSON)
+  name          String      // display name in UI
+  description   String?
+  type          SegmentType
+  rulesJson     Json?       // required when type=dynamic; null for static
+  isArchived    Boolean     @default(false)
+  createdBy     String
+  updatedBy     String?
+  definitionHash String?    // hash(rulesJson) for cache/CDN invalidation
+  compiledBlob  Bytes?      // optional precompiled predicate (regex/semver/cidr)
 
-  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  project   Project         @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
-  members   SegmentMember[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  @@unique([projectId, key])
-  @@index([workspaceId])
-  @@index([projectId])
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project       Project?    @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
+  members       SegmentMember[]
+
+  @@unique([workspaceId, projectId, key])           // keeps key unique per scope
+  @@index([workspaceId, name])
+  @@index([workspaceId, isArchived])
 }
 
 model SegmentMember {
   segmentId   String
   workspaceId String
-  userId      String
-  addedAt     DateTime @default(now())
+  targetType  TargetType   // user|account|service
+  targetKey   String       // e.g., userId/email/accountId/serviceId
+  addedBy     String?
+  addedAt     DateTime     @default(now())
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  segment   Segment   @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  segment     Segment   @relation(fields: [segmentId], references: [id], onDelete: Cascade)
 
-  @@id([segmentId, userId])
-  @@index([workspaceId])
-  @@index([userId])
+  @@id([segmentId, targetType, targetKey])
+  @@index([workspaceId, targetType, targetKey])
+  @@index([segmentId])
 }
+
+model FlagRuleSet {
+  id             String   @id @default(uuid())
+  workspaceId    String
+  projectId      String
+  flagId         String
+  envKey         String           // dev|stage|prod
+  version        Int
+  status         String  @default("draft") // draft|active|archived
+  rules          Json              // ordered list with allow/deny + segment refs
+  defaultVar     String
+  killswitch     Boolean @default(false)
+  prerequisites  Json?             // [{flagKey, variations:[...]}]
+  salt           String            // for sticky hashing
+  configHash     String?           // ETag for CDN/polling
+  createdBy      String
+  publishedBy    String?
+  publishedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([flagId, envKey, version])
+  @@index([workspaceId, projectId, flagId, envKey, status])
+}
+
+
+model FlagOverride {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  projectId    String
+  flagId       String
+  envKey       String
+  targetType   TargetType          // user|account|service
+  targetKey    String
+  mode         String              // allow|deny|force
+  variationKey String?
+  expiresAt    DateTime?
+  createdBy    String?
+  createdAt    DateTime @default(now())
+
+  @@index([workspaceId, flagId, envKey, targetType, targetKey])
+}
+
+
 
 //////////////////////////////
 

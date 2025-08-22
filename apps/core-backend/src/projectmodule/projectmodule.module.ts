@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ProjectmoduleController } from './interface/projectmodule.controller';
-import { ProjectmoduleService } from './application/projectmodule.service';
 import { ProjectmoduleRepoToken } from './application/ports/projectmodule.repo';
 import { PrismaProjectmoduleRepo } from './infrastructure/prisma/prisma-projectmodule.repo';
+import { ProjectmoduleService } from './application/use-cases/projectmodule.service';
 
 @Module({
   controllers: [ProjectmoduleController],
