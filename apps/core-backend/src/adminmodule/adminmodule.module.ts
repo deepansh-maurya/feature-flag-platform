@@ -1,16 +1,15 @@
-// import { Module } from '@nestjs/common';
-// import { AdminmoduleController } from './interface/adminmodule.controller';
-// import { AdminmoduleService } from './application/adminmodule.service';
-// import { AdminmoduleRepoToken } from './application/ports/adminmodule.repo';
-// import { PrismaAdminmoduleRepo } from './infrastructure/prisma/prisma-adminmodule.repo';
+import { Module } from '@nestjs/common';
+import { AuditController } from './interface/adminmodule.controller';
+import { AuditService } from './application/use-cases/adminmodule.service';
+import { AuditRepoToken } from './application/ports/adminmodule.repo';
+import { PrismaAuditRepo } from './infrastructure/prisma/prisma-adminmodule.repo';
 
-// @Module({
-//   controllers: [AdminmoduleController],
-//   providers: [
-//     AdminmoduleService,
-//     { provide: AdminmoduleRepoToken, useClass: PrismaAdminmoduleRepo },
-//   ],
-//   exports: [AdminmoduleService],
-// })
-// export class AdminmoduleModule {}
-
+@Module({
+  controllers: [AuditController],
+  providers: [
+    AuditService,
+    { provide: AuditRepoToken, useClass: PrismaAuditRepo },
+  ],
+  exports: [AuditService],
+})
+export class AuditModule {}

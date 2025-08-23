@@ -281,8 +281,8 @@ model Role {
 // =======================================
 
 enum SegmentType {
-  dynamic   // uses rulesJson (traits-based predicate)
-  static    // uses SegmentMember rows
+  dynamic // uses rulesJson (traits-based predicate)
+  static // uses SegmentMember rows
 }
 
 enum ChangeRequestStatus {
@@ -310,6 +310,7 @@ enum FlagVersionStatus {
   superseded
   rolled_back
 }
+
 enum TargetType {
   user
   account
@@ -324,26 +325,25 @@ enum TargetType {
 // Feature Flags / Versions / Segments
 // =======================================
 
-
 model Flag {
-  id          String          @id @default(uuid())
+  id          String   @id @default(uuid())
   projectId   String
   workspaceId String
   key         String
   type        FlagType
   description String?
-  archived    Boolean         @default(false)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   createdBy   String?
 
-  workspace   Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
-  project     Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
-  versions    FlagVersion[]   @relation("FlagVersions")
-  changes     ChangeRequest[] @relation("FlagChangeRequests")
+  workspace Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
+  versions  FlagVersion[]   @relation("FlagVersions")
+  changes   ChangeRequest[] @relation("FlagChangeRequests")
 
   // 1-1 metadata (display name + tags)
-  flagMeta    FlagMeta?
+  flagMeta FlagMeta?
 
   @@unique([projectId, key])
   @@index([workspaceId])
@@ -351,45 +351,44 @@ model Flag {
 }
 
 model FlagMeta {
-  flagId String  @id
+  flagId String   @id
   name   String
   tags   String[]
 
-  flag   Flag    @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  flag Flag @relation(fields: [flagId], references: [id], onDelete: Cascade)
 }
 
 model FlagVersion {
-  id        String              @id @default(uuid())
+  id        String            @id @default(uuid())
   flagId    String
   version   Int
   comment   String?
-  status    FlagVersionStatus   @default(draft)
+  status    FlagVersionStatus @default(draft)
   createdBy String
-  createdAt DateTime            @default(now())
+  createdAt DateTime          @default(now())
 
-  flag        Flag              @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
-  envConfigs  FlagEnvConfig[]
+  flag       Flag            @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
+  envConfigs FlagEnvConfig[]
 
   @@unique([flagId, version])
   @@index([flagId])
 }
 
 model FlagEnvConfig {
-  id            String       @id @default(uuid())
+  id            String  @id @default(uuid())
   flagVersionId String
   envKey        EnvKey
   enabled       Boolean
   variantKey    String?
   jsonValue     Json?
-  rollout       Int?         // 0..100
+  rollout       Int? // 0..100
   rules         Json?
 
-  flagVersion   FlagVersion  @relation(fields: [flagVersionId], references: [id], onDelete: Cascade)
+  flagVersion FlagVersion @relation(fields: [flagVersionId], references: [id], onDelete: Cascade)
 
   @@unique([flagVersionId, envKey])
   @@index([envKey])
 }
-
 
 model ChangeRequest {
   id          String              @id @default(uuid())
@@ -413,30 +412,29 @@ model ChangeRequest {
   @@index([flagId, envKey, status])
 }
 
-
 model Segment {
-  id            String      @id @default(uuid())
-  workspaceId   String
-  projectId     String?     // allow workspace‑level segments; null = workspace-global
-  key           String      // machine key (used in RuleSet JSON)
-  name          String      // display name in UI
-  description   String?
-  type          SegmentType
-  rulesJson     Json?       // required when type=dynamic; null for static
-  isArchived    Boolean     @default(false)
-  createdBy     String
-  updatedBy     String?
-  definitionHash String?    // hash(rulesJson) for cache/CDN invalidation
-  compiledBlob  Bytes?      // optional precompiled predicate (regex/semver/cidr)
+  id             String      @id @default(uuid())
+  workspaceId    String
+  projectId      String? // allow workspace‑level segments; null = workspace-global
+  key            String // machine key (used in RuleSet JSON)
+  name           String // display name in UI
+  description    String?
+  type           SegmentType
+  rulesJson      Json? // required when type=dynamic; null for static
+  isArchived     Boolean     @default(false)
+  createdBy      String
+  updatedBy      String?
+  definitionHash String? // hash(rulesJson) for cache/CDN invalidation
+  compiledBlob   Bytes? // optional precompiled predicate (regex/semver/cidr)
 
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  project       Project?    @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
-  members       SegmentMember[]
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project?        @relation("ProjectSegments", fields: [projectId], references: [id], onDelete: Cascade)
+  members   SegmentMember[]
 
-  @@unique([workspaceId, projectId, key])           // keeps key unique per scope
+  @@unique([workspaceId, projectId, key]) // keeps key unique per scope
   @@index([workspaceId, name])
   @@index([workspaceId, isArchived])
 }
@@ -444,13 +442,13 @@ model Segment {
 model SegmentMember {
   segmentId   String
   workspaceId String
-  targetType  TargetType   // user|account|service
-  targetKey   String       // e.g., userId/email/accountId/serviceId
+  targetType  TargetType // user|account|service
+  targetKey   String // e.g., userId/email/accountId/serviceId
   addedBy     String?
-  addedAt     DateTime     @default(now())
+  addedAt     DateTime   @default(now())
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  segment     Segment   @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  segment   Segment   @relation(fields: [segmentId], references: [id], onDelete: Cascade)
 
   @@id([segmentId, targetType, targetKey])
   @@index([workspaceId, targetType, targetKey])
@@ -458,43 +456,42 @@ model SegmentMember {
 }
 
 model FlagRuleSet {
-  id             String   @id @default(uuid())
-  workspaceId    String
-  projectId      String
-  flagId         String
-  envKey         String           // dev|stage|prod
-  version        Int
-  status         String  @default("draft") // draft|active|archived
-  rules          Json              // ordered list with allow/deny + segment refs
-  defaultVar     String
-  killswitch     Boolean @default(false)
-  prerequisites  Json?             // [{flagKey, variations:[...]}]
-  salt           String            // for sticky hashing
-  configHash     String?           // ETag for CDN/polling
-  createdBy      String
-  publishedBy    String?
-  publishedAt    DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String    @id @default(uuid())
+  workspaceId   String
+  projectId     String
+  flagId        String
+  envKey        String // dev|stage|prod
+  version       Int
+  status        String    @default("draft") // draft|active|archived
+  rules         Json // ordered list with allow/deny + segment refs
+  defaultVar    String
+  killswitch    Boolean   @default(false)
+  prerequisites Json? // [{flagKey, variations:[...]}]
+  salt          String // for sticky hashing
+  configHash    String? // ETag for CDN/polling
+  createdBy     String
+  publishedBy   String?
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@unique([flagId, envKey, version])
   @@index([workspaceId, projectId, flagId, envKey, status])
 }
 
-
 model FlagOverride {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   workspaceId  String
   projectId    String
   flagId       String
   envKey       String
-  targetType   TargetType          // user|account|service
+  targetType   TargetType // user|account|service
   targetKey    String
-  mode         String              // allow|deny|force
+  mode         String // allow|deny|force
   variationKey String?
   expiresAt    DateTime?
   createdBy    String?
-  createdAt    DateTime @default(now())
+  createdAt    DateTime   @default(now())
 
   @@index([workspaceId, flagId, envKey, targetType, targetKey])
 }
@@ -677,28 +674,37 @@ enum EvalSource {
 // Audit (append-only)   
 // =============================
 model AuditLog {
-  id          String          @id @default(uuid())
+  id          String  @id @default(uuid())
   workspaceId String
-  projectId   String? // nullable per your "project_id?" note
-  envKey      String? // nullable per your "env_key?"
+  projectId   String?
+  envKey      String? // "dev" | "stage" | "prod" | ...
+  entityType  String // "flag" | "targeting" | "project" | ...
+  entityId    String // flagId, ruleId, projectId, etc.
+  entityKey   String? // "dark_mode_v2" helpful for UI labels
+
+  actionType  AuditActionType
+  title       String // short: "Flag toggled ON"
+  description String? // optional long text for details
+
+  // who
   actorUserId String
   actorName   String
-  actionType  AuditActionType
-  entityType  String // e.g., "flag" | "segment" | "project"
-  entityId    String
-  title       String
-  beforeJson  Json?
-  afterJson   Json?
-  ip          String?
-  ua          String?
-  createdAt   DateTime        @default(now())
 
-  // link back to Workspace
+  // snapshots
+  beforeJson Json?
+  afterJson  Json?
+
+  // misc
+  metadata Json? // IP, UA, requestId, etc.
+
+  createdAt DateTime  @default(now())
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  @@index([workspaceId, createdAt(sort: Desc)])
-  @@index([projectId, createdAt])
-  @@index([actionType, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([workspaceId, projectId, envKey, createdAt])
+  @@index([workspaceId, entityType, entityId, createdAt])
+  @@index([workspaceId, actionType, createdAt])
+  @@index([workspaceId, actorUserId, createdAt])
 }
 
 // =============================
