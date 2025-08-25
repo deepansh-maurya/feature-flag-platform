@@ -9,4 +9,13 @@ export enum Routes {
     Team = "/dashboard/team",
     Account = "/dashboard/account",
     Billing = "/dashboard/billing",
+    pricing = "/pricing",
+    signup = "/register",
+    login = "/login",
+    landingPage = "/"
+}
+
+
+export enum AppConst {
+    appName = "Flagly"
 }

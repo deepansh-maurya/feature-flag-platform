@@ -1,10 +1,14 @@
 "use client";
 import { useState } from "react";
 import styles from "./Auth.module.css";
+import Image from "next/image";
+import FlagCard from "../../../../public/img/image.png";
+import { AppConst, Routes } from "../../constants/routes";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
-
+  const router = useRouter();
   return (
     <div className={styles.container}>
       {/* optional toast slot */}
@@ -16,10 +20,18 @@ export default function LoginPage() {
           <div className={styles.cardTitle}>Welcome back</div>
           <p className={styles.muted}>Sign in to your account to continue.</p>
 
-          <label className={styles.label} htmlFor="email">Email</label>
-          <input id="email" className={styles.input} placeholder="you@company.com" />
+          <label className={styles.label} htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            className={styles.input}
+            placeholder="you@company.com"
+          />
 
-          <label className={styles.label} htmlFor="password">Password</label>
+          <label className={styles.label} htmlFor="password">
+            Password
+          </label>
           <div className={styles.passwordRow}>
             <input
               id="password"
@@ -40,12 +52,16 @@ export default function LoginPage() {
             <label className={styles.checkbox}>
               <input type="checkbox" /> <span>Remember me</span>
             </label>
-            <a className={styles.link} href="#">Forgot password?</a>
+            <a className={styles.link} href="#">
+              Forgot password?
+            </a>
           </div>
 
           <button className={styles.button}>Sign in</button>
 
-          <div className={styles.divider}><span>or continue with</span></div>
+          <div className={styles.divider}>
+            <span>or continue with</span>
+          </div>
 
           <div className={styles.oauthRow}>
             <button className={styles.oauthBtn}>Google</button>
@@ -53,20 +69,40 @@ export default function LoginPage() {
           </div>
 
           <p className={styles.hint}>
-            Don’t have an account? <a className={styles.link} href="/register">Create one</a>
+            Don’t have an account?{" "}
+            <a className={styles.link} href="/register">
+              Create one
+            </a>
           </p>
         </div>
-
         {/* RIGHT: brand / illustration */}
         <div className={styles.sidePanel}>
           <div className={styles.brandRow}>
             <div className={styles.brandDot} />
-            <span className={styles.brand}>YourApp</span>
+            <span
+              style={{ cursor: "pointer" }}
+              onClick={() => {
+                router.push(Routes.landingPage);
+              }}
+              className={styles.brand}
+            >
+              {AppConst.appName}
+            </span>
           </div>
-          <h2 className={styles.sideHeading}>Ship features faster</h2>
+          <h2 className={styles.sideHeading}>Deploy with confidence</h2>
           <p className={styles.sideText}>
-            Manage flags, target users, and roll out safely — all from one clean dashboard.
+            Flip features live, roll out gradually, and ship without fear.
           </p>
+
+          <div className={styles.mockImage}>
+            <Image
+              src={FlagCard}
+              alt="Feature flag card"
+              width={400}
+              height={300}
+              priority
+            />
+          </div>
         </div>
       </div>
     </div>

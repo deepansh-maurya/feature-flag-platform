@@ -8,6 +8,7 @@ import { AcceptInviteDto, AddMemberDto, ArchiveWorkspaceDto, ChangeMemberRoleDto
 
 //TODO add plan key where the any is written 
 //Todo move the plans in db 
+
 export const PLAN_LIMITS: Record<any, PlanLimits> = {
   starter: {
     workspaces: 1,

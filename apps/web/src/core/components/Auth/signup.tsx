@@ -1,25 +1,45 @@
 "use client";
 import { useState } from "react";
 import styles from "./Auth.module.css";
-
+import Image from "next/image";
+import FlagCard from "../../../../public/img/image.png";
+import { AppConst, Routes } from "../../constants/routes";
+import { useRouter } from "next/navigation";
 export default function SignupPage() {
   const [show, setShow] = useState(false);
-
+  const router = useRouter();
   return (
     <div className={styles.container}>
       <div className={styles.grid}>
         {/* LEFT: form card */}
         <div className={styles.card}>
           <div className={styles.cardTitle}>Create your account</div>
-          <p className={styles.muted}>Start your 14-day free trial. No credit card needed.</p>
+          <p className={styles.muted}>
+            {" "}
+            Choose the <span className="grad">right plan</span> for your team
+          </p>
 
-          <label className={styles.label} htmlFor="name">Full name</label>
-          <input id="name" className={styles.input} placeholder="Ada Lovelace" />
+          <label className={styles.label} htmlFor="name">
+            Full name
+          </label>
+          <input
+            id="name"
+            className={styles.input}
+            placeholder="Ada Lovelace"
+          />
 
-          <label className={styles.label} htmlFor="email">Email</label>
-          <input id="email" className={styles.input} placeholder="you@company.com" />
+          <label className={styles.label} htmlFor="email">
+            Email
+          </label>
+          <input
+            id="email"
+            className={styles.input}
+            placeholder="you@company.com"
+          />
 
-          <label className={styles.label} htmlFor="password">Password</label>
+          <label className={styles.label} htmlFor="password">
+            Password
+          </label>
           <div className={styles.passwordRow}>
             <input
               id="password"
@@ -37,12 +57,15 @@ export default function SignupPage() {
           </div>
 
           <label className={styles.checkbox}>
-            <input type="checkbox" /> <span>I agree to the Terms & Privacy</span>
+            <input type="checkbox" />{" "}
+            <span>I agree to the Terms & Privacy</span>
           </label>
 
           <button className={styles.button}>Create account</button>
 
-          <div className={styles.divider}><span>or sign up with</span></div>
+          <div className={styles.divider}>
+            <span>or sign up with</span>
+          </div>
 
           <div className={styles.oauthRow}>
             <button className={styles.oauthBtn}>Google</button>
@@ -50,7 +73,10 @@ export default function SignupPage() {
           </div>
 
           <p className={styles.hint}>
-            Already have an account? <a className={styles.link} href="/login">Sign in</a>
+            Already have an account?{" "}
+            <a className={styles.link} href="/login">
+              Sign in
+            </a>
           </p>
         </div>
 
@@ -58,12 +84,30 @@ export default function SignupPage() {
         <div className={styles.sidePanel}>
           <div className={styles.brandRow}>
             <div className={styles.brandDot} />
-            <span className={styles.brand}>YourApp</span>
+            <span
+              style={{ cursor: "pointer" }}
+              className={styles.brand}
+              onClick={() => {
+                router.push(Routes.landingPage);
+              }}
+            >
+              {AppConst.appName}
+            </span>
           </div>
-          <h2 className={styles.sideHeading}>Focus on building</h2>
+          <h2 className={styles.sideHeading}>Deploy with confidence</h2>
           <p className={styles.sideText}>
-            Reliable auth, clear UI, and a smooth onboarding flow so your users don’t bounce.
+            Flip features live, roll out gradually, and ship without fear.
           </p>
+
+          <div className={styles.mockImage}>
+            <Image
+              src={FlagCard}
+              alt="Feature flag card"
+              width={400}
+              height={300}
+              priority
+            />
+          </div>
         </div>
       </div>
     </div>
