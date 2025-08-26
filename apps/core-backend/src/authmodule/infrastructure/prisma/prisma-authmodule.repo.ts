@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -9,6 +10,7 @@ import { AuthEntity } from "src/authmodule/domain/authmodule.entity";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import PrismaService from "src/infra/prisma/prisma.service";
+import { WorkspacesmoduleRepo, WorkspacesmoduleRepoToken } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
 
 const BCRYPT_ROUNDS = 12;
 
@@ -22,7 +24,9 @@ function sha256(input: string): string {
 
 @Injectable()
 export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService,
+    @Inject(WorkspacesmoduleRepoToken) private readonly workspace: WorkspacesmoduleRepo
+  ) { }
 
   /**
    * Register a user.
@@ -30,30 +34,40 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * - Hashes password
    */
   async register(user: AuthEntity): Promise<string> {
-    const email = user.email?.trim().toLowerCase();
-    if (!email || !user.password) {
-      throw new BadRequestException("Email and password are required.");
-    }
 
-    const existing = await this.prisma.user.findUnique({
-      where: { email },
-      select: { id: true },
-    });
-    if (existing) {
-      throw new BadRequestException("Email already in use.");
-    }
+    return await this.prisma.$transaction(async (tx) => {
 
-    const passwordHash = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
+      const email = user.email?.trim().toLowerCase();
+      if (!email || !user.password) {
+        throw new BadRequestException("Email and password are required.");
+      }
 
-    const dbuser = await this.prisma.user.create({
-      data: {
-        email,
-        passwordHash,
-        name: user.fullName!
-      },
-    });
+      const existing = await tx.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      if (existing) {
+        throw new BadRequestException("Email already in use.");
+      }
 
-    return dbuser.id
+      const passwordHash = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
+
+      const dbuser = await this.prisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          name: user.fullName!
+        },
+      });
+
+      //! stripe customer id
+      const dbWorkspace = await this.workspace.create({ name: user.workspace!, ownerUserId: dbuser.id }, tx)
+      await this.workspace.addMember({ workspaceId: dbWorkspace.id!, role: "ADMIN", userId: dbuser.id }, tx)
+
+      return dbuser.id
+    })
+
+
   }
 
   /**

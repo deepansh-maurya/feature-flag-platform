@@ -1,13 +1,13 @@
 // infrastructure/prisma/prisma-workspacesmodule.repo.ts
 import { Injectable, BadRequestException, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { RoleKey } from 'generated/prisma';
-import PrismaService from 'src/infra/prisma/prisma.service';
-import { BillingStatus, InviteSummary, MemberSummary, PlanLimits, UsageCounts, WorkspaceRole, WorkspacesmoduleRepo, WorkspaceSummary } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
+import { BillingStatus, PlanKey, RoleKey } from 'generated/prisma';
+import PrismaService, { PrismaTx } from 'src/infra/prisma/prisma.service';
+import { InviteSummary, MemberSummary, PlanLimits, UsageCounts, WorkspaceRole, WorkspacesmoduleRepo, WorkspaceSummary } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
 import { WorkspaceEntity } from 'src/workspacesmodule/domain/workspacesmodule.entity';
 import { AcceptInviteDto, AddMemberDto, ArchiveWorkspaceDto, ChangeMemberRoleDto, CheckLimitDto, CreateWorkspaceDto, GetMemberRoleDto, GetWorkspaceDto, InviteMemberDto, ListMyWorkspacesDto, PaginationDto, RemoveMemberDto, RestoreWorkspaceDto, RevokeInviteDto, TransferOwnershipDto, UpdateWorkspaceDto } from 'src/workspacesmodule/interface/dto/create-workspacesmodule.dto';
 
 //TODO add plan key where the any is written 
-//Todo move the plans in db 
+//Todo move the plans in db
 
 export const PLAN_LIMITS: Record<any, PlanLimits> = {
   starter: {
@@ -154,18 +154,20 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   // Methods
   // --------------------------
 
-  async create(dto: CreateWorkspaceDto): Promise<WorkspaceEntity> {
+  async create(dto: CreateWorkspaceDto, tx?: PrismaTx): Promise<WorkspaceEntity> {
     const slug = dto.slug ? this.slugify(dto.slug) : await this.ensureUniqueSlug(dto.name);
     const finalSlug = dto.slug ? await this.ensureUniqueSlug(slug) : slug;
 
-    const row = await this.prisma.workspace.create({
+    const db = tx ?? this.prisma
+
+    const row = await db.workspace.create({
       data: {
         name: dto.name,
         slug: finalSlug,
         ownerUserId: dto.ownerUserId,
-        planKey: dto.planKey ?? 'free',
+        planKey: dto.planKey ?? PlanKey.DEFAULT,
         stripeCustomerId: dto.stripeCustomerId ?? '',
-        billingStatus: 'active', // default per your schema
+        billingStatus: BillingStatus.default, // default per your schema
       },
     });
 
@@ -288,10 +290,11 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
 
   // Membership 
 
-  async addMember(dto: AddMemberDto): Promise<void> {
+  async addMember(dto: AddMemberDto,tx?:PrismaTx): Promise<void> {
     // Expect a UNIQUE index on (workspaceId, userId)
     try {
-      await this.prisma.workspaceMember.create({
+      const db = tx ?? this.prisma
+      await db.workspaceMember.create({
         data: {
           workspaceId: dto.workspaceId,
           userId: dto.userId,

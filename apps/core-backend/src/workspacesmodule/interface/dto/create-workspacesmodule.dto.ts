@@ -1,6 +1,7 @@
 import { IsString, IsOptional, IsUUID, IsEmail, IsEnum, IsNumber, IsBoolean, IsDateString } from "class-validator";
 import { Type } from "class-transformer";
-import { BillingStatus, LimitKind, WorkspaceRole } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
+import { LimitKind, WorkspaceRole } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
+import { BillingStatus } from "generated/prisma";
 
 // ---------- Generic DTOs ----------
 export class PaginationDto {
@@ -41,7 +42,7 @@ export class CreateWorkspaceDto {
 
   @IsOptional()
   @IsString()
-  planKey?: string = "free";
+  planKey?: string = "default";
 
   @IsOptional()
   @IsString()
@@ -72,7 +73,7 @@ export class ArchiveWorkspaceDto extends ByWorkspaceDto {
   reason?: string;
 }
 
-export class RestoreWorkspaceDto extends ByWorkspaceDto {}
+export class RestoreWorkspaceDto extends ByWorkspaceDto { }
 
 export class GetWorkspaceDto {
   @IsOptional()
@@ -123,7 +124,7 @@ export class RemoveMemberDto extends ByWorkspaceDto {
   userId!: string;
 }
 
-export class GetMemberRoleDto extends ByWorkspaceAndUserDto {}
+export class GetMemberRoleDto extends ByWorkspaceAndUserDto { }
 
 // ---------- Ownership DTOs ----------
 export class TransferOwnershipDto extends ByWorkspaceDto {
@@ -175,4 +176,4 @@ export class CheckLimitDto extends ByWorkspaceDto {
   delta?: number = 1;
 }
 
-export class GetUsageCountsDto extends ByWorkspaceDto {}
+export class GetUsageCountsDto extends ByWorkspaceDto { }

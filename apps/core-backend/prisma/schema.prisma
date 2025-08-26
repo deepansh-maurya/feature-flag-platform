@@ -18,8 +18,9 @@ datasource db {
 enum BillingStatus {
   active
   past_due
-  grace
+  canceled
   frozen
+  default
 }
 
 enum RoleKey {
@@ -770,6 +771,7 @@ enum PlanKey {
   STARTER
   GROWTH
   ENTERPRISE
+  DEFAULT
 }
 
 enum SubscriptionStatus {

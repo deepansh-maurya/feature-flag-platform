@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
-import { PrismaClient } from "generated/prisma";
+import { Prisma, PrismaClient } from "generated/prisma";
 
 @Injectable()
 export default class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
@@ -14,3 +14,5 @@ export default class PrismaService extends PrismaClient implements OnModuleInit,
     }
 
 }
+
+export type PrismaTx = PrismaClient | Prisma.TransactionClient;

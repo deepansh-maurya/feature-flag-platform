@@ -1,4 +1,6 @@
 // application/ports/workspacesmodule.repo.ts
+import { BillingStatus } from "generated/prisma";
+import { PrismaTx } from "src/infra/prisma/prisma.service";
 import { WorkspaceEntity } from "src/workspacesmodule/domain/workspacesmodule.entity";
 import { AcceptInviteDto, AddMemberDto, ArchiveWorkspaceDto, ByWorkspaceDto, ChangeMemberRoleDto, CheckLimitDto, CreateWorkspaceDto, GetMemberRoleDto, GetUsageCountsDto, GetWorkspaceDto, InviteMemberDto, ListMyWorkspacesDto, PaginationDto, RemoveMemberDto, RestoreWorkspaceDto, RevokeInviteDto, TransferOwnershipDto, UpdateWorkspaceDto } from "src/workspacesmodule/interface/dto/create-workspacesmodule.dto";
 
@@ -6,16 +8,6 @@ export const WorkspacesmoduleRepoToken = Symbol("WorkspacesmoduleRepo");
 
 // ---------- Roles / Enums ----------
 export type WorkspaceRole = "OWNER" | "ADMIN" | "EDITOR" | "VIEWER";
-export const BillingStatus = {
-  ACTIVE: "active",
-  PAST_DUE: "past_due",
-  CANCELED: "canceled",
-  TRIALING: "trialing",
-  INCOMPLETE: "incomplete",
-} as const;
-
-export type BillingStatus = (typeof BillingStatus)[keyof typeof BillingStatus];
-
 
 export const LimitKind = {
   MEMBERS: "members",
@@ -70,7 +62,7 @@ export interface UsageCounts {
 export type FeatureGate = "experiments" | "advancedRules" | "integrations" | "rbac" | "sso";
 export interface PlanLimits {
   // hard limits
-  workspaces: number | "unlimited"; 
+  workspaces: number | "unlimited";
   projects: number | "unlimited";
   environmentsPerWorkspace: number | "unlimited";
   seats: number | "unlimited";
@@ -92,7 +84,7 @@ export interface TxHandle { /* opaque to application layer */ }
 // ---------- Repo Port ----------
 export interface WorkspacesmoduleRepo {
   // Workspaces
-  create(dto: CreateWorkspaceDto): Promise<WorkspaceEntity>;
+  create(dto: CreateWorkspaceDto, tx?: PrismaTx): Promise<WorkspaceEntity>;
   get(dto: GetWorkspaceDto): Promise<WorkspaceEntity | null>;
   update(dto: UpdateWorkspaceDto): Promise<void>;
   archive(dto: ArchiveWorkspaceDto): Promise<void>;
@@ -100,7 +92,7 @@ export interface WorkspacesmoduleRepo {
   listMine(dto: ListMyWorkspacesDto): Promise<{ items: WorkspaceSummary[]; nextCursor: string | null }>;
 
   // Membership
-  addMember(dto: AddMemberDto): Promise<void>;
+  addMember(dto: AddMemberDto, tx?: PrismaTx): Promise<void>;
   changeMemberRole(dto: ChangeMemberRoleDto): Promise<void>;
   removeMember(dto: RemoveMemberDto): Promise<void>;
   getMemberRole(dto: GetMemberRoleDto): Promise<WorkspaceRole | null>;
