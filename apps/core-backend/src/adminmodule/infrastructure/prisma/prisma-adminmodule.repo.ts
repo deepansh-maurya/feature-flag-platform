@@ -1,130 +1,245 @@
-import { Injectable } from '@nestjs/common';
-import { AuditCreate, AuditFilters, AuditListItem, AuditRepo } from 'src/adminmodule/application/ports/adminmodule.repo';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { AdminmoduleRepo, PlanAggregate } from '../../application/ports/adminmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
+import { PlanStatus } from 'generated/prisma';
+
+
+type DbPlanAgg = any;
 
 @Injectable()
-export class PrismaAuditRepo implements AuditRepo {
-    constructor(private readonly prisma: PrismaService) { }
+export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
+  constructor(private readonly db: PrismaService) {}
 
-    async create(e: AuditCreate): Promise<void> {
-        await this.prisma.auditLog.create({
-            data: {
-                ...e,
-                beforeJson: (e.beforeJson ?? null) as any,
-                afterJson: (e.afterJson ?? null) as any,
-                metadata: (e.metadata ?? null) as any,
-            },
+  // ---------- helpers ----------
+  private toAggregate(p: DbPlanAgg): PlanAggregate {
+    const { prices, features, limits, ...plan } = p;
+    return {
+      ...plan,
+      description: plan.description ?? null,
+      prices: prices.map((x: any) => ({ ...x })),
+      features: features.map((x: any) => ({ ...x })),
+      limits: limits.map((x: any) => ({ ...x })),
+    };
+  }
+
+  private includeChildren() {
+    return { prices: true, features: true, limits: true };
+  }
+
+  // ---------- Commands ----------
+  async createPlan(dto: CreatePlanDto): Promise<PlanAggregate> {
+    return this.db.$transaction(async (tx) => {
+      const exists = await tx.plan.findUnique({ where: { key: dto.key } });
+      if (exists) throw new BadRequestException('Plan key already exists');
+
+      const plan = await tx.plan.create({
+        data: {
+          key: dto.key.trim(),
+          name: dto.name.trim(),
+          description: dto.description ?? null,
+          trialDays: dto.trialDays ?? 0,
+          status: PlanStatus.draft,
+          prices: {
+            create: dto.prices.map((p) => ({
+              recurringInterval: p.recurringInterval,
+              currency: p.currency.trim().toLowerCase(),
+              unitAmountCents: p.unitAmountCents,
+              isMetered: p.isMetered ?? false,
+              meterKey: p.meterKey ?? null,
+              active: p.active ?? true,
+            })),
+          },
+          features: {
+            create: (dto.features ?? []).map((f) => ({
+              key: f.key.trim(),
+              enabled: !!f.enabled,
+              notes: f.notes ?? null,
+            })),
+          },
+          limits: {
+            create: (dto.limits ?? []).map((l) => ({
+              resource: l.resource.trim(),
+              soft: l.soft ?? null,
+              hard: l.hard ?? null,
+            })),
+          },
+        },
+        include: this.includeChildren(),
+      });
+
+      return this.toAggregate(plan);
+    });
+  }
+
+  async publishPlan(dto: PublishPlanDto): Promise<void> {
+    const plan = await this.db.plan.findUnique({
+      where: { id: dto.planId },
+      include: { prices: { where: { active: true } } },
+    });
+    if (!plan) throw new NotFoundException('Plan not found');
+    if (!plan.prices.length) {
+      throw new BadRequestException('Plan must have at least one active price to publish');
+    }
+    if (plan.status === PlanStatus.archived) {
+      throw new BadRequestException('Archived plan cannot be published');
+    }
+    await this.db.plan.update({
+      where: { id: dto.planId },
+      data: { status: PlanStatus.active },
+    });
+  }
+
+  async archivePlan(dto: ArchivePlanDto): Promise<void> {
+    const plan = await this.db.plan.findUnique({ where: { id: dto.planId } });
+    if (!plan) throw new NotFoundException('Plan not found');
+    await this.db.plan.update({
+      where: { id: dto.planId },
+      data: { status: PlanStatus.archived },
+    });
+  }
+
+  // ---------- Queries ----------
+  async getPlanById(dto: GetPlanByIdDto): Promise<PlanAggregate | null> {
+    const plan = await this.db.plan.findUnique({
+      where: { id: dto.planId },
+      include: this.includeChildren(),
+    });
+    return plan ? this.toAggregate(plan) : null;
+  }
+
+  async getPlanByKey(dto: GetPlanByKeyDto): Promise<PlanAggregate | null> {
+    const plan = await this.db.plan.findUnique({
+      where: { key: dto.planKey },
+      include: this.includeChildren(),
+    });
+    return plan ? this.toAggregate(plan) : null;
+  }
+
+  async listPlans(dto?: ListPlansDto): Promise<PlanAggregate[]> {
+    const where = dto?.status ? { status: dto.status } : {};
+    const plans = await this.db.plan.findMany({
+      where,
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      include: this.includeChildren(),
+    });
+    return plans.map((p) => this.toAggregate(p));
+  }
+
+  // ---------- Optional editors (V2) ----------
+  async upsertPrice(dto: UpsertPriceDto) {
+    // Find by (planId, interval, currency). If exists -> update; else -> create.
+    const existing = await this.db.price.findFirst({
+      where: {
+        planId: dto.planId,
+        recurringInterval: dto.recurringInterval,
+        currency: dto.currency.trim().toLowerCase(),
+      },
+    });
+
+    if (existing) {
+      return this.db.price.update({
+        where: { id: existing.id },
+        data: {
+          unitAmountCents: dto.unitAmountCents,
+          isMetered: dto.isMetered ?? existing.isMetered,
+          meterKey: dto.meterKey ?? existing.meterKey,
+          stripeProductId: dto.stripeProductId ?? existing.stripeProductId,
+          stripePriceId: dto.stripePriceId ?? existing.stripePriceId,
+          active: dto.active ?? existing.active,
+        },
+      });
+    }
+
+    return this.db.price.create({
+      data: {
+        planId: dto.planId,
+        recurringInterval: dto.recurringInterval,
+        currency: dto.currency.trim().toLowerCase(),
+        unitAmountCents: dto.unitAmountCents,
+        isMetered: dto.isMetered ?? false,
+        meterKey: dto.meterKey ?? null,
+        stripeProductId: dto.stripeProductId ?? null,
+        stripePriceId: dto.stripePriceId ?? null,
+        active: dto.active ?? true,
+      },
+    });
+  }
+
+  async setPriceActive(dto: SetPriceActiveDto): Promise<void> {
+    const exists = await this.db.price.findFirst({
+      where: { id: dto.priceId, planId: dto.planId },
+    });
+    if (!exists) throw new NotFoundException('Price not found for plan');
+    await this.db.price.update({
+      where: { id: dto.priceId },
+      data: { active: dto.active },
+    });
+  }
+
+  async upsertFeatures(dto: UpsertFeaturesDto) {
+    return this.db.$transaction(async (tx) => {
+      const results:any = [];
+      for (const item of dto.items) {
+        const res = await tx.planFeature.upsert({
+          where: { planId_key: { planId: dto.planId, key: item.key } },
+          create: {
+            planId: dto.planId,
+            key: item.key.trim(),
+            enabled: !!item.enabled,
+            notes: item.notes ?? null,
+          },
+          update: {
+            enabled: !!item.enabled,
+            notes: item.notes ?? null,
+          },
         });
-    }
+        results.push(res);
+      }
+      return results;
+    });
+  }
 
-    async list(f: AuditFilters) {
-        const take = Math.min(f.limit ?? 25, 100);
-
-        const where: any = {
-            workspaceId: f.workspaceId,
-            ...(f.entityType ? { entityType: f.entityType } : {}),
-            ...(f.actionType ? { actionType: f.actionType } : {}),
-            ...(f.projectId ? { projectId: f.projectId } : {}),
-            ...(f.envKey ? { envKey: f.envKey } : {}),
-            ...(f.actorUserId ? { actorUserId: f.actorUserId } : {}),
-            ...(f.q
-                ? {
-                    OR: [
-                        { title: { contains: f.q, mode: 'insensitive' } },
-                        { entityKey: { contains: f.q, mode: 'insensitive' } },
-                        { actorName: { contains: f.q, mode: 'insensitive' } },
-                    ],
-                }
-                : {}),
-        };
-
-        const rows = await this.prisma.auditLog.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            take: take + 1,
-            ...(f.cursor ? { cursor: { id: f.cursor }, skip: 1 } : {}),
-            select: {
-                id: true,
-                createdAt: true,
-                actionType: true,
-                title: true,
-                description: true,     // string | null
-                envKey: true,          // string | null
-                projectId: true,       // string | null
-                entityType: true,
-                entityId: true,
-                entityKey: true,       // string | null
-                actorName: true,
-                actorUserId: true,
-                beforeJson: true,      // Prisma.JsonValue
-                afterJson: true,       // Prisma.JsonValue
-            },
+  async upsertLimits(dto: UpsertLimitsDto) {
+    return this.db.$transaction(async (tx) => {
+      const results:any = [];
+      for (const item of dto.items) {
+        const res = await tx.planLimit.upsert({
+          where: { planId_resource: { planId: dto.planId, resource: item.resource } },
+          create: {
+            planId: dto.planId,
+            resource: item.resource.trim(),
+            soft: item.soft ?? null,
+            hard: item.hard ?? null,
+          },
+          update: {
+            soft: item.soft ?? null,
+            hard: item.hard ?? null,
+          },
         });
+        results.push(res);
+      }
+      return results;
+    });
+  }
 
-        const hasMore = rows.length > take;
-        if (hasMore) rows.pop();
+  async deletePrice(dto: DeletePriceDto): Promise<void> {
+    const exists = await this.db.price.findFirst({
+      where: { id: dto.priceId, planId: dto.planId },
+    });
+    if (!exists) throw new NotFoundException('Price not found for plan');
+    await this.db.price.delete({ where: { id: dto.priceId } });
+  }
 
-        // Map DB → domain (null → undefined; JsonValue → unknown)
-        const items: AuditListItem[] = rows.map((r) => ({
-            id: r.id,
-            createdAt: r.createdAt,
-            actionType: r.actionType,
-            title: r.title,
-            description: r.description ?? undefined,
-            envKey: r.envKey ?? undefined,
-            projectId: r.projectId ?? undefined,
-            entityType: r.entityType,
-            entityId: r.entityId,
-            entityKey: r.entityKey ?? undefined,
-            actorName: r.actorName,
-            actorUserId: r.actorUserId,
-            beforeJson: r.beforeJson as unknown,
-            afterJson: r.afterJson as unknown,
-        }));
+  async deleteFeature(dto: DeleteFeatureDto): Promise<void> {
+    await this.db.planFeature.delete({
+      where: { planId_key: { planId: dto.planId, key: dto.key } },
+    });
+  }
 
-        return {
-            items,
-            nextCursor: hasMore ? items[items.length - 1].id : undefined,
-        };
-    }
-    async getById(id: string, workspaceId: string) {
-        return this.prisma.auditLog.findFirst({
-            where: { id, workspaceId },
-        }) as any;
-    }
-
-    async exportCsv(f: AuditFilters) {
-        const { items } = await this.list({ ...f, limit: 1000 }); // cap export
-        const rows = items.map((i) => ({
-            id: i.id,
-            createdAt: i.createdAt.toISOString(),
-            actionType: i.actionType,
-            title: i.title,
-            envKey: i.envKey ?? '',
-            projectId: i.projectId ?? '',
-            entityType: i.entityType,
-            entityId: i.entityId,
-            entityKey: i.entityKey ?? '',
-            actorName: i.actorName,
-            actorUserId: i.actorUserId,
-            before: JSON.stringify(i.beforeJson ?? {}),
-            after: JSON.stringify(i.afterJson ?? {}),
-        }));
-        const csv = this.toCsv(rows);
-        return Buffer.from(csv, 'utf8');
-    }
-
-    private toCsv(rows: Record<string, any>[]): string {
-        if (!rows.length) return '';
-        const headers = Object.keys(rows[0]);
-        const escape = (val: any) => {
-            const s = String(val ?? '');
-            return `"${s.replace(/"/g, '""')}"`; // wrap in quotes, escape quotes
-        };
-        const headerLine = headers.join(',');
-        const lines = rows.map(row => headers.map(h => escape(row[h])).join(','));
-        return [headerLine, ...lines].join('\n');
-    }
-
-
+  async deleteLimit(dto: DeleteLimitDto): Promise<void> {
+    await this.db.planLimit.delete({
+      where: { planId_resource: { planId: dto.planId, resource: dto.resource } },
+    });
+  }
 }

@@ -1,65 +1,32 @@
-import { AuditActionType } from "generated/prisma";
+import { Plan, PlanFeature, PlanLimit, Price } from 'generated/prisma';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
 
-export const AuditRepoToken = Symbol('AuditRepo');
-
-export type AuditCreate = {
-  workspaceId: string;
-  projectId?: string;
-  envKey?: string;
-
-  entityType: 'flag' | 'targeting' | 'project' | 'environment' | 'user' | string;
-  entityId: string;
-  entityKey?: string;
-
-  actionType: AuditActionType;
-  title: string;
-  description?: string;
-
-  actorUserId: string;
-  actorName: string;
-
-  beforeJson?: unknown;
-  afterJson?: unknown;
-  metadata?: Record<string, unknown>;
+// Aggregate return shape
+export type PlanAggregate = Plan & {
+  prices: Price[];
+  features: PlanFeature[];
+  limits: PlanLimit[];
 };
 
-export type AuditFilters = {
-  workspaceId: string;
-  q?: string;                     // free text search (title/entityKey/actorName)
-  entityType?: string;
-  actionType?: AuditActionType;
-  envKey?: string;
-  projectId?: string;
-  actorUserId?: string;
+export interface AdminmoduleRepo {
+  // Commands
+  createPlan(dto: CreatePlanDto): Promise<PlanAggregate>;
+  publishPlan(dto: PublishPlanDto): Promise<void>;
+  archivePlan(dto: ArchivePlanDto): Promise<void>;
 
-  cursor?: string;                // for keyset pagination
-  limit?: number;                 // default 25
-};
+  // Queries
+  getPlanById(dto: GetPlanByIdDto): Promise<PlanAggregate | null>;
+  getPlanByKey(dto: GetPlanByKeyDto): Promise<PlanAggregate | null>;
+  listPlans(dto?: ListPlansDto): Promise<PlanAggregate[]>;
 
-export type AuditListItem = {
-  id: string;
-  createdAt: Date;
-  actionType: AuditActionType;
-  title: string;
-  description?: string;
+  // Optional editors (V2)
+  upsertPrice?(dto: UpsertPriceDto): Promise<Price>;
+  setPriceActive?(dto: SetPriceActiveDto): Promise<void>;
 
-  envKey?: string;
-  projectId?: string;
+  upsertFeatures?(dto: UpsertFeaturesDto): Promise<PlanFeature[]>;
+  upsertLimits?(dto: UpsertLimitsDto): Promise<PlanLimit[]>;
 
-  entityType: string;
-  entityId: string;
-  entityKey?: string;
-
-  actorName: string;
-  actorUserId: string;
-
-  beforeJson?: unknown;
-  afterJson?: unknown;
-};
-
-export interface AuditRepo {
-  create(entry: AuditCreate): Promise<void>;
-  list(filters: AuditFilters): Promise<{ items: AuditListItem[]; nextCursor?: string }>;
-  getById(id: string, workspaceId: string): Promise<AuditListItem | null>;
-  exportCsv(filters: AuditFilters): Promise<Buffer>;
+  deletePrice?(dto: DeletePriceDto ): Promise<void>;
+  deleteFeature?(dto: DeleteFeatureDto): Promise<void>;
+  deleteLimit?(dto: DeleteLimitDto): Promise<void>;
 }
