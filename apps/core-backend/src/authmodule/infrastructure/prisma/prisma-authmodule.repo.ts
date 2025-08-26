@@ -66,8 +66,6 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
 
       return dbuser.id
     })
-
-
   }
 
   /**
