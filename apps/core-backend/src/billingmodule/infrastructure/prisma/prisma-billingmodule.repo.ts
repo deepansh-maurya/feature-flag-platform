@@ -3,9 +3,6 @@ import Stripe from 'stripe';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import {
     BillingmoduleRepo,
-    BillingCycle,
-    PlanKey,
-    SubscriptionStatus,
 } from 'src/billingmodule/application/ports/billingmodule.repo';
 import {
     CancelDto,
@@ -18,6 +15,7 @@ import {
     SubscriptionDto,
     UpsertFromStripeSubscriptionDto,
 } from 'src/billingmodule/interface/dto/create-billingmodule.dto';
+import { BillingCycle, PlanKey, SubscriptionStatus } from 'generated/prisma';
 
 @Injectable()
 export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
@@ -44,6 +42,10 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
             monthly: process.env.PRICE_ENTERPRISE_M!,
             yearly: process.env.PRICE_ENTERPRISE_Y!,
         },
+        DEFAULT: {
+            monthly: process.env.PRICE_DFAULT!,
+            yearly: process.env.PRICE_DFAULT!
+        }
     };
 
     // ---- Commands ------------------------------------------------------
@@ -242,6 +244,7 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
             STARTER: { projects: 3, customDomain: false, aiTokens: 100_000 },
             GROWTH: { projects: 20, customDomain: true, aiTokens: 1_000_000 },
             ENTERPRISE: { projects: 999, customDomain: true, aiTokens: 99_999_999 },
+            DEFAULT: {}
         };
 
         // simple status-based downgrade sample:
@@ -355,7 +358,7 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
 
         try {
             await this.prisma.webhookEvent.create({
-                data: { id: eventId,},  
+                data: { id: eventId, },
             });
         } catch (err: any) {
             // If called twice for the same event, unique PK on id will throw — that’s fine.

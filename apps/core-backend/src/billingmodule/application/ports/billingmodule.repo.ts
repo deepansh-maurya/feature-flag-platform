@@ -1,12 +1,10 @@
+import { BillingCycle, PlanKey } from "generated/prisma";
 import { CancelDto, ChangePlanDto, EntitlementsDto, PortalDto, ReconciliationSubscriptionItemDto, ResumeDto, StartCheckoutDto, SubscriptionDto, UpsertFromStripeSubscriptionDto } from "src/billingmodule/interface/dto/create-billingmodule.dto";
 
 // billingmodule.repo.ts
 export const BillingmoduleRepoToken = Symbol('BillingmoduleRepo');
 
 /** Domain types (match your Prisma model + enums) */
-export type PlanKey = 'STARTER' | 'GROWTH' | 'ENTERPRISE';
-export type BillingCycle = 'monthly' | 'yearly';
-export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'grace' | 'frozen' | 'canceled';
 
 export interface BillingmoduleRepo {
   // ---------------------------------------------------------------------------

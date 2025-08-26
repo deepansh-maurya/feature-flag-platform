@@ -789,19 +789,6 @@ enum BillingCycle {
 }
 
 // =============================
-// Plans (catalog)
-// =============================
-model Plan {
-  key          PlanKey  @id // free | pro | business
-  priceMonthly Int      @default(0) // cents
-  priceYearly  Int      @default(0) // cents
-  limitsJson   Json // { api, flags, members, envs }
-  featuresJson Json // arbitrary feature switches
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-// =============================
 // Subscriptions (per workspace)
 // =============================
 model Subscription {
@@ -976,4 +963,71 @@ model AppMigration {
   appliedAt   DateTime @default(now())
   tookMs      Int?
   success     Boolean  @default(true)
+}
+
+// ============================================
+// pricing plan models
+// ==========================================
+
+enum PlanStatus {
+  draft
+  active
+  archived
+}
+
+model Plan {
+  id          String     @id @default(uuid())
+  key         String     @unique // e.g., "starter", "pro"
+  name        String
+  description String?
+  status      PlanStatus @default(draft)
+  trialDays   Int        @default(0)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  prices   Price[]
+  features PlanFeature[]
+  limits   PlanLimit[]
+}
+
+model Price {
+  id                String       @id @default(uuid())
+  planId            String
+  recurringInterval BillingCycle
+  currency          String       @default("usd")
+  unitAmountCents   Int
+  stripeProductId   String?
+  stripePriceId     String?
+  isMetered         Boolean      @default(false)
+  meterKey          String? // e.g. "evaluations" (for overage later)
+  active            Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  plan Plan @relation(fields: [planId], references: [id])
+}
+
+model PlanFeature {
+  id      String  @id @default(uuid())
+  planId  String
+  key     String // e.g., "experiments", "sso"
+  enabled Boolean @default(true)
+  notes   String?
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@unique([planId, key])
+}
+
+model PlanLimit {
+  id       String @id @default(uuid())
+  planId   String
+  resource String // e.g., "projects", "flags", "segments"
+  soft     Int?
+  hard     Int?
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@unique([planId, resource])
 }
