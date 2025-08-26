@@ -1,49 +1,122 @@
-import { Controller, Get, Query, Param, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
-import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
-import { AuditService } from '../application/use-cases/adminmodule.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import { AdminmoduleService } from '../application/use-cases/adminmodule.service';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from './dto/create-adminmodule.dto';
 
-@UseGuards(JwtAuthGuard)
-@Controller('audit')
-export class AuditController {
-  constructor(private readonly svc: AuditService) {}
+// @UseGuards(SuperAdminGuard)
+@Controller('super-admin/plans')
+export class AdminmoduleController {
+  constructor(private readonly svc: AdminmoduleService) { }
 
-  @Get('list')
-  async list(@Query() q: any) {
-    // in your auth guard, attach req.user.workspaceId
-    const filters = {
-      workspaceId: q.workspaceId,               // or from req.user
-      q: q.q,
-      entityType: q.entityType,
-      actionType: q.actionType,
-      envKey: q.envKey,
-      projectId: q.projectId,
-      actorUserId: q.actorUserId,
-      cursor: q.cursor,
-      limit: q.limit ? Number(q.limit) : undefined,
-    };
-    return this.svc.list(filters);
+  // ---------- Commands ----------
+  @Post()
+  create(@Body() dto: CreatePlanDto) {
+    return this.svc.createPlan(dto);
   }
 
-  @Get('detail/:id')
-  async detail(@Param('id') id: string, @Query('workspaceId') workspaceId: string) {
-    return this.svc.get(id, workspaceId);
+  @Post(':planId/publish')
+  publish(@Param('planId') planId: string) {
+    const dto = new PublishPlanDto();
+    dto.planId = planId;
+    return this.svc.publishPlan(dto);
   }
 
-  @Get('export.csv')
-  async export(@Query() q: any, @Res() res: Response) {
-    const buf = await this.svc.exportCsv({
-      workspaceId: q.workspaceId,
-      q: q.q,
-      entityType: q.entityType,
-      actionType: q.actionType,
-      envKey: q.envKey,
-      projectId: q.projectId,
-      actorUserId: q.actorUserId,
-      limit: 1000,
-    });
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="audit.csv"');
-    return res.send(buf);
+  @Patch(':planId/archive')
+  archive(@Param('planId') planId: string) {
+    const dto = new ArchivePlanDto();
+    dto.planId = planId;
+    return this.svc.archivePlan(dto);
+  }
+
+  // ---------- Queries ----------
+  @Get()
+  list(@Query() q: ListPlansDto) {
+    return this.svc.listPlans(q);
+  }
+
+  @Get(':planId')
+  getById(@Param('planId') planId: string) {
+    const dto = new GetPlanByIdDto();
+    dto.planId = planId;
+    return this.svc.getPlanById(dto);
+  }
+
+  @Get('key/:planKey')
+  getByKey(@Param('planKey') planKey: string) {
+    const dto = new GetPlanByKeyDto();
+    dto.planKey = planKey;
+    return this.svc.getPlanByKey(dto);
+  }
+
+  @Get('key/:planKey/entitlements')
+  entitlements(@Param('planKey') planKey: string) {
+    const dto = new GetPlanByKeyDto();
+    dto.planKey = planKey;
+    return this.svc.getEntitlementsByKey(dto);
+  }
+
+  // ---------- Editors (optional/V2) ----------
+  @Post(':planId/prices')
+  upsertPrice(@Param('planId') planId: string, @Body() body: UpsertPriceDto) {
+    body.planId = planId;
+    return this.svc.upsertPrice(body);
+  }
+
+  @Patch(':planId/prices/:priceId/active')
+  setPriceActive(
+    @Param('planId') planId: string,
+    @Param('priceId') priceId: string,
+    @Body() body: { active: boolean },
+  ) {
+    const dto = new SetPriceActiveDto();
+    dto.planId = planId;
+    dto.priceId = priceId;
+    dto.active = !!body.active;
+    return this.svc.setPriceActive(dto);
+  }
+
+  @Put(':planId/features')
+  upsertFeatures(@Param('planId') planId: string, @Body() body: UpsertFeaturesDto) {
+    body.planId = planId;
+    return this.svc.upsertFeatures(body);
+  }
+
+  @Put(':planId/limits')
+  upsertLimits(@Param('planId') planId: string, @Body() body: UpsertLimitsDto) {
+    body.planId = planId;
+    return this.svc.upsertLimits(body);
+  }
+
+  @Delete(':planId/prices/:priceId')
+  deletePrice(@Param('planId') planId: string, @Param('priceId') priceId: string) {
+    const dto = new DeletePriceDto();
+    dto.planId = planId;
+    dto.priceId = priceId;
+    return this.svc.deletePrice(dto);
+  }
+
+  @Delete(':planId/features/:key')
+  deleteFeature(@Param('planId') planId: string, @Param('key') key: string) {
+    const dto = new DeleteFeatureDto();
+    (dto as any).planId = planId; // if your DTO includes planId; else adapt
+    dto.key = key;
+    return this.svc.deleteFeature(dto);
+  }
+
+  @Delete(':planId/limits/:resource')
+  deleteLimit(@Param('planId') planId: string, @Param('resource') resource: string) {
+    const dto = new DeleteLimitDto();
+    (dto as any).planId = planId; // if your DTO includes planId; else adapt
+    dto.resource = resource;
+    return this.svc.deleteLimit(dto);
   }
 }

@@ -1,23 +1,94 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { AuditCreate, AuditFilters, AuditRepo, AuditRepoToken } from '../ports/adminmodule.repo';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+
+import type { AdminmoduleRepo, PlanAggregate } from '../../application/ports/adminmodule.repo';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
+
+export type PlanEntitlements = {
+  features: Record<string, boolean>;
+  limits: Record<string, { soft?: number; hard?: number }>;
+};
+
+export const AdminmoduleRepoToken = Symbol('AdminmoduleRepo');
 
 @Injectable()
-export class AuditService {
-  constructor(@Inject(AuditRepoToken) private readonly repo: AuditRepo) {}
+export class AdminmoduleService {
+  constructor(
+    @Inject('AdminmoduleRepo') private readonly repo: AdminmoduleRepo,
+  ) {}
 
-  log(entry: AuditCreate) {
-    return this.repo.create(entry);
+  // ---------- Commands ----------
+  createPlan(dto: CreatePlanDto) {
+    return this.repo.createPlan(dto);
   }
 
-  list(filters: AuditFilters) {
-    return this.repo.list(filters);
+  publishPlan(dto: PublishPlanDto) {
+    return this.repo.publishPlan(dto);
   }
 
-  get(id: string, workspaceId: string) {
-    return this.repo.getById(id, workspaceId);
+  archivePlan(dto: ArchivePlanDto) {
+    return this.repo.archivePlan(dto);
   }
 
-  exportCsv(filters: AuditFilters) {
-    return this.repo.exportCsv(filters);
+  // ---------- Queries ----------
+  getPlanById(dto: GetPlanByIdDto) {
+    return this.repo.getPlanById(dto);
+  }
+
+  getPlanByKey(dto: GetPlanByKeyDto) {
+    return this.repo.getPlanByKey(dto);
+  }
+
+  listPlans(dto?: ListPlansDto) {
+    return this.repo.listPlans(dto);
+  }
+
+  // ---------- Editors (optional/V2) ----------
+  upsertPrice(dto: UpsertPriceDto) {
+    return this.repo.upsertPrice!(dto);
+  }
+
+  setPriceActive(dto: SetPriceActiveDto) {
+    return this.repo.setPriceActive!(dto);
+  }
+
+  upsertFeatures(dto: UpsertFeaturesDto) {
+    return this.repo.upsertFeatures!(dto);
+  }
+
+  upsertLimits(dto: UpsertLimitsDto) {
+    return this.repo.upsertLimits!(dto);
+  }
+
+  deletePrice(dto: DeletePriceDto) {
+    return this.repo.deletePrice!(dto);
+  }
+
+  deleteFeature(dto: DeleteFeatureDto) {
+    return this.repo.deleteFeature!(dto);
+  }
+
+  deleteLimit(dto: DeleteLimitDto) {
+    return this.repo.deleteLimit!(dto);
+  }
+
+  async getEntitlementsByKey(dto: GetPlanByKeyDto): Promise<PlanEntitlements> {
+    const agg = await this.repo.getPlanByKey(dto);
+    if (!agg) throw new NotFoundException('Plan not found');
+
+    return this.toEntitlements(agg);
+  }
+
+  private toEntitlements(agg: PlanAggregate): PlanEntitlements {
+    const features: Record<string, boolean> = {};
+    for (const f of agg.features) features[f.key] = !!f.enabled;
+
+    const limits: Record<string, { soft?: number; hard?: number }> = {};
+    for (const l of agg.limits) {
+      limits[l.resource] = {
+        ...(l.soft != null ? { soft: l.soft } : {}),
+        ...(l.hard != null ? { hard: l.hard } : {}),
+      };
+    }
+    return { features, limits };
   }
 }

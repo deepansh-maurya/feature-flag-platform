@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AuditController } from './interface/adminmodule.controller';
-import { AuditService } from './application/use-cases/adminmodule.service';
-import { AuditRepoToken } from './application/ports/adminmodule.repo';
-import { PrismaAuditRepo } from './infrastructure/prisma/prisma-adminmodule.repo';
+import { AdminmoduleController } from './interface/adminmodule.controller';
+import { AdminmoduleRepoToken, AdminmoduleService } from './application/use-cases/adminmodule.service';
+import { PrismaAdminmoduleRepo } from './infrastructure/prisma/prisma-adminmodule.repo';
 
 @Module({
-  controllers: [AuditController],
+  controllers: [AdminmoduleController],
   providers: [
-    AuditService,
-    { provide: AuditRepoToken, useClass: PrismaAuditRepo },
+    AdminmoduleService,
+    { provide: AdminmoduleRepoToken, useClass: PrismaAdminmoduleRepo },
   ],
-  exports: [AuditService],
+  exports: [AdminmoduleService],
 })
-export class AuditModule {}
+export class Adminmodule {}
+
