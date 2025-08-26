@@ -10,7 +10,7 @@
 import React, { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
 import CreateProjectModal from "../CreateProjectModal/CreateProjectModal";
-import Observer from "../../producer/observer";
+import Observer from "../../../../app/observer";
 
 // ---- Types ----
 export type ActivityItem = {

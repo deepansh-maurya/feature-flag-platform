@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import "./Pricing.css";
 import { useRouter } from "next/navigation";
-import { Routes } from "../../constants/routes";
+import { Routes } from "../../../../app/constants";
 
 type Primitive = number | string;
 type PlanLimits = {
@@ -134,13 +134,24 @@ export default function Pricing() {
     <div className="pricing-wrap">
       <header className="pricing-hero">
         <h1 className="fx-title flex  justify-center items-center gap-6">
-          <div onClick={()=>{
-            router.push(Routes.landingPage)
-          }} className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner cursor-pointer" />
+          <div
+            onClick={() => {
+              router.push(Routes.landingPage);
+            }}
+            className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner cursor-pointer"
+          />
           Pricing that scales with <span className="grad">confidence</span>
         </h1>
-        <p className="fx-sub">
+
+        <p className="fx-sub flex  justify-center items-center">
           Powerful flags, safe rollouts, instant control.
+          {/* LOGIN BUTTON */}
+          <button
+            className="login-btn"
+            onClick={() => router.push(Routes.login)}
+          >
+            Login
+          </button>
         </p>
 
         <div className="toggle">
@@ -173,7 +184,10 @@ export default function Pricing() {
 
               <div className="price-row">
                 {key === "enterprise" ? (
-                  <div className="price">${Math.round(prices[key])} </div>
+                  <div className="price">
+                    ${Math.round(prices[key])}
+                    <span className="per">/{ yearly ? "yr" : "mo"} </span>
+                  </div>
                 ) : (
                   <div className="price">
                     {prices[key] === 0 ? "$29" : `$${Math.round(prices[key])}`}

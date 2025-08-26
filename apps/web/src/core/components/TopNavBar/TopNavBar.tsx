@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import styles from "./TopNavBar.module.css";
-import { Routes } from "../../constants/routes";
+import { Routes } from "../../../../app/constants";
 import { useRouter } from "next/navigation";
-import Observer from "../../producer/observer";
+import Observer from "../../../../app/observer";
 import Link from "next/link";
 
 const projects = [

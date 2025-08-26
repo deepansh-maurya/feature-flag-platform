@@ -15,7 +15,7 @@ import {
   Twitter
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Routes } from "../../constants/routes";
+import { Routes } from "../../../../app/constants";
 
 // =============================================
 // Supercharged Flagly Landing Page (single file)
