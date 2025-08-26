@@ -12,7 +12,8 @@ export enum Routes {
     pricing = "/pricing",
     signup = "/register",
     login = "/login",
-    landingPage = "/"
+    landingPage = "/",
+    dashboard = "/dashboard"
 }
 
 

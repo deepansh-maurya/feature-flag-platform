@@ -314,6 +314,9 @@ export default function LandingPage() {
   const goToPricingPage = () => {
     router.push(Routes.pricing);
   };
+  const goToLoginPage = ()=>{
+    router.push(Routes.login)
+  }
 
   return (
     <div className="relative min-h-screen overflow-x-clip bg-gradient-to-br from-[#191926] via-[#1b1b2a] to-[#202032] text-slate-100">
@@ -343,7 +346,7 @@ export default function LandingPage() {
             <a href="#" className="navlink">
               GitHub
             </a>
-            <div onClick={goToPricingPage}>
+            <div onClick={goToLoginPage}>
               <MagneticButton className="bg-gradient-to-r from-indigo-500 to-fuchsia-500">
                 Try <ArrowRight className="h-4 w-4" />
               </MagneticButton>
@@ -383,7 +386,7 @@ export default function LandingPage() {
             transition={{ delay: 0.35, duration: 0.6 }}
             className="mt-7 flex items-center justify-center gap-3"
           >
-            <div onClick={goToPricingPage}>
+            <div onClick={goToLoginPage}>
               <MagneticButton className="bg-gradient-to-r from-indigo-500 to-fuchsia-500">
                 Try <ArrowRight className="h-4 w-4" />
               </MagneticButton>
@@ -497,9 +500,11 @@ export default function LandingPage() {
             </span>
           </h3>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <MagneticButton className="bg-gradient-to-r from-indigo-500 to-fuchsia-500">
-              View Pricing
-            </MagneticButton>
+            <div onClick={goToPricingPage}> 
+              <MagneticButton className="bg-gradient-to-r from-indigo-500 to-fuchsia-500">
+                View Pricing
+              </MagneticButton>
+            </div>
             <a
               href="#"
               className="inline-flex items-center gap-2 rounded-xl border border-indigo-400/30 bg-white/5 px-5 py-3 font-semibold text-indigo-100/90 backdrop-blur hover:bg-white/10"

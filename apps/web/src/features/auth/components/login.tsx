@@ -1,18 +1,61 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./Auth.module.css";
 import Image from "next/image";
 import FlagCard from "../../../../public/img/image.png";
 import { AppConst, Routes } from "../../../../app/constants";
 import { useRouter } from "next/navigation";
+import { useLogin } from "../hooks";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
   const router = useRouter();
-  return (
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true); // visual only for now
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const login = useLogin();
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    // Minimal guard
+    if (!email || !password) {
+      setErrorMsg("Email and password are required.");
+      return;
+    }
+
+    login.mutate(
+      { email, password },
+      {
+        onSuccess: async () => {
+          // (Optional) if you want "remember me" to affect persistence later,
+          // you can adjust token storage in your api.ts.
+          router.push(Routes.dashboard); // or wherever you send logged-in users
+        },
+        onError: (err: any) => {
+          const apiMsg =
+            err?.response?.data?.message ||
+            err?.message ||
+            "Unable to sign in. Check your credentials.";
+          setErrorMsg(apiMsg);
+        }
+      }
+    );
+  }
+
+  // Press Enter to submit when focused in inputs (form handles it already)
+  useEffect(() => {
+    setErrorMsg(null);
+  }, [email, password]);
+
+    return (
     <div className={styles.container}>
-      {/* optional toast slot */}
-      {/* <div className={styles.toast}>Wrong credentials</div> */}
+      {/* toast / error slot */}
+      {errorMsg && <div className={styles.toast}>{errorMsg}</div>}
 
       <div className={styles.grid}>
         {/* LEFT: form card */}
@@ -20,52 +63,78 @@ export default function LoginPage() {
           <div className={styles.cardTitle}>Welcome back</div>
           <p className={styles.muted}>Sign in to your account to continue.</p>
 
-          <label className={styles.label} htmlFor="email">
-            Email
-          </label>
-          <input
-            id="email"
-            className={styles.input}
-            placeholder="you@company.com"
-          />
-
-          <label className={styles.label} htmlFor="password">
-            Password
-          </label>
-          <div className={styles.passwordRow}>
-            <input
-              id="password"
-              className={styles.input}
-              type={show ? "text" : "password"}
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              className={styles.ghostBtn}
-              onClick={() => setShow((s) => !s)}
-            >
-              {show ? "Hide" : "Show"}
-            </button>
-          </div>
-
-          <div className={styles.rowBetween}>
-            <label className={styles.checkbox}>
-              <input type="checkbox" /> <span>Remember me</span>
+          <form onSubmit={onSubmit} className={styles.form}>
+            <label className={styles.label} htmlFor="email">
+              Email
             </label>
-            <a className={styles.link} href="#">
-              Forgot password?
-            </a>
-          </div>
+            <input
+              id="email"
+              className={styles.input}
+              placeholder="you@company.com"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-          <button className={styles.button}>Sign in</button>
+            <label className={styles.label} htmlFor="password">
+              Password
+            </label>
+            <div className={styles.passwordRow}>
+              <input
+                id="password"
+                className={styles.input}
+                type={show ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className={styles.ghostBtn}
+                onClick={() => setShow((s) => !s)}
+              >
+                {show ? "Hide" : "Show"}
+              </button>
+            </div>
+
+            <div className={styles.rowBetween}>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />{" "}
+                <span>Remember me</span>
+              </label>
+              <a className={styles.link} href="/forgot-password">
+                Forgot password?
+              </a>
+            </div>
+
+            <button
+              className={styles.button}
+              type="submit"
+              disabled={login.isPending}
+            >
+              {login.isPending ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
 
           <div className={styles.divider}>
             <span>or continue with</span>
           </div>
 
           <div className={styles.oauthRow}>
-            <button className={styles.oauthBtn}>Google</button>
-            <button className={styles.oauthBtn}>GitHub</button>
+            <button className={styles.oauthBtn} type="button" disabled>
+              Google
+            </button>
+            <button className={styles.oauthBtn} type="button" disabled>
+              GitHub
+            </button>
           </div>
 
           <p className={styles.hint}>
@@ -75,6 +144,7 @@ export default function LoginPage() {
             </a>
           </p>
         </div>
+
         {/* RIGHT: brand / illustration */}
         <div className={styles.sidePanel}>
           <div className={styles.brandRow}>

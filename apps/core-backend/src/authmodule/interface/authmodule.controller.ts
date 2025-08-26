@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Post, Req, UseGuards, Version } from '@nestjs/common';
 import { AuthmoduleService } from '../application/use-cases/authmodule.service';
 import { ChangePasswordDto, DeleteUserDto, LoginDto, LogoutDto, RegisterDto } from './dto/create-authmodule.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
 import { JwtPayload } from '../infrastructure/strategy/jwt.strategy';
 
-@Controller('auth')
+@Controller({ path: 'auth', version: "1" })
 export class AuthmoduleController {
   constructor(private readonly svc: AuthmoduleService) { }
 
@@ -18,7 +18,7 @@ export class AuthmoduleController {
   @Public()
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    return this.svc.login(dto);
+    return this.svc.login(dto);   
   }
 
   @UseGuards(JwtAuthGuard)
@@ -34,7 +34,7 @@ export class AuthmoduleController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Delete()
+  @Delete("me")
   async delete(@Body() dto: DeleteUserDto) {
     return this.svc.delete(dto.userId);
   }
