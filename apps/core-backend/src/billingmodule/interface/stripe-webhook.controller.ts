@@ -4,7 +4,8 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
-import { BillingCycle, BillingmoduleRepo, BillingmoduleRepoToken, PlanKey } from '../application/ports/billingmodule.repo';
+import {  BillingmoduleRepo, BillingmoduleRepoToken } from '../application/ports/billingmodule.repo';
+import { BillingCycle, PlanKey } from 'generated/prisma';
 
 @Controller()
 export class StripeWebhookController {

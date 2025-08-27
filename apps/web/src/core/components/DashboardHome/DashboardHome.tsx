@@ -11,6 +11,8 @@ import React, { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
 import CreateProjectModal from "../CreateProjectModal/CreateProjectModal";
 import Observer from "../../../../app/observer";
+import { useRouter } from "next/navigation";
+import { Routes } from "@/app/constants";
 
 // ---- Types ----
 export type ActivityItem = {
@@ -41,7 +43,7 @@ export default function DashboardHome({
 }: DashboardHomeProps) {
   const hasProjects = (stats?.projects ?? 0) > 0;
   const [isOpen, setIsOpen] = useState(false);
-
+  const router = useRouter();
   const onCreateProject = () => {
     setIsOpen(!isOpen);
   };
@@ -168,7 +170,7 @@ export default function DashboardHome({
 
           <div className={styles.emptyActions}>
             <button
-              className={styles.createBtn}
+              className={`${styles.createBtn} ${styles.mutedBtn}`}
               onClick={onCreateProject}
               autoFocus
             >
@@ -179,6 +181,15 @@ export default function DashboardHome({
               disabled
             >
               + Create Feature Flag
+            </button>
+            <button
+              className={`${styles.btn} ${styles.lg} ${styles.pro}`} // choose variant(s)
+              onClick={() => router.push(Routes.Billing)}
+            >
+              <span className={styles.label}>
+                Choose a plan
+                <span className={styles.sub}>Compare features & pricing</span>
+              </span>
             </button>
           </div>
 

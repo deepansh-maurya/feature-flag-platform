@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from "react";
 import "./Pricing.css";
 import { useRouter } from "next/navigation";
-import { Routes } from "../../../../app/constants";
+import { Routes } from "../../../../../app/constants";
 
 type Primitive = number | string;
 type PlanLimits = {
@@ -113,10 +113,13 @@ const Feature = ({ ok }: { ok: boolean | string }) => {
   );
 };
 
-export default function Pricing() {
+export default function Pricing({
+  toShowHeading = true
+}: {
+  toShowHeading: boolean;
+}) {
   const [yearly, setYearly] = useState<boolean>(false);
   const router = useRouter();
-  // simple price model (edit to your real numbers / billing):
   const prices = useMemo(
     () => ({
       starter: yearly ? 29 * 12 * 0.83 : 29,
@@ -133,26 +136,30 @@ export default function Pricing() {
   return (
     <div className="pricing-wrap">
       <header className="pricing-hero">
-        <h1 className="fx-title flex  justify-center items-center gap-6">
-          <div
-            onClick={() => {
-              router.push(Routes.landingPage);
-            }}
-            className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner cursor-pointer"
-          />
-          Pricing that scales with <span className="grad">confidence</span>
-        </h1>
+        {toShowHeading && (
+          <div>
+            <h1 className="fx-title flex  justify-center items-center gap-6">
+              <div
+                onClick={() => {
+                  router.push(Routes.landingPage);
+                }}
+                className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner cursor-pointer"
+              />
+              Pricing that scales with <span className="grad">confidence</span>
+            </h1>
 
-        <p className="fx-sub flex  justify-center items-center">
-          Powerful flags, safe rollouts, instant control.
-          {/* LOGIN BUTTON */}
-          <button
-            className="login-btn"
-            onClick={() => router.push(Routes.login)}
-          >
-            Login
-          </button>
-        </p>
+            <p className="fx-sub flex  justify-center items-center">
+              Powerful flags, safe rollouts, instant control.
+              {/* LOGIN BUTTON */}
+              <button
+                className="login-btn"
+                onClick={() => router.push(Routes.login)}
+              >
+                Login
+              </button>
+            </p>
+          </div>
+        )}
 
         <div className="toggle">
           <button
@@ -186,7 +193,7 @@ export default function Pricing() {
                 {key === "enterprise" ? (
                   <div className="price">
                     ${Math.round(prices[key])}
-                    <span className="per">/{ yearly ? "yr" : "mo"} </span>
+                    <span className="per">/{yearly ? "yr" : "mo"} </span>
                   </div>
                 ) : (
                   <div className="price">

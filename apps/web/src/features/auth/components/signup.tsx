@@ -10,6 +10,7 @@ import { useRegister } from "../hooks";
 export default function SignupPage() {
   const [show, setShow] = useState(false);
   const [name, setName] = useState("");
+  const [workspace, setWorkSpace] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [agree, setAgree] = useState(false);
@@ -22,8 +23,8 @@ export default function SignupPage() {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!name || !email || !password) {
-      setErrorMsg("Name, email, and password are required.");
+    if (!name || !email || !password || !workspace) {
+      setErrorMsg("Name, email, workspace name and password are required.");
       return;
     }
     if (password.length < 8) {
@@ -36,7 +37,7 @@ export default function SignupPage() {
     }
 
     register.mutate(
-      { name, email, password },
+      { name, email, password, workspace },
       {
         onSuccess: () => {
           // token persisted in api.ts; header set globally
@@ -48,7 +49,7 @@ export default function SignupPage() {
             err?.message ||
             "Unable to create account. Please try again.";
           setErrorMsg(apiMsg);
-        },
+        }
       }
     );
   }
@@ -70,6 +71,19 @@ export default function SignupPage() {
           </p>
 
           <form onSubmit={onSubmit} className={styles.form}>
+            <label className={styles.label} htmlFor="name">
+              Workspace Name
+            </label>
+            <input
+              id="workspace"
+              className={styles.input}
+              placeholder="Org workspace"
+              value={workspace}
+              onChange={(e) => setWorkSpace(e.target.value)}
+              autoComplete="workspace"
+              required
+            />
+
             <label className={styles.label} htmlFor="name">
               Full name
             </label>
@@ -129,7 +143,11 @@ export default function SignupPage() {
               <span>I agree to the Terms &amp; Privacy</span>
             </label>
 
-            <button className={styles.button} type="submit" disabled={register.isPending}>
+            <button
+              className={styles.button}
+              type="submit"
+              disabled={register.isPending}
+            >
               {register.isPending ? "Creating…" : "Create account"}
             </button>
           </form>

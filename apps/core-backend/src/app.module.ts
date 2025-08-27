@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { Authmodule } from './authmodule/authmodule.module';
 import { PassportModule } from '@nestjs/passport';
 import { AnalyticsmoduleModule } from './analyticsmodule/analyticsmodule.module';
-import { AuditModule } from './adminmodule/adminmodule.module';
 import { BillingmoduleModule } from './billingmodule/billingmodule.module';
 import { ChangeRequestModule } from './changerequestsmodule/changerequestsmodule.module';
 import { FlagsmoduleModule } from './flagsmodule/flagsmodule.module';
@@ -15,7 +14,7 @@ import { WorkspacesmoduleModule } from './workspacesmodule/workspacesmodule.modu
     Authmodule,
     PassportModule,
     AnalyticsmoduleModule,
-    AuditModule,
+    // AuditModule,
     BillingmoduleModule,
     ChangeRequestModule,
     FlagsmoduleModule,

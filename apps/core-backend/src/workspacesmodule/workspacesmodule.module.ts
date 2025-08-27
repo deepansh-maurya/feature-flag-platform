@@ -10,7 +10,7 @@ import { WorkspacesmoduleService } from './application/use-cases/workspacesmodul
     WorkspacesmoduleService,
     { provide: WorkspacesmoduleRepoToken, useClass: PrismaWorkspacesmoduleRepo },
   ],
-  exports: [WorkspacesmoduleService],
+  exports: [WorkspacesmoduleService, PrismaWorkspacesmoduleRepo],
 })
-export class WorkspacesmoduleModule {}
+export class WorkspacesmoduleModule { }
 

@@ -1,4 +1,4 @@
-import BillingPage from "@/src/core/components/BillingPage/BillingPage";
+import BillingPage from "@/src/features/billing/components/BillingPage";
 
 export default function Billing(){
     return <BillingPage />

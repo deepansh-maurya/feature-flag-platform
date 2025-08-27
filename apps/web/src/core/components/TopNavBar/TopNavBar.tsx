@@ -8,33 +8,30 @@ import Observer from "../../../../app/observer";
 import Link from "next/link";
 
 const projects = [
-  { name: "MainApp" },
-  { name: "Payments" },
-  { name: "Internal Tools" }
+  { name: "Project" },
 ];
 
 const user = {
   name: "Deepansh",
-  avatar: "https://i.pravatar.cc/40?img=5" // replace with actual user avatar
+  avatar: "https://i.pravatar.cc/40?img=5"
 };
 
 const tabs = [
   { tab: "Environments", route: Routes.Environment },
-  { tab: "Feature Flags", route: Routes.Featureflag },
-  { tab: "Targeting Rules", route: Routes.Rules },
+  { tab: "Flags", route: Routes.Featureflag },
+  { tab: "Rules", route: Routes.Rules },
   { tab: "SDK Keys", route: Routes.SdkKeys },
   { tab: "Analytics", route: Routes.Analytics },
-  { tab: "Audit Logs", route: Routes.AuditLogs }
+  { tab: "Logs", route: Routes.AuditLogs },
+  { tab: "Projects", route: Routes.AuditLogs }
 ];
 
 export default function TopNavBar() {
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(projects[0]);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState(tabs[0]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState({ tab: "", route: "" });
   const router = useRouter();
-  console.log(activeTab);
 
   return (
     <header className={styles.navbar}>

@@ -29,7 +29,7 @@ export default function LoginPage() {
     }
 
     login.mutate(
-      { email, password },
+      { email, password, remember },
       {
         onSuccess: async () => {
           // (Optional) if you want "remember me" to affect persistence later,
@@ -52,7 +52,7 @@ export default function LoginPage() {
     setErrorMsg(null);
   }, [email, password]);
 
-    return (
+  return (
     <div className={styles.container}>
       {/* toast / error slot */}
       {errorMsg && <div className={styles.toast}>{errorMsg}</div>}

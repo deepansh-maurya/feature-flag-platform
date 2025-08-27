@@ -1,4 +1,4 @@
-import PricingPlan from "@/src/core/pages/Pricing/Pricing";
+import PricingPlan from "@/src/features/billing/components/Pricing/Pricing";
 
 export default function Pricing(){
     return <PricingPlan />

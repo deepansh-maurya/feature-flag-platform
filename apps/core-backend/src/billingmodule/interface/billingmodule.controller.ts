@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post, Delete, Patch, UseGuards } from '@nestjs/common';
 import { BillingmoduleService } from '../application/use-cases/billingmodule.service';
-import { PlanKey, BillingCycle } from '../application/ports/billingmodule.repo';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
+import { BillingCycle, PlanKey } from 'generated/prisma';
 
 @UseGuards(JwtAuthGuard)   
 @Controller('billing')
