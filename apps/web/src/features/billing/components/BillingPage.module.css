@@ -424,3 +424,122 @@
     color: white;
     background: linear-gradient(90deg, var(--brand1), var(--brand2));
 }
+
+
+/* Empty state container */
+.empty {
+    text-align: center;
+    padding: 28px 20px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff, #fafafa);
+}
+
+.emptyIcon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 10px;
+    border-radius: 12px;
+    color: #7c3aed;
+    /* accent */
+    background:
+        radial-gradient(100% 100% at 50% 0%, #ede9fe 0%, #fff 100%);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.15);
+}
+
+.emptyIcon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.emptyTitle {
+    margin: 6px 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.emptyText {
+    margin: 0 auto 14px;
+    max-width: 520px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Actions */
+.emptyActions {
+    display: inline-flex;
+    gap: 8px;
+}
+
+.emptyBtn {
+    --from: #7c3aed;
+    /* violet-600 */
+    --to: #6366f1;
+    /* indigo-500 */
+    appearance: none;
+    border: 0;
+    border-radius: 9999px;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--from), var(--to));
+    box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.emptyBtn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+}
+
+.emptyBtn:active {
+    transform: translateY(0);
+    filter: brightness(.98);
+}
+
+.emptyGhost {
+    appearance: none;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #111827;
+    border-radius: 9999px;
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.emptyGhost:hover {
+    background: #f8fafc;
+}
+
+/* Dark mode tweaks (optional) */
+@media (prefers-color-scheme: dark) {
+    .empty {
+        background: linear-gradient(180deg, #0b1220, #0b1220);
+        border-color: #1f2937;
+    }
+
+    .emptyTitle {
+        color: #e5e7eb;
+    }
+
+    .emptyText {
+        color: #94a3b8;
+    }
+
+    .emptyGhost {
+        background: #0b1220;
+        color: #e5e7eb;
+        border-color: #1f2937;
+    }
+
+    .emptyGhost:hover {
+        background: #0e162a;
+    }
+}

@@ -12,7 +12,7 @@ import * as crypto from "crypto";
 import PrismaService from "src/infra/prisma/prisma.service";
 import { WorkspacesmoduleRepo, WorkspacesmoduleRepoToken } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
 
-const BCRYPT_ROUNDS = 12;
+export const BCRYPT_ROUNDS = 12;
 
 /**
  * Utility: hash any secret/token with a cryptographic hash (not reversible).

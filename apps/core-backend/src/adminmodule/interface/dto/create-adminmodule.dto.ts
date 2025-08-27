@@ -150,3 +150,8 @@ export class DeleteLimitDto {
   @IsUUID() planId!: string;
   @IsString() resource!: string;
 }
+
+
+export class EnrollDto {
+  @IsString() passKey: string
+}

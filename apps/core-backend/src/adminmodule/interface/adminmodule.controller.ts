@@ -8,9 +8,11 @@ import {
   Post,
   Put,
   Query,
+  Res,
 } from '@nestjs/common';
 import { AdminmoduleService } from '../application/use-cases/adminmodule.service';
-import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from './dto/create-adminmodule.dto';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from './dto/create-adminmodule.dto';
+import { Response } from 'express';
 
 // @UseGuards(SuperAdminGuard)
 @Controller('super-admin/plans')
@@ -119,4 +121,18 @@ export class AdminmoduleController {
     dto.resource = resource;
     return this.svc.deleteLimit(dto);
   }
+
+  @Post("enroll")
+  async enrollAdmin(@Body() body: EnrollDto, @Res() res: Response) {
+    const token = await this.svc.enrollAdmin(body)
+    res.cookie('admin_td', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24 * 60,
+    });
+    return res.json({ ok: true });
+  }
+
 }

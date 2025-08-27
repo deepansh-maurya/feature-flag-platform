@@ -1,15 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AdminmoduleRepo, PlanAggregate } from '../../application/ports/adminmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
 import { PlanStatus } from 'generated/prisma';
-
+import * as bcrypt from "bcrypt"
 
 type DbPlanAgg = any;
 
 @Injectable()
 export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
-  constructor(private readonly db: PrismaService) {}
+  constructor(private readonly db: PrismaService) { }
 
   // ---------- helpers ----------
   private toAggregate(p: DbPlanAgg): PlanAggregate {
@@ -179,7 +179,7 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
 
   async upsertFeatures(dto: UpsertFeaturesDto) {
     return this.db.$transaction(async (tx) => {
-      const results:any = [];
+      const results: any = [];
       for (const item of dto.items) {
         const res = await tx.planFeature.upsert({
           where: { planId_key: { planId: dto.planId, key: item.key } },
@@ -202,7 +202,7 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
 
   async upsertLimits(dto: UpsertLimitsDto) {
     return this.db.$transaction(async (tx) => {
-      const results:any = [];
+      const results: any = [];
       for (const item of dto.items) {
         const res = await tx.planLimit.upsert({
           where: { planId_resource: { planId: dto.planId, resource: item.resource } },
@@ -242,4 +242,21 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
       where: { planId_resource: { planId: dto.planId, resource: dto.resource } },
     });
   }
+
+  async enroll(dto: EnrollDto): Promise<{token:string,id:string}> {
+    const admin = await this.db.admin.findFirst()
+    const ok = await bcrypt.compare(dto.passKey, admin?.passKey!)
+
+    if (!ok) {
+      throw new UnauthorizedException('Invalid passkey');
+    }
+    const token = crypto.randomUUID()
+    await this.db.admin.update({
+      where: { id: admin?.id },
+      data: { token: token }
+    })
+
+    return { token, id: admin?.id! }
+  }
+
 }

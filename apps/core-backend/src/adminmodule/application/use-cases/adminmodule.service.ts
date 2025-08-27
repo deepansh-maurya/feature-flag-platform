@@ -1,12 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-
+import * as crypto from 'crypto';
 import type { AdminmoduleRepo, PlanAggregate } from '../../application/ports/adminmodule.repo';
-import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
 
 export type PlanEntitlements = {
   features: Record<string, boolean>;
   limits: Record<string, { soft?: number; hard?: number }>;
 };
+import * as jwt from "jsonwebtoken";
 
 export const AdminmoduleRepoToken = Symbol('AdminmoduleRepo');
 
@@ -14,7 +15,7 @@ export const AdminmoduleRepoToken = Symbol('AdminmoduleRepo');
 export class AdminmoduleService {
   constructor(
     @Inject('AdminmoduleRepo') private readonly repo: AdminmoduleRepo,
-  ) {}
+  ) { }
 
   // ---------- Commands ----------
   createPlan(dto: CreatePlanDto) {
@@ -69,6 +70,17 @@ export class AdminmoduleService {
 
   deleteLimit(dto: DeleteLimitDto) {
     return this.repo.deleteLimit!(dto);
+  }
+
+  async enrollAdmin(dto: EnrollDto) {
+    const { token, id } = await this.repo.enroll(dto)
+    const signedToken = jwt.sign(
+      { a: id, d: token },
+      process.env.COOKIE_SIGN_SECRET!,
+      { algorithm: 'HS256', expiresIn: '60d' }
+    );
+
+    return signedToken
   }
 
   async getEntitlementsByKey(dto: GetPlanByKeyDto): Promise<PlanEntitlements> {

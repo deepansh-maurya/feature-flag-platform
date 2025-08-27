@@ -1,8 +1,11 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import styles from "./BillingPage.module.css";
-import Pricing, { PLAN_LIMITS } from "@/src/features/billing/components/Pricing/Pricing";
+import Pricing, {
+  PLAN_LIMITS
+} from "@/src/features/billing/components/Pricing/Pricing";
 import { PlanUsageModern } from "./PlanUsageGrid";
+import { useSubscription } from "../hooks";
 
 const invoices = [
   {
@@ -42,6 +45,8 @@ const sampleLimitsStarter = {
 
 export default function BillingPage() {
   const [active, setActive] = useState(false);
+  const { data: sub } = useSubscription();
+
   return (
     <div className={styles.wrapper}>
       {/* Header */}
@@ -62,63 +67,86 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {!active ? (
-        <div>
-          <PlanUsageModern
-            usage={sampleUsageStarter}
-            //@ts-ignore
-            limits={sampleLimitsStarter}
-            accent="#0ea5e9"
-          />
+      {!sub}
 
-          <div className={styles.section}>
-            <div className={styles.sectionTitle}>Invoices</div>
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Invoice</th>
-                    <th>Date</th>
-                    <th>Plan</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: "right" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map((inv) => (
-                    <tr key={inv.id}>
-                      <td>
-                        <code className={styles.code}>{inv.id}</code>
-                      </td>
-                      <td>{inv.date}</td>
-                      <td>{inv.plan}</td>
-                      <td>{inv.amount}</td>
-                      <td>
-                        <span className={styles.badgePaid}>{inv.status}</span>
-                      </td>
-                      <td style={{ textAlign: "right" }}>
-                        <button
-                          className={styles.smallBtn}
-                          onClick={() => alert("Download PDF (demo)")}
-                        >
-                          Download
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {invoices.length === 0 && (
+      {!active ? (
+        sub ? (
+          <div>
+            <PlanUsageModern
+              usage={sampleUsageStarter}
+              //@ts-ignore
+              limits={sampleLimitsStarter}
+              accent="#0ea5e9"
+            />
+
+            <div className={styles.section}>
+              <div className={styles.sectionTitle}>Invoices</div>
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
                     <tr>
-                      <td colSpan={6} className={styles.empty}>
-                        No invoices yet.
-                      </td>
+                      <th>Invoice</th>
+                      <th>Date</th>
+                      <th>Plan</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: "right" }}>Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {invoices.map((inv) => (
+                      <tr key={inv.id}>
+                        <td>
+                          <code className={styles.code}>{inv.id}</code>
+                        </td>
+                        <td>{inv.date}</td>
+                        <td>{inv.plan}</td>
+                        <td>{inv.amount}</td>
+                        <td>
+                          <span className={styles.badgePaid}>{inv.status}</span>
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <button
+                            className={styles.smallBtn}
+                            onClick={() => alert("Download PDF (demo)")}
+                          >
+                            Download
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {invoices.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className={styles.empty}>
+                          No invoices yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className={styles.empty}>
+            <div className={styles.emptyIcon} aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M6 3v18M6 4h9a3 3 0 0 1 2.12.88l.83.83a2 2 0 0 0 0 2.83l-.83.83A3 3 0 0 1 15 11H6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <h3 className={styles.emptyTitle}>No current plans yet</h3>
+            <p className={styles.emptyText}>
+              Buy your first plan to get start.
+            </p>
+          </div>
+        )
       ) : (
         <Pricing toShowHeading={false} />
       )}

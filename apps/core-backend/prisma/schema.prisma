@@ -34,7 +34,7 @@ enum RoleKey {
 enum UserStatus {
   invited
   active
-  disabled  
+  disabled
 }
 
 enum IntegrationProvider {
@@ -96,7 +96,6 @@ enum OutboxStatus {
   sent
   failed
 }
-
 
 enum FlagVersionStatus {
   draft
@@ -176,6 +175,14 @@ enum PlanStatus {
 }
 
 // ---------- Core ----------
+
+model Admin {
+  id       String   @id @default(uuid())
+  passKey  String
+  isUsable Boolean? @default(true)
+  token    String?
+}
+
 model Workspace {
   id               String        @id @default(uuid())
   name             String
@@ -403,8 +410,6 @@ model Role {
 // =======================================
 // Enums
 // =======================================
-
-
 
 // =======================================
 // Core
@@ -713,7 +718,6 @@ model OutboxEvent {
 // Enums
 // =============================
 
-
 // =============================
 // Audit (append-only)   
 // =============================
@@ -877,7 +881,6 @@ model UsageCountersMonthly {
 
 // ============ Enums ============
 
-
 // ============ Notification Settings ============
 model NotificationSetting {
   workspaceId     String   @id
@@ -982,8 +985,6 @@ model AppMigration {
 // ============================================
 // pricing plan models
 // ==========================================
-
-
 
 model Plan {
   id          String     @id @default(uuid())

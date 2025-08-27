@@ -1,5 +1,5 @@
 import { Plan, PlanFeature, PlanLimit, Price } from 'generated/prisma';
-import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
+import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
 
 // Aggregate return shape
 export type PlanAggregate = Plan & {
@@ -26,7 +26,11 @@ export interface AdminmoduleRepo {
   upsertFeatures?(dto: UpsertFeaturesDto): Promise<PlanFeature[]>;
   upsertLimits?(dto: UpsertLimitsDto): Promise<PlanLimit[]>;
 
-  deletePrice?(dto: DeletePriceDto ): Promise<void>;
+  deletePrice?(dto: DeletePriceDto): Promise<void>;
   deleteFeature?(dto: DeleteFeatureDto): Promise<void>;
   deleteLimit?(dto: DeleteLimitDto): Promise<void>;
+
+
+  // admin auth routes
+  enroll(dto: EnrollDto): Promise<{ token: string, id: string }>
 }

@@ -7,9 +7,7 @@ import { useRouter } from "next/navigation";
 import Observer from "../../../../app/observer";
 import Link from "next/link";
 
-const projects = [
-  { name: "Project" },
-];
+const projects = [{ name: "Project" }];
 
 const user = {
   name: "Deepansh",
@@ -23,14 +21,14 @@ const tabs = [
   { tab: "SDK Keys", route: Routes.SdkKeys },
   { tab: "Analytics", route: Routes.Analytics },
   { tab: "Logs", route: Routes.AuditLogs },
-  { tab: "Projects", route: Routes.AuditLogs }
+  { tab: "Projects", route: Routes.Projects }
 ];
 
 export default function TopNavBar() {
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(projects[0]);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState({ tab: "", route: "" });
+  const [activeTab, setActiveTab] = useState({ tab: "", route: () => {} });
   const router = useRouter();
 
   return (
@@ -83,7 +81,7 @@ export default function TopNavBar() {
       <nav className={styles.tabs}>
         {tabs.map((tab) => (
           <Link
-            href={tab.route}
+            href={tab.route()}
             key={tab.tab}
             className={`${styles.tab} ${activeTab.tab === tab.tab ? styles.activeTab : ""}`}
             onClick={() => setActiveTab(tab)}
@@ -106,19 +104,19 @@ export default function TopNavBar() {
         {userMenuOpen && (
           <div className={styles.userMenu}>
             <div
-              onClick={() => router.push(Routes.Account)}
+              onClick={() => router.push(Routes.Account())}
               className={styles.userMenuItem}
             >
               Account Settings
             </div>
             <div
-              onClick={() => router.push(Routes.Team)}
+              onClick={() => router.push(Routes.Team())}
               className={styles.userMenuItem}
             >
               Team Management
             </div>
             <div
-              onClick={() => router.push(Routes.Billing)}
+              onClick={() => router.push(Routes.Billing())}
               className={styles.userMenuItem}
             >
               Billing
