@@ -32,5 +32,5 @@ export interface AdminmoduleRepo {
 
 
   // admin auth routes
-  enroll(dto: EnrollDto): Promise<{ token: string, id: string }>
+  enroll(dto: EnrollDto): Promise<{ deviceId: string, id: string }>
 }

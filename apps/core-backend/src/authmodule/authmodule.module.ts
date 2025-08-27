@@ -6,6 +6,7 @@ import { PrismaAuthmoduleRepo } from './infrastructure/prisma/prisma-authmodule.
 import PrismaService from 'src/infra/prisma/prisma.service';
 import { PrismaWorkspacesmoduleRepo } from 'src/workspacesmodule/infrastructure/prisma/prisma-workspacesmodule.repo';
 import { WorkspacesmoduleRepoToken } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
+import { JwtAuthGuard } from './infrastructure/guards/jwt-auth.guard';
 
 @Module({
   controllers: [AuthmoduleController],
@@ -15,7 +16,7 @@ import { WorkspacesmoduleRepoToken } from 'src/workspacesmodule/application/port
     { provide: AuthmoduleRepoToken, useClass: PrismaAuthmoduleRepo },
     { provide: WorkspacesmoduleRepoToken, useClass: PrismaWorkspacesmoduleRepo },
   ],
-  exports: [AuthmoduleService],
+  exports: [AuthmoduleService,JwtAuthGuard],
 })
 export class Authmodule {}
 

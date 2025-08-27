@@ -180,7 +180,7 @@ model Admin {
   id       String   @id @default(uuid())
   passKey  String
   isUsable Boolean? @default(true)
-  token    String?
+  deviceId    String?
 }
 
 model Workspace {

@@ -243,20 +243,20 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
     });
   }
 
-  async enroll(dto: EnrollDto): Promise<{token:string,id:string}> {
+  async enroll(dto: EnrollDto): Promise<{ deviceId: string, id: string }> {
     const admin = await this.db.admin.findFirst()
     const ok = await bcrypt.compare(dto.passKey, admin?.passKey!)
 
     if (!ok) {
       throw new UnauthorizedException('Invalid passkey');
     }
-    const token = crypto.randomUUID()
+    const deviceId = crypto.randomUUID()
     await this.db.admin.update({
       where: { id: admin?.id },
-      data: { token: token }
+      data: { deviceId: deviceId, isUsable: false }
     })
 
-    return { token, id: admin?.id! }
+    return { deviceId, id: admin?.id! }
   }
 
 }

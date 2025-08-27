@@ -5,6 +5,8 @@ export async function GenerateAdminPasskeyAndSave() {
     try {
         const prisma = new PrismaService()
         await prisma.$connect()
+        const admin = await prisma.admin.findFirst()
+        if (admin) throw new Error("admin exist")
         const passKey = process.env.PASS_KEY!
         const hash = await bcrypt.hash(passKey, BCRYPT_ROUNDS);
         prisma.admin.create({
@@ -12,12 +14,9 @@ export async function GenerateAdminPasskeyAndSave() {
                 passKey: hash
             }
         })
-
         await prisma.$disconnect()
-
     } catch (error) {
         console.log("failed to store passkey");
     }
 }
-
 GenerateAdminPasskeyAndSave()

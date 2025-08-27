@@ -73,9 +73,9 @@ export class AdminmoduleService {
   }
 
   async enrollAdmin(dto: EnrollDto) {
-    const { token, id } = await this.repo.enroll(dto)
+    const { deviceId, id } = await this.repo.enroll(dto)
     const signedToken = jwt.sign(
-      { a: id, d: token },
+      { id: id, deviceId: deviceId },
       process.env.COOKIE_SIGN_SECRET!,
       { algorithm: 'HS256', expiresIn: '60d' }
     );
