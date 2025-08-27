@@ -1,5 +1,5 @@
 export type BillingCycle = 'monthly' | 'yearly';
-export type PlanStatus = 'draft' | 'active' | 'archived';
+export type PlanStatus = 'draft' | 'active' | 'archived' | "published" ;
 
 export type PriceInput = {
   recurringInterval: BillingCycle;
@@ -72,23 +72,6 @@ export interface PlanFeature {
   sort?: number;
 }
 
-// ----------------- DTOs (mirror your backend DTOs) -----------------
-export interface CreatePlan {
-  key: PlanKey;
-  name: string;
-  description?: string;
-  badge?: string;
-  sortOrder?: number;
-  // optional initial config
-  prices?: Array<{
-    cycle: BillingCycle;
-    unitAmount: number;
-    currency?: string;
-    active?: boolean;
-  }>;
-  limits?: PlanLimit[];
-  features?: PlanFeature[];
-}
 
 export interface PublishPlan { planId: string; }
 export interface ArchivePlan { planId: string; }

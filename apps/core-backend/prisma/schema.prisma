@@ -14,7 +14,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ---------- Enums ----------
 enum BillingStatus {
   active
   past_due
@@ -35,7 +34,7 @@ enum RoleKey {
 enum UserStatus {
   invited
   active
-  disabled
+  disabled  
 }
 
 enum IntegrationProvider {
@@ -50,6 +49,130 @@ enum IntegrationStatus {
   active // configured + working
   error // misconfigured or failing
   disabled // explicitly turned off
+}
+
+enum SegmentType {
+  dynamic // uses rulesJson (traits-based predicate)
+  static // uses SegmentMember rows
+}
+
+enum ChangeRequestStatus {
+  open
+  approved
+  rejected
+  applied
+}
+
+enum FlagType {
+  boolean
+  multivariate
+  json
+}
+
+enum EnvKey {
+  dev
+  stage
+  prod
+}
+
+enum SdkKeyType {
+  client
+  server
+}
+
+enum KeyStatus {
+  active
+  revoked
+  disabled
+}
+
+enum AllowlistKind {
+  ip
+  referrer
+}
+
+enum OutboxStatus {
+  pending
+  sent
+  failed
+}
+
+
+enum FlagVersionStatus {
+  draft
+  active
+  superseded
+  rolled_back
+}
+
+enum TargetType {
+  user
+  account
+  service
+}
+
+enum AuditActionType {
+  workspace_created
+  workspace_updated
+  project_created
+  project_updated
+  flag_created
+  flag_updated
+  flag_published
+  flag_archived
+  segment_created
+  segment_updated
+  member_invited
+  member_added
+  member_removed
+  token_created
+  token_revoked
+  // add more as needed
+}
+
+enum EvalSource {
+  web
+  ios
+  android
+  backend
+}
+
+enum PlanKey {
+  STARTER
+  GROWTH
+  ENTERPRISE
+  DEFAULT
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  grace
+  frozen
+  canceled
+}
+
+enum BillingCycle {
+  monthly
+  yearly
+}
+
+enum WebhookEndpointStatus {
+  active
+  disabled
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  sent
+  failed
+}
+
+enum PlanStatus {
+  draft
+  active
+  archived
 }
 
 // ---------- Core ----------
@@ -281,42 +404,7 @@ model Role {
 // Enums
 // =======================================
 
-enum SegmentType {
-  dynamic // uses rulesJson (traits-based predicate)
-  static // uses SegmentMember rows
-}
 
-enum ChangeRequestStatus {
-  open
-  approved
-  rejected
-  applied
-}
-
-enum FlagType {
-  boolean
-  multivariate
-  json
-}
-
-enum EnvKey {
-  dev
-  stage
-  prod
-}
-
-enum FlagVersionStatus {
-  draft
-  active
-  superseded
-  rolled_back
-}
-
-enum TargetType {
-  user
-  account
-  service
-}
 
 // =======================================
 // Core
@@ -516,27 +604,6 @@ model FlagEvaluation {
 // =============================
 // Enums
 // =============================
-enum SdkKeyType {
-  client
-  server
-}
-
-enum KeyStatus {
-  active
-  revoked
-  disabled
-}
-
-enum AllowlistKind {
-  ip
-  referrer
-}
-
-enum OutboxStatus {
-  pending
-  sent
-  failed
-}
 
 // =============================
 // SDK Keys (for SDKs)
@@ -645,31 +712,7 @@ model OutboxEvent {
 // =============================
 // Enums
 // =============================
-enum AuditActionType {
-  workspace_created
-  workspace_updated
-  project_created
-  project_updated
-  flag_created
-  flag_updated
-  flag_published
-  flag_archived
-  segment_created
-  segment_updated
-  member_invited
-  member_added
-  member_removed
-  token_created
-  token_revoked
-  // add more as needed
-}
 
-enum EvalSource {
-  web
-  ios
-  android
-  backend
-}
 
 // =============================
 // Audit (append-only)   
@@ -767,26 +810,6 @@ model EvalRollupDaily {
 // =============================
 // Enums
 // =============================
-enum PlanKey {
-  STARTER
-  GROWTH
-  ENTERPRISE
-  DEFAULT
-}
-
-enum SubscriptionStatus {
-  active
-  trialing
-  past_due
-  grace
-  frozen
-  canceled
-}
-
-enum BillingCycle {
-  monthly
-  yearly
-}
 
 // =============================
 // Subscriptions (per workspace)
@@ -853,16 +876,7 @@ model UsageCountersMonthly {
 //////////////////////////////////////////////
 
 // ============ Enums ============
-enum WebhookEndpointStatus {
-  active
-  disabled
-}
 
-enum WebhookDeliveryStatus {
-  pending
-  sent
-  failed
-}
 
 // ============ Notification Settings ============
 model NotificationSetting {
@@ -969,11 +983,7 @@ model AppMigration {
 // pricing plan models
 // ==========================================
 
-enum PlanStatus {
-  draft
-  active
-  archived
-}
+
 
 model Plan {
   id          String     @id @default(uuid())
