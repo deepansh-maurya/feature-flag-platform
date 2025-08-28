@@ -34,7 +34,7 @@ export default function LoginPage() {
         onSuccess: async () => {
           // (Optional) if you want "remember me" to affect persistence later,
           // you can adjust token storage in your api.ts.
-          router.push(Routes.dashboard); // or wherever you send logged-in users
+          router.push(Routes.dashboard()); // or wherever you send logged-in users
         },
         onError: (err: any) => {
           const apiMsg =
@@ -152,7 +152,7 @@ export default function LoginPage() {
             <span
               style={{ cursor: "pointer" }}
               onClick={() => {
-                router.push(Routes.landingPage);
+                router.push(Routes.landingPage());
               }}
               className={styles.brand}
             >

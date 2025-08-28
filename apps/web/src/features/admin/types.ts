@@ -1,5 +1,5 @@
 export type BillingCycle = 'monthly' | 'yearly';
-export type PlanStatus = 'draft' | 'active' | 'archived' | "published" ;
+export type PlanStatus = 'draft' | 'active' | 'archived' | "published";
 
 export type PriceInput = {
   recurringInterval: BillingCycle;
@@ -97,3 +97,4 @@ export interface UpsertLimits { planId: string; limits: PlanLimit[]; }
 export interface DeletePrice { priceId: string; }
 export interface DeleteFeature { planId: string; key: string; }
 export interface DeleteLimit { planId: string; key: string; }
+export interface Enroll { passKey: string }

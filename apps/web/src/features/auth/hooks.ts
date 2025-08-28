@@ -30,7 +30,6 @@ async function fetchMe(): Promise<User> {
   return (parsed.data as any).user ?? parsed.data;
 }
 
-/** Who am I? */
 export function useMe(options?: { enabled?: boolean }) {
   // Allow caller to turn off automatically (e.g., on public routes)
   const enabled = options?.enabled ?? true;
@@ -47,7 +46,6 @@ export function useMe(options?: { enabled?: boolean }) {
   });
 }
 
-/** Login */
 export function useLogin() {
   const qc = useQueryClient();
   return useMutation({
@@ -60,7 +58,6 @@ export function useLogin() {
   });
 }
 
-/** Register (often same post-login flow) */
 export function useRegister() {
   const qc = useQueryClient();
   return useMutation({
@@ -71,14 +68,12 @@ export function useRegister() {
   });
 }
 
-/** Change password */
 export function useChangePassword() {
   return useMutation({
     mutationFn: apiChangePassword,
   });
 }
 
-/** Logout (optionally from all devices if backend supports) */
 export function useLogout() {
   const qc = useQueryClient();
   return useMutation({
@@ -91,7 +86,6 @@ export function useLogout() {
   });
 }
 
-/** Delete my account */
 export function useDeleteAccount() {
   const qc = useQueryClient();
   return useMutation({
@@ -104,7 +98,6 @@ export function useDeleteAccount() {
   });
 }
 
-/** Optional memo helper — handy in components to know auth state quickly */
 export function useAuthState() {
   const me = useMe();
   return useMemo(() => {

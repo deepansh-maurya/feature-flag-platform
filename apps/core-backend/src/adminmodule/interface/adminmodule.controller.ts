@@ -8,13 +8,16 @@ import {
   Post,
   Put,
   Query,
+  Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { AdminmoduleService } from '../application/use-cases/adminmodule.service';
 import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from './dto/create-adminmodule.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
+import { AdminJwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
 
-// @UseGuards(SuperAdminGuard)
+@UseGuards(AdminJwtAuthGuard)
 @Controller('super-admin/plans')
 export class AdminmoduleController {
   constructor(private readonly svc: AdminmoduleService) { }
@@ -135,4 +138,12 @@ export class AdminmoduleController {
     return res.json({ ok: true });
   }
 
+  @Get("me")
+  async me(@Req() req: Request & { id: string }) {
+    if (req.id) {
+      return true
+    } else {
+      return false
+    }
+  }
 }

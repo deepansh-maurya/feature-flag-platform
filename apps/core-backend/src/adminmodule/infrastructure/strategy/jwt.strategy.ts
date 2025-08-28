@@ -47,6 +47,7 @@ export default class AdminJwtStrategy extends PassportStrategy(
         const admin = await this.prisma.admin.findUnique({
             where: { id: payload.id, deviceId: payload.deviceId },
         });
+        
         if (!admin) throw new UnauthorizedException('unauthorized');
 
         return {

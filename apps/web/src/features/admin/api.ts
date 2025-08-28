@@ -1,5 +1,5 @@
 import { http } from "@/src/shared/lib/http";
-import { ArchivePlan, CreatePlan, DeleteFeature, DeleteLimit, DeletePrice, GetPlanById, GetPlanByKey, ListPlans, PlanAggregate, PlanFeature, PlanLimit, Price, PublishPlan, SetPriceActive, UpsertFeatures, UpsertLimits, UpsertPrice } from "./types";
+import { ArchivePlan, CreatePlan, DeleteFeature, DeleteLimit, DeletePrice, Enroll, GetPlanById, GetPlanByKey, ListPlans, PlanAggregate, PlanFeature, PlanLimit, Price, PublishPlan, SetPriceActive, UpsertFeatures, UpsertLimits, UpsertPrice } from "./types";
 
 // ----------------- Base paths -----------------
 const BASE = "/api/v1/admin/plans";
@@ -64,4 +64,13 @@ export async function deleteFeature(dto: DeleteFeature): Promise<void> {
 
 export async function deleteLimit(dto: DeleteLimit): Promise<void> {
   await http.delete(`${BASE}/${dto.planId}/limits/${encodeURIComponent(dto.key)}`);
+}
+
+
+export async function enroll(dto: Enroll): Promise<void> {
+  await http.post(`${BASE}/enroll`, dto.passKey)
+}
+
+export async function me() {
+  await http.get(`${BASE}/me`)
 }

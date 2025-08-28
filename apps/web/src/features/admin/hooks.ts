@@ -1,4 +1,3 @@
-// src/features/admin-plans/hooks.ts
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +15,7 @@ import {
     type DeletePrice,
     type DeleteFeature,
     type DeleteLimit,
+    Enroll,
 } from './types';
 
 import {
@@ -32,6 +32,8 @@ import {
     deletePrice as apiDeletePrice,
     deleteFeature as apiDeleteFeature,
     deleteLimit as apiDeleteLimit,
+    enroll,
+    me,
 
 } from "./api"
 
@@ -41,9 +43,18 @@ const QK = {
         ['admin', 'plans', 'list', filter?.status ?? null, filter?.includeArchived ?? null] as const,
     byId: (id: string) => ['admin', 'plans', 'byId', id] as const,
     byKey: (key: PlanKey) => ['admin', 'plans', 'byKey', key] as const,
+    me: () => ['auth', 'me'] as const
 };
 
 // --------------- Queries --------------------
+
+export function useMe() {
+    return useQuery({
+        queryKey: QK.me(),
+        queryFn: () => me(),
+    })
+}
+
 export function usePlans(filter?: ListPlans) {
     return useQuery<PlanAggregate[]>({
         queryKey: QK.list(filter),
@@ -51,6 +62,7 @@ export function usePlans(filter?: ListPlans) {
         staleTime: 10_000,
     });
 }
+
 
 export function usePlanById(planId?: string) {
     return useQuery<PlanAggregate | null>({
@@ -188,4 +200,10 @@ export function useDeleteLimit() {
             qc.invalidateQueries({ queryKey: QK.list() });
         },
     });
+}
+
+export function useEnroll() {
+    return useMutation({
+        mutationFn: (dto: Enroll) => enroll(dto),
+    })
 }

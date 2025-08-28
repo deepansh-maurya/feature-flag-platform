@@ -258,5 +258,4 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
 
     return { deviceId, id: admin?.id! }
   }
-
 }

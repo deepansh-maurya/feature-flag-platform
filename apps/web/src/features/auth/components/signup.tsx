@@ -41,7 +41,7 @@ export default function SignupPage() {
       {
         onSuccess: () => {
           // token persisted in api.ts; header set globally
-          router.push(Routes.dashboard); // or Routes.onboarding/pricing if you have those
+          router.push(Routes.dashboard()); // or Routes.onboarding/pricing if you have those
         },
         onError: (err: any) => {
           const apiMsg =
@@ -180,7 +180,7 @@ export default function SignupPage() {
             <span
               style={{ cursor: "pointer" }}
               className={styles.brand}
-              onClick={() => router.push(Routes.landingPage)}
+              onClick={() => router.push(Routes.landingPage())}
             >
               {AppConst.appName}
             </span>
