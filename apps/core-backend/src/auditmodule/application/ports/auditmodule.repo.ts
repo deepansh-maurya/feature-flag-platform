@@ -1,4 +1,3 @@
-// src/auditmodule/application/ports/auditmodule.repo.ts
 
 import { AuditActionType } from "generated/prisma";
 

@@ -110,24 +110,24 @@ enum TargetType {
   service
 }
 
-enum AuditActionType {
-  workspace_created
-  workspace_updated
-  project_created
-  project_updated
-  flag_created
-  flag_updated
-  flag_published
-  flag_archived
-  segment_created
-  segment_updated
-  member_invited
-  member_added
-  member_removed
-  token_created
-  token_revoked
-  // add more as needed
-}
+  enum AuditActionType {
+    workspace_created
+    workspace_updated
+    project_created
+    project_updated
+    flag_created
+    flag_updated
+    flag_published
+    flag_archived
+    segment_created
+    segment_updated
+    member_invited
+    member_added
+    member_removed
+    token_created
+    token_revoked
+    // add more as needed
+  }
 
 enum EvalSource {
   web

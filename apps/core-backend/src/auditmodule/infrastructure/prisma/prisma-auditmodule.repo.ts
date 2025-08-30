@@ -1,4 +1,3 @@
-// src/auditmodule/infrastructure/prisma/prisma-auditmodule.repo.ts
 import { Injectable } from '@nestjs/common';
 import {
   AuditModuleRepo,
