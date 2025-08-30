@@ -139,7 +139,7 @@ export class StripeWebhookController {
         const status = this.mapStripeStatus(s.status);
 
         return {
-            stripeSubId,
+            stripeSubId,    
             stripeCustomerId,
             workspaceId,
             planKey: planKey as PlanKey,

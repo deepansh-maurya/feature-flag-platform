@@ -1,18 +1,16 @@
 import { Module } from '@nestjs/common';
-import { BillingmoduleRepoToken } from './application/ports/billingmodule.repo';
-import PrismaBillingModuleRepo from './infrastructure/prisma/prisma-billingmodule.repo';
-import { StripeWebhookController } from './interface/stripe-webhook.controller';
-import { BillingmoduleService } from './application/use-cases/billingmodule.service';
+import { AuditModuleService } from 'src/auditmodule/application/use-cases/auditmodule.service';
+import { PrismaAuditModuleRepo } from 'src/auditmodule/infrastructure/prisma/prisma-auditmodule.repo';
+import { AuditModuleController } from 'src/auditmodule/interface/auditmodule.controller';
 import PrismaService from 'src/infra/prisma/prisma.service';
 
 @Module({
-  controllers: [StripeWebhookController],
+  controllers: [AuditModuleController],
   providers: [
     PrismaService,
-    BillingmoduleService,
-    { provide: BillingmoduleRepoToken, useClass: PrismaBillingModuleRepo },
+    { provide: 'AuditModuleRepo', useClass: PrismaAuditModuleRepo },
+    { provide: AuditModuleService, useFactory: (repo: PrismaAuditModuleRepo) => new AuditModuleService(repo), inject: ['AuditModuleRepo'] },
   ],
-  exports: [BillingmoduleService],
+  exports: [AuditModuleService],
 })
-export class BillingmoduleModule { }
-
+export class AuditModule {}

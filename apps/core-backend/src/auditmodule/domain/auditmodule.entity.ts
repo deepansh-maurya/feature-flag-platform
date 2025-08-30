@@ -1,4 +1,1 @@
-// export class Auditmodule {
-//   constructor(id) { this.id = id; }
-// }
-
+export type { AuditLogRecord } from '../application/ports/auditmodule.repo';
