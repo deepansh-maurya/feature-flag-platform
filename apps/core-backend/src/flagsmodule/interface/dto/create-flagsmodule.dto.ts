@@ -95,7 +95,6 @@ export class CreateFlagDto {
   comment?: string | null;
 }
 
-
 export class CreateVersionEnvConfigDto {
   @IsEnum(EnvKey)
   envKey!: EnvKey;
@@ -142,8 +141,6 @@ export class CreateVersionDto {
   envs!: CreateVersionEnvConfigDto[];
 }
 
-
-
 export class UpsertFlagMetaDto {
   @IsString()
   @IsNotEmpty()
@@ -158,8 +155,6 @@ export class UpsertFlagMetaDto {
   @IsString({ each: true })
   tags?: string[];
 }
-
-
 
 export class IsKeyTakenDto {
   @IsString()

@@ -9,7 +9,7 @@
 
 import React, { useEffect, useState } from "react";
 import styles from "./DashboardHome.module.css";
-import CreateProjectModal from "../CreateProjectModal/CreateProjectModal";
+import CreateProjectModal from "../../../shared/components/CreateProjectModal/CreateProjectModal";
 import Observer from "../../../../app/observer";
 import { useRouter } from "next/navigation";
 import { Routes } from "@/app/constants";
@@ -184,7 +184,7 @@ export default function DashboardHome({
             </button>
             <button
               className={`${styles.btn} ${styles.lg} ${styles.pro}`} // choose variant(s)
-              onClick={() => router.push(Routes.Billing)}
+              onClick={() => router.push(Routes.Billing())}
             >
               <span className={styles.label}>
                 Choose a plan
