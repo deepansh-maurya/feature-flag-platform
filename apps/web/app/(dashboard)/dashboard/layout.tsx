@@ -1,4 +1,4 @@
-import TopNavBar from "@/src/core/components/TopNavBar/TopNavBar";
+import TopNavBar from "@/src/shared/components/TopNavBar/TopNavBar";
 
 export default function DashboardLayout({
   children
