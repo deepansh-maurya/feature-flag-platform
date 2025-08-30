@@ -5,6 +5,8 @@ import {
   IsDate,
   IsEnum,
   IsISO8601,
+  IsJSON,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -48,6 +50,26 @@ export class StartCheckoutDto {
   @ApiProperty({ enum: BillingCycle })
   @IsEnum(BillingCycle)
   cycle!: BillingCycle;
+
+  @IsNumber()
+  amountInINR: number
+
+  @IsString()
+  currency: string
+
+
+  @IsString()
+  receipt?: string
+
+  @IsString()
+  notes?: string
+
+  @IsString()
+  purpose?: string
+
+  @IsJSON()
+  metadata?: JSON
+
 }
 
 export class ChangePlanDto {
@@ -249,4 +271,26 @@ export class ReconciliationSubscriptionItemDto {
   @ApiProperty()
   @IsString()
   stripeSubId!: string;
+}
+
+export class VerifyHandlerDto {
+
+  @IsString()
+  razorpay_payment_id: string
+  @IsString()
+
+  razorpay_order_id: string
+  @IsString()
+
+  razorpay_signature: string
+  @IsString()
+
+  internalOrderId: string
+  @IsJSON()
+  metadata: JSON
+}
+
+export interface StartCheckout {
+  orderId: string, amount: number, currency: string,
+  keyId: string, internalOrderId: string
 }

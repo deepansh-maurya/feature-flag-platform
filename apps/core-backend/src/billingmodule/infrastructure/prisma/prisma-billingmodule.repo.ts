@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import * as crypto from 'crypto';
 import Stripe from 'stripe';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import {
-    BillingmoduleRepo,
-} from 'src/billingmodule/application/ports/billingmodule.repo';
+import { BillingmoduleRepo } from 'src/billingmodule/application/ports/billingmodule.repo';
 import {
     CancelDto,
     ChangePlanDto,
@@ -11,11 +10,14 @@ import {
     PortalDto,
     ReconciliationSubscriptionItemDto,
     ResumeDto,
+    StartCheckout,
     StartCheckoutDto,
     SubscriptionDto,
     UpsertFromStripeSubscriptionDto,
+    VerifyHandlerDto,
 } from 'src/billingmodule/interface/dto/create-billingmodule.dto';
 import { BillingCycle, PlanKey, SubscriptionStatus } from 'generated/prisma';
+import Razorpay from 'razorpay';
 
 @Injectable()
 export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
@@ -23,7 +25,12 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
 
     // Stripe SDK (server-side key only)
     private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2025-07-30.basil",
+        apiVersion: '2025-07-30.basil',
+    });
+
+    private razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
     // ---- Price catalog (env-driven; swap to DB table if you prefer) ----
@@ -44,47 +51,74 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         },
         DEFAULT: {
             monthly: process.env.PRICE_DFAULT!,
-            yearly: process.env.PRICE_DFAULT!
-        }
+            yearly: process.env.PRICE_DFAULT!,
+        },
     };
 
-    // ---- Commands ------------------------------------------------------
 
-    /** Create Stripe Checkout Session URL for buying a subscription */
-    async startCheckout(input: StartCheckoutDto): Promise<{ url: string }> {
-        const { workspaceId, planKey, cycle } = input;
+    async startCheckout(input: StartCheckoutDto): Promise<StartCheckout> {
+        const {
+            amountInINR,
+            purpose,
+            metadata,
+            currency = 'INR',
+            receipt,
+            notes,
+            workspaceId,
+        } = input;
 
-        // 1) Ensure we have a Stripe customer for this workspace
-        const customerId = await this.ensureStripeCustomerForWorkspace(workspaceId);
-
-        // 2) Resolve the correct Price ID for (planKey, cycle)
-        const priceId = this.getPriceId(planKey as PlanKey, cycle as BillingCycle);
-
-        // 3) Create Checkout Session (idempotent)
-        const appUrl = process.env.APP_URL ?? 'http://localhost:3000';
-        const idempotencyKey = `checkout:${workspaceId}:${planKey}:${cycle}`;
-
-        const session = await this.stripe.checkout.sessions.create(
-            {
-                mode: 'subscription',
-                customer: customerId,
-                line_items: [{ price: priceId, quantity: 1 }],
-                allow_promotion_codes: true,
-                success_url: `${appUrl}/billing/success?ws=${encodeURIComponent(workspaceId)}`,
-                cancel_url: `${appUrl}/billing/cancel?ws=${encodeURIComponent(workspaceId)}`,
-                metadata: {
-                    workspaceId,
-                    planKey,
-                    billingCycle: cycle,
-                },
+        const order = await this.prisma.order.create({
+            data: {
+                workspaceId,
+                currency,
+                amount: Math.round(amountInINR * 100),
+                purpose,
+                metadata: metadata as any,
             },
-            { idempotencyKey }
-        );
+        });
 
-        if (!session.url) {
-            throw new Error('Stripe did not return a checkout session URL');
-        }
-        return { url: session.url };
+        const options = {
+            amount: Math.round(amountInINR * 100),
+            currency,
+            receipt: receipt ?? `rcpt_${Date.now()}`,
+            ...(typeof notes === 'object' ? notes : {}),
+        };
+
+        const rzpOrder = await this.razorpay.orders.create(options);
+
+        await this.prisma.order.update({
+            where: { id: order.id },
+            data: { razorpayOrderId: rzpOrder.id },
+        });
+
+        return {
+            orderId: order.id,
+            amount: order.amount,
+            currency: order.currency,
+            keyId: process.env.RAZORPAY_KEY_ID!,
+            internalOrderId: order.id,
+        };
+    }
+
+    async verifyHandler(input: VerifyHandlerDto): Promise<boolean> {
+        const { razorpay_payment_id, razorpay_order_id, razorpay_signature, internalOrderId } = input
+
+        const hmac = crypto.createHmac('sha256', process.env.RZP_KEY_SECRET!);
+        hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+        const expected = hmac.digest('hex');
+        const ok = expected === razorpay_signature;
+
+        await this.prisma.order.update({
+            where: { id: internalOrderId },
+            data: {
+                razorpayPaymentId: razorpay_payment_id ?? null,
+                razorpaySignature: razorpay_signature ?? null,
+                // don't mark paid here; rely on webhook for source of truth
+                metadata: { ...(input.metadata as any ?? {}), clientVerified: ok },
+            },
+        });
+
+        return ok
     }
 
     // ---- Helpers: price map / customer linkage ------------------------
@@ -102,12 +136,16 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
      * Prefers Workspace.stripeCustomerId if you store it there.
      * Fallback: try latest Subscription row’s stripeCustomerId for this workspace.
      */
-    private async ensureStripeCustomerForWorkspace(workspaceId: string): Promise<string> {
+    private async ensureStripeCustomerForWorkspace(
+        workspaceId: string,
+    ): Promise<string> {
         // If you have stripeCustomerId on Workspace, use that:
-        const ws = await this.prisma.workspace.findUnique({
-            where: { id: workspaceId },
-            select: { stripeCustomerId: true },
-        }).catch(() => null as any);
+        const ws = await this.prisma.workspace
+            .findUnique({
+                where: { id: workspaceId },
+                select: { stripeCustomerId: true },
+            })
+            .catch(() => null as any);
 
         if (ws?.stripeCustomerId) return ws.stripeCustomerId;
 
@@ -119,7 +157,10 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         });
         if (lastSub?.stripeCustomerId) {
             // Optionally, copy it back to workspace for faster future lookups
-            await this.safeSetWorkspaceStripeCustomerId(workspaceId, lastSub.stripeCustomerId);
+            await this.safeSetWorkspaceStripeCustomerId(
+                workspaceId,
+                lastSub.stripeCustomerId,
+            );
             return lastSub.stripeCustomerId;
         }
 
@@ -133,7 +174,10 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
     }
 
     /** Write back the customer id onto workspace if that column exists */
-    private async safeSetWorkspaceStripeCustomerId(workspaceId: string, stripeCustomerId: string) {
+    private async safeSetWorkspaceStripeCustomerId(
+        workspaceId: string,
+        stripeCustomerId: string,
+    ) {
         try {
             await this.prisma.workspace.update({
                 where: { id: workspaceId },
@@ -151,22 +195,37 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
 
     // stubs to satisfy interface for now; we’ll fill them in later
     async changePlan(input: ChangePlanDto): Promise<void> {
-        const { workspaceId, newPlanKey, cycle, proration = 'create_prorations' } = input;
+        const {
+            workspaceId,
+            newPlanKey,
+            cycle,
+            proration = 'create_prorations',
+        } = input;
 
         // load current sub (needs stripeSubId)
         const sub = await this.prisma.subscription.findFirst({
-            where: { workspaceId, stripeSubId: { not: null }, status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
+            where: {
+                workspaceId,
+                stripeSubId: { not: null },
+                status: { in: ['active', 'trialing', 'past_due', 'grace'] },
+            },
             orderBy: { createdAt: 'desc' },
             select: { stripeSubId: true },
         });
-        if (!sub?.stripeSubId) throw new Error('No existing Stripe subscription for this workspace');
+        if (!sub?.stripeSubId)
+            throw new Error('No existing Stripe subscription for this workspace');
 
-        const live = await this.stripe.subscriptions.retrieve(sub.stripeSubId, { expand: ['items.data.price'] });
+        const live = await this.stripe.subscriptions.retrieve(sub.stripeSubId, {
+            expand: ['items.data.price'],
+        });
         const currentItem = live.items.data[0];
         if (!currentItem) throw new Error('Subscription has no items');
 
         // pick new price id
-        const priceId = this.getPriceId(newPlanKey as PlanKey, cycle as BillingCycle);
+        const priceId = this.getPriceId(
+            newPlanKey as PlanKey,
+            cycle as BillingCycle,
+        );
 
         await this.stripe.subscriptions.update(live.id, {
             items: [{ id: currentItem.id, price: priceId }],
@@ -181,14 +240,21 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         const { workspaceId, atPeriodEnd } = input;
 
         const sub = await this.prisma.subscription.findFirst({
-            where: { workspaceId, stripeSubId: { not: null }, status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
+            where: {
+                workspaceId,
+                stripeSubId: { not: null },
+                status: { in: ['active', 'trialing', 'past_due', 'grace'] },
+            },
             orderBy: { createdAt: 'desc' },
             select: { stripeSubId: true },
         });
-        if (!sub?.stripeSubId) throw new Error('No active Stripe subscription to cancel');
+        if (!sub?.stripeSubId)
+            throw new Error('No active Stripe subscription to cancel');
 
         if (atPeriodEnd) {
-            await this.stripe.subscriptions.update(sub.stripeSubId, { cancel_at_period_end: true });
+            await this.stripe.subscriptions.update(sub.stripeSubId, {
+                cancel_at_period_end: true,
+            });
         } else {
             await this.stripe.subscriptions.cancel(sub.stripeSubId);
         }
@@ -203,12 +269,14 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
             orderBy: { createdAt: 'desc' },
             select: { stripeSubId: true },
         });
-        if (!sub?.stripeSubId) throw new Error('No Stripe subscription for this workspace');
+        if (!sub?.stripeSubId)
+            throw new Error('No Stripe subscription for this workspace');
 
-        await this.stripe.subscriptions.update(sub.stripeSubId, { cancel_at_period_end: false });
+        await this.stripe.subscriptions.update(sub.stripeSubId, {
+            cancel_at_period_end: false,
+        });
         // DB updates via webhook
     }
-
 
     async createPortalSession(input: PortalDto): Promise<{ url: string }> {
         const { workspaceId, returnUrl } = input;
@@ -216,15 +284,18 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
 
         const session = await this.stripe.billingPortal.sessions.create({
             customer: customerId,
-            return_url: returnUrl ?? `${process.env.APP_URL}/billing/portal-return?ws=${workspaceId}`,
+            return_url:
+                returnUrl ??
+                `${process.env.APP_URL}/billing/portal-return?ws=${workspaceId}`,
         });
 
         if (!session.url) throw new Error('Stripe did not return a portal URL');
         return { url: session.url };
     }
 
-
-    async getCurrentSubscription(workspaceId: string): Promise<SubscriptionDto | null> {
+    async getCurrentSubscription(
+        workspaceId: string,
+    ): Promise<SubscriptionDto | null> {
         const row = await this.prisma.subscription.findFirst({
             where: { workspaceId },
             orderBy: [{ createdAt: 'desc' }],
@@ -244,7 +315,7 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
             STARTER: { projects: 3, customDomain: false, aiTokens: 100_000 },
             GROWTH: { projects: 20, customDomain: true, aiTokens: 1_000_000 },
             ENTERPRISE: { projects: 999, customDomain: true, aiTokens: 99_999_999 },
-            DEFAULT: {}
+            DEFAULT: {},
         };
 
         // simple status-based downgrade sample:
@@ -265,12 +336,20 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         } as EntitlementsDto;
     }
 
-
-    async upsertFromStripeSubscription(payload: UpsertFromStripeSubscriptionDto): Promise<void> {
+    async upsertFromStripeSubscription(
+        payload: UpsertFromStripeSubscriptionDto,
+    ): Promise<void> {
         const {
-            stripeSubId, stripeCustomerId, workspaceId,
-            planKey, billingCycle, status, periodStart, periodEnd,
-            cancelAtPeriodEnd, cancelsAt,
+            stripeSubId,
+            stripeCustomerId,
+            workspaceId,
+            planKey,
+            billingCycle,
+            status,
+            periodStart,
+            periodEnd,
+            cancelAtPeriodEnd,
+            cancelsAt,
         } = payload;
 
         await this.prisma.subscription.upsert({
@@ -315,7 +394,10 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         });
     }
 
-    async setCanceledByStripeSubId(input: { stripeSubId: string; periodEnd?: Date }): Promise<void> {
+    async setCanceledByStripeSubId(input: {
+        stripeSubId: string;
+        periodEnd?: Date;
+    }): Promise<void> {
         const { stripeSubId, periodEnd } = input;
         await this.prisma.subscription.updateMany({
             where: { stripeSubId },
@@ -351,14 +433,14 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
     }
 
     /**
-      * Persist that a Stripe event.id has been processed (pair to the check above)
-      */
+     * Persist that a Stripe event.id has been processed (pair to the check above)
+     */
     async markWebhookEventProcessed(eventId: string): Promise<void> {
         if (!eventId) return;
 
         try {
             await this.prisma.webhookEvent.create({
-                data: { id: eventId, },
+                data: { id: eventId },
             });
         } catch (err: any) {
             // If called twice for the same event, unique PK on id will throw — that’s fine.
@@ -372,15 +454,19 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         }
     }
 
-    async listSubscriptionsForReconciliation(): Promise<ReconciliationSubscriptionItemDto[]> {
+    async listSubscriptionsForReconciliation(): Promise<
+        ReconciliationSubscriptionItemDto[]
+    > {
         const rows = await this.prisma.subscription.findMany({
             where: { status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
             select: { workspaceId: true, stripeSubId: true },
         });
-        return rows.filter(r => !!r.stripeSubId) as any;
+        return rows.filter((r) => !!r.stripeSubId) as any;
     }
 
-    async patchSubscriptionByStripeSubId(patch: Partial<SubscriptionDto> & { stripeSubId: string }): Promise<void> {
+    async patchSubscriptionByStripeSubId(
+        patch: Partial<SubscriptionDto> & { stripeSubId: string },
+    ): Promise<void> {
         const { stripeSubId, ...data } = patch;
         await this.prisma.subscription.updateMany({
             where: { stripeSubId },
@@ -400,7 +486,10 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         }
     }
 
-    async setStripeCustomerId(workspaceId: string, stripeCustomerId: string): Promise<void> {
+    async setStripeCustomerId(
+        workspaceId: string,
+        stripeCustomerId: string,
+    ): Promise<void> {
         try {
             await this.prisma.workspace.update({
                 where: { id: workspaceId },
@@ -411,15 +500,17 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         }
     }
 
-    async mapPriceId(priceId: string): Promise<{ planKey: PlanKey; cycle: BillingCycle }> {
+    async mapPriceId(
+        priceId: string,
+    ): Promise<{ planKey: PlanKey; cycle: BillingCycle }> {
         // Example mapping (replace with your real Stripe price IDs)
         const map: Record<string, { planKey: PlanKey; cycle: BillingCycle }> = {
-            "price_123MONTHLY_STARTER": { planKey: "STARTER", cycle: "monthly" },
-            "price_456YEARLY_STARTER": { planKey: "STARTER", cycle: "yearly" },
-            "price_789MONTHLY_GROWTH": { planKey: "GROWTH", cycle: "monthly" },
-            "price_abcYEARLY_GROWTH": { planKey: "GROWTH", cycle: "yearly" },
-            "price_defMONTHLY_ENTER": { planKey: "ENTERPRISE", cycle: "monthly" },
-            "price_ghiYEARLY_ENTER": { planKey: "ENTERPRISE", cycle: "yearly" },
+            price_123MONTHLY_STARTER: { planKey: 'STARTER', cycle: 'monthly' },
+            price_456YEARLY_STARTER: { planKey: 'STARTER', cycle: 'yearly' },
+            price_789MONTHLY_GROWTH: { planKey: 'GROWTH', cycle: 'monthly' },
+            price_abcYEARLY_GROWTH: { planKey: 'GROWTH', cycle: 'yearly' },
+            price_defMONTHLY_ENTER: { planKey: 'ENTERPRISE', cycle: 'monthly' },
+            price_ghiYEARLY_ENTER: { planKey: 'ENTERPRISE', cycle: 'yearly' },
         };
 
         const found = map[priceId];

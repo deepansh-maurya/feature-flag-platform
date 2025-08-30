@@ -1,4 +1,3 @@
-// src/billingmodule/interface/http/stripe-webhook.controller.ts
 import {
     Controller, Post, Req, Res, HttpCode, Inject,
 } from '@nestjs/common';
@@ -8,14 +7,14 @@ import {  BillingmoduleRepo, BillingmoduleRepoToken } from '../application/ports
 import { BillingCycle, PlanKey } from 'generated/prisma';
 
 @Controller()
-export class StripeWebhookController {
+export class RazorpayWebhookController {
     private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-07-30" as any});
 
     constructor(
         @Inject(BillingmoduleRepoToken) private readonly repo: BillingmoduleRepo,
     ) { }
 
-    @Post('/webhook/stripe')
+    @Post('/webhook/razorpay')
     @HttpCode(200)
     async handle(@Req() req: Request, @Res() res: Response) {
         const sig = req.headers['stripe-signature'] as string | undefined;

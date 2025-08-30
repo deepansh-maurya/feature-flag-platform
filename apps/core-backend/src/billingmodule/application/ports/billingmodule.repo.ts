@@ -1,5 +1,5 @@
 import { BillingCycle, PlanKey } from "generated/prisma";
-import { CancelDto, ChangePlanDto, EntitlementsDto, PortalDto, ReconciliationSubscriptionItemDto, ResumeDto, StartCheckoutDto, SubscriptionDto, UpsertFromStripeSubscriptionDto } from "src/billingmodule/interface/dto/create-billingmodule.dto";
+import { CancelDto, ChangePlanDto, EntitlementsDto, PortalDto, ReconciliationSubscriptionItemDto, ResumeDto, StartCheckout, StartCheckoutDto, SubscriptionDto, UpsertFromStripeSubscriptionDto, VerifyHandlerDto } from "src/billingmodule/interface/dto/create-billingmodule.dto";
 
 // billingmodule.repo.ts
 export const BillingmoduleRepoToken = Symbol('BillingmoduleRepo');
@@ -11,7 +11,8 @@ export interface BillingmoduleRepo {
   // Commands (FE -> your API)  — These call Stripe and return URLs or 204s
   // ---------------------------------------------------------------------------
   /** Create Stripe Checkout Session URL for buying a subscription */
-  startCheckout(input: StartCheckoutDto): Promise<{ url: string }>;
+  startCheckout(input: StartCheckoutDto): Promise<StartCheckout>;
+  verifyHandler(input: VerifyHandlerDto): Promise<boolean>
 
   /** Change plan (upgrade/downgrade); DB sync happens via webhook */
   changePlan(input: ChangePlanDto): Promise<void>;
