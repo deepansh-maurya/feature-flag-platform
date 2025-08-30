@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import styles from "./FeatureFlagsPage.module.css";
-import { EnvKey, Flag, FlagStatus, FlagType } from "./FeatureFlagsPage";
+import styles from "../FeatureFlagsPage/FeatureFlagsPage.module.css";
+import { EnvKey, Flag, FlagStatus, FlagType } from "../FeatureFlagsPage/FeatureFlagsPage";
 
 // ---------------- Create Flag Modal ----------------
 export default function CreateFlagModal({

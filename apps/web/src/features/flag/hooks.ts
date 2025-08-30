@@ -1,4 +1,3 @@
-// src/features/flags/hooks.ts
 'use client';
 
 import { useEffect } from "react";
@@ -18,7 +17,7 @@ import {
   upsertMeta,
   archive,
 } from "./api";
-import { CreateFlagDto, CreateVersionDto, UpsertFlagMetaDto } from "./types";
+import { CreateFlagDto, CreateVersionDto, FlagMetaDTO, UpsertFlagMetaDto } from "./types";
 /* -------------------- Query Keys -------------------- */
 const QK = {
   flagsByProject: (projectId: string) => ["flags", "by-project", projectId] as const,
@@ -32,7 +31,7 @@ const QK = {
 /* -------------------- Queries ----------------------- */
 
 export function useFlags(projectId?: string) {
-  return useQuery<UpsertFlagMetaDto[]>({
+  return useQuery<FlagMetaDTO[]>({
     queryKey: QK.flagsByProject(projectId ?? "nil"),
     enabled: !!projectId,
     queryFn: () => listFlagsByProject(projectId as string),
@@ -42,7 +41,7 @@ export function useFlags(projectId?: string) {
 }
 
 export function useFlagById(id?: string) {
-  return useQuery<UpsertFlagMetaDto | null>({
+  return useQuery<FlagMetaDTO | null>({
     queryKey: QK.flagById(id ?? "nil"),
     enabled: !!id,
     queryFn: () => getFlagById(id as string),
@@ -51,7 +50,7 @@ export function useFlagById(id?: string) {
 }
 
 export function useFlagByKey(projectId?: string, key?: string) {
-  return useQuery<UpsertFlagMetaDto | null>({
+  return useQuery<FlagMetaDTO | null>({
     queryKey: QK.flagByKey(projectId ?? "nil", key ?? "nil"),
     enabled: !!projectId && !!key,
     queryFn: () => getFlagByKey(projectId as string, key as string),

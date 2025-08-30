@@ -1,5 +1,5 @@
 import { http } from "@/src/shared/lib/http";
-import { CreateFlagDto, CreateVersionDto, UpsertFlagMetaDto } from "./types";
+import { CreateFlagDto, CreateVersionDto, FlagMetaDTO, UpsertFlagMetaDto } from "./types";
 
 /** -------------------- Queries -------------------- */
 
@@ -16,29 +16,29 @@ export async function isKeyTaken(params: {
 }
 
 // /api/v1/flags/:id
-export async function getFlagById(id: string): Promise<UpsertFlagMetaDto | null> {
+export async function getFlagById(id: string): Promise<FlagMetaDTO | null> {
   const { data } = await http.get(`/api/v1/flags/${id}`);
-  return (data ?? null) as UpsertFlagMetaDto | null;
+  return (data ?? null) as FlagMetaDTO | null;
 }
 
 // /api/v1/projects/:projectId/flags/by-key?key=...
 export async function getFlagByKey(
   projectId: string,
   key: string
-): Promise<UpsertFlagMetaDto | null> {
+): Promise<FlagMetaDTO | null> {
   const { data } = await http.get(
     `/api/v1/projects/${projectId}/flags/by-key`,
     { params: { key } }
   );
-  return (data ?? null) as UpsertFlagMetaDto | null;
+  return (data ?? null) as FlagMetaDTO | null;
 }
 
 // /api/v1/projects/:projectId/flags
 export async function listFlagsByProject(
   projectId: string
-): Promise<UpsertFlagMetaDto[]> {
+): Promise<FlagMetaDTO[]> {
   const { data } = await http.get(`/api/v1/projects/${projectId}/flags`);
-  return data as UpsertFlagMetaDto[];
+  return data as FlagMetaDTO[];
 }
 
 /** -------------------- Mutations -------------------- */

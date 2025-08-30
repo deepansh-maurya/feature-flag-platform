@@ -22,9 +22,9 @@ import RulesTestModal from "./RulesTestModal";
 import PrerequisitesPicker, {
   FlagMeta,
   Prereq
-} from "./PrerequisitesPicker/PrerequisitesPicker";
-import RuleSetPreview from "./RuleSetPreview/RuleSetPreview";
-import { withModal } from "../WithModel/withModal";
+} from "../PrerequisitesPicker/PrerequisitesPicker";
+import RuleSetPreview from "../RuleSetPreview/RuleSetPreview";
+import { withModal } from "../../../../shared/components/WithModel/withModal";
 
 const RuleSetPreviewModal = withModal(RuleSetPreview);
 

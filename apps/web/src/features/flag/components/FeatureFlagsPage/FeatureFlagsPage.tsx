@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from "react";
 import styles from "./FeatureFlagsPage.module.css";
-import CreateFlagModal from "./CreateFlagModal";
+import CreateFlagModal from "../createFlagModel/CreateFlagModal";
 
 // ---------------- Types ----------------
 export type EnvKey = "dev" | "stage" | "prod";

@@ -55,3 +55,17 @@ export interface IsKeyTakenDto {
     projectId: string;
     key: string;
 }
+
+export type FlagMetaDTO = {
+  id: string;
+  key: string;
+  type: FlagType;
+  description?: string | null;
+  archived: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  workspaceId: string;
+  projectId: string;
+  displayName?: string;
+  tags?: string[];
+};

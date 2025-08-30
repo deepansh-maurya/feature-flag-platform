@@ -1,4 +1,4 @@
-import TargetingRulesPage from "@/src/core/components/TargetingRulesPage/TargetingRulesPage";
+import TargetingRulesPage from "@/src/features/rules/components/TargetingRulesPage/TargetingRulesPage";
 
 export default function TargetingRules(){
     return <TargetingRulesPage />
