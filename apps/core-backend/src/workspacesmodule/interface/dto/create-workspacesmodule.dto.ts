@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsUUID, IsEmail, IsEnum, IsNumber, IsBoolean, IsDateString } from "class-validator";
 import { Type } from "class-transformer";
-import { LimitKind, WorkspaceRole } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
-import { BillingStatus } from "@prisma/client";
+import { LimitKind } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
+import { BillingStatus, RoleKey } from "@prisma/client";
 
 // ---------- Generic DTOs ----------
 export class PaginationDto {
@@ -107,16 +107,16 @@ export class AddMemberDto extends ByWorkspaceDto {
   @IsUUID()
   userId!: string;
 
-  @IsEnum(["ADMIN", "EDITOR", "VIEWER"])
-  role!: Exclude<WorkspaceRole, "OWNER">;
+  @IsEnum(RoleKey)
+  role!: Exclude<RoleKey, "owner">;
 }
 
 export class ChangeMemberRoleDto extends ByWorkspaceDto {
   @IsUUID()
   userId!: string;
 
-  @IsEnum(["ADMIN", "EDITOR", "VIEWER"])
-  role!: Exclude<WorkspaceRole, "OWNER">;
+  @IsEnum(RoleKey)
+  role!: Exclude<RoleKey, "owner">;   
 }
 
 export class RemoveMemberDto extends ByWorkspaceDto {
@@ -140,8 +140,8 @@ export class InviteMemberDto extends ByWorkspaceDto {
   @IsEmail()
   email!: string;
 
-  @IsEnum(["ADMIN", "EDITOR", "VIEWER"])
-  role!: Exclude<WorkspaceRole, "OWNER">;
+  @IsEnum(RoleKey)
+  role!: Exclude<RoleKey, "OWNER">;
 
   @IsString()
   tokenHash!: string;

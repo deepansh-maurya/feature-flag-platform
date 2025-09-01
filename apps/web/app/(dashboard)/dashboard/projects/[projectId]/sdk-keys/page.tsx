@@ -1,4 +1,4 @@
-import SdkKeysPage from "@/src/core/components/SdkKeysPage/SdkKeysPage";
+import SdkKeysPage from "@/src/features/envAndSdkKeys/components/SdkKeysPage/SdkKeysPage";
 
 export default function SdkKeys(){
     return <SdkKeysPage />

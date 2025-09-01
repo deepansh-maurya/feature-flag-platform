@@ -28,9 +28,6 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
             ]),
             secretOrKey: process.env.JWT_ACCESS_SECRET!,   // set in env
             ignoreExpiration: false,
-            // optional hardening (set if you include them when signing)
-            issuer: process.env.JWT_ISSUER || undefined,
-            audience: process.env.JWT_AUDIENCE || undefined,
         });
     }
 

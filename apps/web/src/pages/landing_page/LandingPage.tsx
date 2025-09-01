@@ -15,7 +15,7 @@ import {
   Twitter
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Routes } from "../../../../app/constants";
+import { Routes } from "../../../app/constants";
 
 // =============================================
 // Supercharged Flagly Landing Page (single file)
@@ -312,10 +312,10 @@ export default function LandingPage() {
   const router = useRouter();
 
   const goToPricingPage = () => {
-    router.push(Routes.pricing);
+    router.push(Routes.pricing());
   };
   const goToLoginPage = ()=>{
-    router.push(Routes.login)
+    router.push(Routes.login())
   }
 
   return (

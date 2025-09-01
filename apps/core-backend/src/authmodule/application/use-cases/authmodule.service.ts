@@ -10,8 +10,8 @@ export class AuthmoduleService {
 
   async register(data: RegisterDto) {
     const user = AuthEntity.create(data)
-    const id = await this.repo.register(user)
-    return this.issueTokens(id, { sub: id }, data.workspaceId)
+    const result = await this.repo.register(user)
+    return this.issueTokens(result.id, { sub: result.id }, result.wid)
   }
 
   async login(data: LoginDto) {

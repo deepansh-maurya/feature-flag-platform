@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import  Razorpay from 'razorpay';
+import Razorpay = require('razorpay');
 import * as crypto from 'crypto';
 import {
     BillingmoduleRepo,

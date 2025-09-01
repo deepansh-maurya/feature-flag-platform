@@ -5,8 +5,9 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider         = "prisma-client-js"
+  output           = "../generated/prisma"
+  connection_limit = 10
 }
 
 datasource db {
@@ -110,24 +111,24 @@ enum TargetType {
   service
 }
 
-  enum AuditActionType {
-    workspace_created
-    workspace_updated
-    project_created
-    project_updated
-    flag_created
-    flag_updated
-    flag_published
-    flag_archived
-    segment_created
-    segment_updated
-    member_invited
-    member_added
-    member_removed
-    token_created
-    token_revoked
-    // add more as needed
-  }
+enum AuditActionType {
+  workspace_created
+  workspace_updated
+  project_created
+  project_updated
+  flag_created
+  flag_updated
+  flag_published
+  flag_archived
+  segment_created
+  segment_updated
+  member_invited
+  member_added
+  member_removed
+  token_created
+  token_revoked
+  // add more as needed
+}
 
 enum EvalSource {
   web
@@ -180,50 +181,50 @@ model Admin {
   id       String   @id @default(uuid())
   passKey  String
   isUsable Boolean? @default(true)
-  deviceId    String?
+  deviceId String?
 }
 
 model Workspace {
-  id               String        @id @default(uuid())
-  name             String
-  slug             String        @unique
-  stripeCustomerId String
-  ownerUserId      String
-  archivedAt       DateTime?
-  owner            User          @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
-  planKey          String        @default("free")
-  billingStatus    BillingStatus @default(active)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                 String                  @id @default(uuid())
+  name               String
+  slug               String                  @unique
+  stripeCustomerId   String
+  ownerUserId        String
+  archivedAt         DateTime?
+  owner              User                    @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
+  planKey            String                  @default("free")
+  billingStatus      BillingStatus           @default(active)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
   razorpayCustomerId String?
-  flags            Flag[]                  @relation("WorkspaceFlags")
-  projects         Project[]               @relation("WorkspaceProjects")
-  members          WorkspaceMember[]       @relation("WorkspaceMembers")
-  invites          Invite[]                @relation("WorkspaceInvites")
-  roles            Role[]                  @relation("WorkspaceRoles")
-  projectOverrides MemberProjectOverride[] @relation("WorkspaceProjectOverrides")
-  environment      Environment[]           @relation("WorkspaceEnvironments")
-  refreshTokens    RefreshToken[]
-  subscriptions    Subscription[]
-  invoices         Invoice[]
-  usageCounters    UsageCountersMonthly[]
-  notification     NotificationSetting?
-  webhookEndpoints WebhookEndpoint[]
-  apiTokens        ApiToken[]
-  auditLogs        AuditLog[]
-  ChangeRequest    ChangeRequest[]
-  Segment          Segment[]
-  SegmentMember    SegmentMember[]
-  SdkKey           SdkKey[]
-  AllowlistEntry   AllowlistEntry[]
-  ConfigSnapshot   ConfigSnapshot[]
-  OutboxEvent      OutboxEvent[]
-  EvalEventRaw     EvalEventRaw[]
-  EvalRollupHourly EvalRollupHourly[]
-  EvalRollupDaily  EvalRollupDaily[]
-  WebhookDelivery  WebhookDelivery[]
-  RateLimit        RateLimit[]
-  Session          Session[]
+  flags              Flag[]                  @relation("WorkspaceFlags")
+  projects           Project[]               @relation("WorkspaceProjects")
+  members            WorkspaceMember[]       @relation("WorkspaceMembers")
+  invites            Invite[]                @relation("WorkspaceInvites")
+  roles              Role[]                  @relation("WorkspaceRoles")
+  projectOverrides   MemberProjectOverride[] @relation("WorkspaceProjectOverrides")
+  environment        Environment[]           @relation("WorkspaceEnvironments")
+  refreshTokens      RefreshToken[]
+  subscriptions      Subscription[]
+  invoices           Invoice[]
+  usageCounters      UsageCountersMonthly[]
+  notification       NotificationSetting?
+  webhookEndpoints   WebhookEndpoint[]
+  apiTokens          ApiToken[]
+  auditLogs          AuditLog[]
+  ChangeRequest      ChangeRequest[]
+  Segment            Segment[]
+  SegmentMember      SegmentMember[]
+  SdkKey             SdkKey[]
+  AllowlistEntry     AllowlistEntry[]
+  ConfigSnapshot     ConfigSnapshot[]
+  OutboxEvent        OutboxEvent[]
+  EvalEventRaw       EvalEventRaw[]
+  EvalRollupHourly   EvalRollupHourly[]
+  EvalRollupDaily    EvalRollupDaily[]
+  WebhookDelivery    WebhookDelivery[]
+  RateLimit          RateLimit[]
+  Session            Session[]
 }
 
 model WebhookEvent {
@@ -819,19 +820,19 @@ model EvalRollupDaily {
 // Subscriptions (per workspace)
 // =============================
 model Subscription {
-  id                String             @id @default(uuid())
-  workspaceId       String
-  planKey           PlanKey
-  status            SubscriptionStatus @default(active)
-  periodStart       DateTime
-  periodEnd         DateTime
-  billingCycle      BillingCycle
-  cancelAtPeriodEnd Boolean            @default(false)
-  cancelsAt         DateTime?
+  id                 String             @id @default(uuid())
+  workspaceId        String
+  planKey            PlanKey
+  status             SubscriptionStatus @default(active)
+  periodStart        DateTime
+  periodEnd          DateTime
+  billingCycle       BillingCycle
+  cancelAtPeriodEnd  Boolean            @default(false)
+  cancelsAt          DateTime?
   razorpayCustomerId String?
-  razorpaySubId      String?  @unique
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  razorpaySubId      String?            @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 

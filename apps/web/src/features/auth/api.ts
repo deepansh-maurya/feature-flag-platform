@@ -13,26 +13,26 @@ export type User = z.infer<typeof UserSchema>;
 
 const TokensSchema = z.object({
     accessToken: z.string(),
-    refreshToken: z.string().optional(),
 });
 
 const AuthResponseSchema = z.object({
-    user: UserSchema,
     ...TokensSchema.shape,
 });
+
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
 
 export const RegisterInputSchema = z.object({
     workspace: z.string(),
-    name: z.string().min(2).max(64),
+    fullName: z.string().min(2).max(64),
     email: z.email(),
     password: z.string().min(8).max(128),
 });
 
+
 export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 
 export const LoginInputSchema = z.object({
-    email: z.string().email(),
+    email: z.email(),
     password: z.string().min(8).max(128),
     remember: z.boolean()
 });
@@ -55,6 +55,7 @@ const TOKEN_STORAGE_KEY = 'ff_access_token';
 let installed = false;
 
 export function persistAccessToken(token?: string, remember?: boolean) {
+    
     if (typeof window === 'undefined') return; // SSR guard
     if (!token) {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -62,6 +63,7 @@ export function persistAccessToken(token?: string, remember?: boolean) {
         setAuthToken(undefined);
         return;
     }
+    console.log(token, remember);
     // set axios header for this runtime
     setAuthToken(token);
 
@@ -107,11 +109,15 @@ export function installAuthStorageSync() {
  * Assumes Bearer auth for protected routes.
  */
 
-const base = '/api/v1/auth';
+const base = '/auth';
 
 export async function register(input: RegisterInput): Promise<AuthResponse> {
+    console.log(`${base}/register`);
+
     RegisterInputSchema.parse(input);
     const { data } = await http.post(`${base}/register`, input);
+    console.log(data);
+
     const parsed = AuthResponseSchema.parse(data);
     persistAccessToken(parsed.accessToken);
     return parsed;

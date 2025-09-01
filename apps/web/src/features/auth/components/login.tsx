@@ -31,11 +31,11 @@ export default function LoginPage() {
     login.mutate(
       { email, password, remember },
       {
-        onSuccess: async () => {
+        onSuccess: async (data) => {
           // (Optional) if you want "remember me" to affect persistence later,
           // you can adjust token storage in your api.ts.
           router.push(Routes.dashboard()); // or wherever you send logged-in users
-        },
+        },  
         onError: (err: any) => {
           const apiMsg =
             err?.response?.data?.message ||

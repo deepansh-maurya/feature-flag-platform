@@ -8,24 +8,23 @@ import { ProjectmoduleModule } from './projectmodule/projectmodule.module';
 import { UserModule } from './usersmodule/usersmodule.module';
 import { WorkspacesmoduleModule } from './workspacesmodule/workspacesmodule.module';
 import { BillingModule } from './billingmodule/billingmodule.module';
-import { JwtAuthGuard } from './authmodule/infrastructure/guards/jwt-auth.guard';
-import { APP_GUARD } from '@nestjs/core';
+import { Auditmodule } from './auditmodule/auditmodule.module';
+import PrismaModule from './infra/prisma/prisma.module';
 
 @Module({
   imports: [
     Authmodule,
     PassportModule,
     AnalyticsmoduleModule,
-    // AuditModule,
+    Auditmodule,
     BillingModule,
     ChangeRequestModule,
     FlagsmoduleModule,
     ProjectmoduleModule,
     UserModule,
     WorkspacesmoduleModule,
-  ],
-  providers:[
-    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    PrismaModule
   ]
 })
 export class AppModule {}
+

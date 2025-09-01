@@ -30,13 +30,13 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         ></link>
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     </html>
   );
 }

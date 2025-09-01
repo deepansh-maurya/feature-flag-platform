@@ -4,13 +4,17 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
-} from "@nestjs/common";
-import { AuthmoduleRepo } from "../../application/ports/authmodule.repo";
-import { AuthEntity } from "src/authmodule/domain/authmodule.entity";
-import * as bcrypt from "bcrypt";
-import * as crypto from "crypto";
-import PrismaService from "src/infra/prisma/prisma.service";
-import { WorkspacesmoduleRepo, WorkspacesmoduleRepoToken } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
+} from '@nestjs/common';
+import { AuthmoduleRepo } from '../../application/ports/authmodule.repo';
+import { AuthEntity } from 'src/authmodule/domain/authmodule.entity';
+import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
+import PrismaService from 'src/infra/prisma/prisma.service';
+import {
+  WorkspacesmoduleRepo,
+  WorkspacesmoduleRepoToken,
+} from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
+import { RoleKey } from '@prisma/client';
 
 export const BCRYPT_ROUNDS = 12;
 
@@ -19,27 +23,28 @@ export const BCRYPT_ROUNDS = 12;
  * Use for refresh tokens so we never store the raw token.
  */
 function sha256(input: string): string {
-  return crypto.createHash("sha256").update(input).digest("hex");
+  return crypto.createHash('sha256').update(input).digest('hex');
 }
 
 @Injectable()
 export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
-  constructor(private readonly prisma: PrismaService,
-    @Inject(WorkspacesmoduleRepoToken) private readonly workspace: WorkspacesmoduleRepo
-  ) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(WorkspacesmoduleRepoToken)
+    private readonly workspace: WorkspacesmoduleRepo,
+  ) {}
 
   /**
    * Register a user.
    * - Ensures unique email
    * - Hashes password
    */
-  async register(user: AuthEntity): Promise<string> {
-
+  async register(user: AuthEntity): Promise<{ id: string; wid: string }> {
+    const passwordHash = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
     return await this.prisma.$transaction(async (tx) => {
-
       const email = user.email?.trim().toLowerCase();
       if (!email || !user.password) {
-        throw new BadRequestException("Email and password are required.");
+        throw new BadRequestException('Email and password are required.');
       }
 
       const existing = await tx.user.findUnique({
@@ -47,24 +52,33 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
         select: { id: true },
       });
       if (existing) {
-        throw new BadRequestException("Email already in use.");
+        throw new BadRequestException('Email already in use.');
       }
 
-      const passwordHash = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
-
-      const dbuser = await this.prisma.user.create({
+      const dbuser = await tx.user.create({
         data: {
           email,
           passwordHash,
-          name: user.fullName!
+          name: user.fullName!,
         },
       });
 
-      const dbWorkspace = await this.workspace.create({ name: user.workspace!, ownerUserId: dbuser.id }, tx)
-      await this.workspace.addMember({ workspaceId: dbWorkspace.id!, role: "ADMIN", userId: dbuser.id }, tx)
+      const dbWorkspace = await this.workspace.create(
+        { name: user.workspace!, ownerUserId: dbuser.id },
+        tx,
+      );
 
-      return dbuser.id
-    })
+      await this.workspace.addMember(
+        {
+          workspaceId: dbWorkspace.id!,
+          role: RoleKey.admin,
+          userId: dbuser.id,
+        },
+        tx,
+      );
+
+      return { id: dbuser.id, wid: dbWorkspace.id };
+    });
   }
 
   /**
@@ -78,7 +92,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     const pass = user.password;
 
     if (!email || !pass) {
-      throw new BadRequestException("Email and password are required.");
+      throw new BadRequestException('Email and password are required.');
     }
 
     const dbUser = await this.prisma.user.findUnique({
@@ -87,15 +101,15 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     });
 
     if (!dbUser || dbUser.isDeleted) {
-      throw new UnauthorizedException("Invalid credentials.");
+      throw new UnauthorizedException('Invalid credentials.');
     }
 
     const ok = await bcrypt.compare(pass, dbUser.passwordHash!);
     if (!ok) {
-      throw new UnauthorizedException("Invalid credentials.");
+      throw new UnauthorizedException('Invalid credentials.');
     }
 
-    return dbUser.id
+    return dbUser.id;
     // Intentionally return void. Token creation is handled by your service layer.
   }
 
@@ -139,10 +153,10 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     if (!userId) {
       // Without userId you cannot know whose password to change.
       // If you truly cannot change signature, you must pass userId via context or the service layer.
-      throw new BadRequestException("userId is required to change password.");
+      throw new BadRequestException('userId is required to change password.');
     }
     if (!password || password !== confirmPassword) {
-      throw new BadRequestException("Passwords do not match.");
+      throw new BadRequestException('Passwords do not match.');
     }
 
     const user = await this.prisma.user.findUnique({
@@ -150,7 +164,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
       select: { id: true, isDeleted: true },
     });
     if (!user || user.isDeleted) {
-      throw new NotFoundException("User not found.");
+      throw new NotFoundException('User not found.');
     }
 
     const newHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
@@ -174,13 +188,13 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * - If you truly need hard delete, also delete dependent rows in a transaction
    */
   async delete(userId: string): Promise<void> {
-    if (!userId) throw new BadRequestException("userId is required.");
+    if (!userId) throw new BadRequestException('userId is required.');
 
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { id: true },
     });
-    if (!user) throw new NotFoundException("User not found.");
+    if (!user) throw new NotFoundException('User not found.');
 
     await this.prisma.$transaction([
       this.prisma.user.update({
@@ -203,7 +217,12 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    */
 
   // Example: store refresh token (hash only)
-  async storeRefreshToken(userId: string, refreshToken: string, expiresAt: Date, workspaceId: string): Promise<void> {
+  async storeRefreshToken(
+    userId: string,
+    refreshToken: string,
+    expiresAt: Date,
+    workspaceId: string,
+  ): Promise<void> {
     await this.prisma.refreshToken.create({
       data: {
         userId,
@@ -215,14 +234,16 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
   }
 
   // Example: check refresh token validity (exists, not revoked, not expired)
-  async assertValidRefreshToken(refreshToken: string): Promise<string /* userId */> {
+  async assertValidRefreshToken(
+    refreshToken: string,
+  ): Promise<string /* userId */> {
     const tokenHash = sha256(refreshToken);
     const row = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
       select: { userId: true, revokedAt: true, expiresAt: true },
     });
     if (!row || row.revokedAt || row.expiresAt <= new Date()) {
-      throw new UnauthorizedException("Invalid refresh token.");
+      throw new UnauthorizedException('Invalid refresh token.');
     }
     return row.userId;
   }

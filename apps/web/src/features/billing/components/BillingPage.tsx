@@ -68,7 +68,6 @@ export default function BillingPage() {
       </div>
 
       {!sub}
-
       {!active ? (
         sub ? (
           <div>
