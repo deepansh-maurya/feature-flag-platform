@@ -1,5 +1,5 @@
 // apps/core-backend/src/flagsmodule/application/ports/flagsmodule.repo.ts
-import { FlagType } from 'generated/prisma';
+import { FlagType } from '@prisma/client'
 import { CreateFlagDto, CreateVersionDto, UpsertFlagMetaDto } from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';
 
 export const FLAGS_REPO = Symbol('FLAGS_REPO');

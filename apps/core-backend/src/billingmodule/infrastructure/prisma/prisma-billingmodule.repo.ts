@@ -1,324 +1,229 @@
 import { Injectable } from '@nestjs/common';
-import * as crypto from 'crypto';
-import Stripe from 'stripe';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { BillingmoduleRepo } from 'src/billingmodule/application/ports/billingmodule.repo';
+import Razorpay = require('razorpay');
+import * as crypto from 'crypto';
 import {
-    CancelDto,
-    ChangePlanDto,
-    EntitlementsDto,
-    PortalDto,
-    ReconciliationSubscriptionItemDto,
-    ResumeDto,
-    StartCheckout,
+    BillingmoduleRepo,
+    PlanKey,
+    BillingCycle,
+    SubscriptionStatus,
     StartCheckoutDto,
+    ChangePlanDto,
+    CancelDto,  
+    ResumeDto,
+    PortalDto,
     SubscriptionDto,
-    UpsertFromStripeSubscriptionDto,
-    VerifyHandlerDto,
-} from 'src/billingmodule/interface/dto/create-billingmodule.dto';
-import { BillingCycle, PlanKey, SubscriptionStatus } from 'generated/prisma';
-import Razorpay from 'razorpay';
+    EntitlementsDto,
+    UpsertFromRazorpaySubscriptionDto,
+    ReconciliationSubscriptionItemDto,
+    CheckoutInitDto,
+} from '../../application/ports/billingmodule.repo';
 
 @Injectable()
-export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
-    constructor(private readonly prisma: PrismaService) { }
+export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
+    private rzp: Razorpay;
 
-    // Stripe SDK (server-side key only)
-    private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: '2025-07-30.basil',
-    });
+    constructor(private readonly prisma: PrismaService) {
+        this.rzp = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID!,
+            key_secret: process.env.RAZORPAY_KEY_SECRET!,
+        });
+    }
 
-    private razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-
-    // ---- Price catalog (env-driven; swap to DB table if you prefer) ----
-    // Make sure these env vars exist in your .env
-    // PRICE_STARTER_M, PRICE_STARTER_Y, PRICE_GROWTH_M, PRICE_GROWTH_Y, PRICE_ENTERPRISE_M, PRICE_ENTERPRISE_Y
-    private PRICE_ID: Record<PlanKey, Record<BillingCycle, string>> = {
-        STARTER: {
-            monthly: process.env.PRICE_STARTER_M!,
-            yearly: process.env.PRICE_STARTER_Y!,
-        },
-        GROWTH: {
-            monthly: process.env.PRICE_GROWTH_M!,
-            yearly: process.env.PRICE_GROWTH_Y!,
-        },
-        ENTERPRISE: {
-            monthly: process.env.PRICE_ENTERPRISE_M!,
-            yearly: process.env.PRICE_ENTERPRISE_Y!,
-        },
-        DEFAULT: {
-            monthly: process.env.PRICE_DFAULT!,
-            yearly: process.env.PRICE_DFAULT!,
-        },
-    };
-
-
-    async startCheckout(input: StartCheckoutDto): Promise<StartCheckout> {
+    // ---------------------------
+    // Commands
+    // ---------------------------
+    async startCheckout(input: StartCheckoutDto): Promise<CheckoutInitDto> {
         const {
-            amountInINR,
-            purpose,
-            metadata,
-            currency = 'INR',
-            receipt,
-            notes,
             workspaceId,
+            planKey,
+            cycle,
+            prefillName,
+            prefillEmail,
+            prefillContact,
         } = input;
 
-        const order = await this.prisma.order.create({
-            data: {
-                workspaceId,
-                currency,
-                amount: Math.round(amountInINR * 100),
-                purpose,
-                metadata: metadata as any,
-            },
+        const planId = await this.getRazorpayPlanId(planKey, cycle);
+
+        // (Optional) attach/store customer id on workspace
+        let customerId =
+            input.razorpayCustomerId ??
+            (await this.getRazorpayCustomerId(workspaceId));
+        if (!customerId) {
+            const cust = await this.rzp.customers.create({
+                name: prefillName,
+                email: prefillEmail,
+                contact: prefillContact,
+                notes: { workspaceId },
+            });
+            customerId = cust.id;
+            await this.setRazorpayCustomerId(workspaceId, customerId);
+        }
+
+        // Create Subscription (NOT Order) — Checkout will be opened on FE with subscription_id
+        const sub = await this.rzp.subscriptions.create({
+            plan_id: planId,
+            total_count: cycle === 'monthly' ? 12 : 1, // adjust policy as needed
+            customer_notify: 1,
+            notes: { workspaceId, planKey, cycle, customerId },
         });
 
-        const options = {
-            amount: Math.round(amountInINR * 100),
-            currency,
-            receipt: receipt ?? `rcpt_${Date.now()}`,
-            ...(typeof notes === 'object' ? notes : {}),
-        };
+        // Persist a pending row (optional; final state comes via webhook)
+        await this.prisma.subscription
+            .create({
+                data: {
+                    workspaceId,
+                    planKey,
+                    billingCycle: cycle,
+                    status: 'trialing', // or 'active' after first charge; webhook is source of truth
+                    periodStart: new Date(),
+                    periodEnd: this.computeNextPeriodEnd(new Date(), cycle),
+                    razorpayCustomerId: customerId,
+                    razorpaySubId: sub.id,
+                },
+            })
+            .catch(() => void 0); // if unique constraint, ignore; webhook will upsert
 
-        const rzpOrder = await this.razorpay.orders.create(options);
-
-        await this.prisma.order.update({
-            where: { id: order.id },
-            data: { razorpayOrderId: rzpOrder.id },
-        });
+        // after creating the subscription
+        const plan = await this.rzp.plans.fetch(planId); // has item.amount (paise) & item.currency
+        const amountPaise = plan.item.amount;
+        const currency = plan.item.currency;
 
         return {
-            orderId: order.id,
-            amount: order.amount,
-            currency: order.currency,
             keyId: process.env.RAZORPAY_KEY_ID!,
-            internalOrderId: order.id,
+            subscriptionId: sub.id,
+            planKey,
+            cycle,
+            amount: Number(amountPaise),
+            currency: currency as 'INR',
+            notes: { workspaceId, planKey, cycle },
+            prefill: {
+                name: prefillName,
+                email: prefillEmail,
+                contact: prefillContact,
+            },
         };
     }
 
-    async verifyHandler(input: VerifyHandlerDto): Promise<boolean> {
-        const { razorpay_payment_id, razorpay_order_id, razorpay_signature, internalOrderId } = input
-
-        const hmac = crypto.createHmac('sha256', process.env.RZP_KEY_SECRET!);
-        hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
-        const expected = hmac.digest('hex');
-        const ok = expected === razorpay_signature;
-
-        await this.prisma.order.update({
-            where: { id: internalOrderId },
-            data: {
-                razorpayPaymentId: razorpay_payment_id ?? null,
-                razorpaySignature: razorpay_signature ?? null,
-                // don't mark paid here; rely on webhook for source of truth
-                metadata: { ...(input.metadata as any ?? {}), clientVerified: ok },
-            },
-        });
-
-        return ok
-    }
-
-    // ---- Helpers: price map / customer linkage ------------------------
-
-    private getPriceId(planKey: PlanKey, cycle: BillingCycle): string {
-        const priceId = this.PRICE_ID[planKey]?.[cycle];
-        if (!priceId) {
-            throw new Error(`No price configured for plan=${planKey} cycle=${cycle}`);
-        }
-        return priceId;
-    }
-
-    /**
-     * Get or create a Stripe Customer linked to this workspace.
-     * Prefers Workspace.stripeCustomerId if you store it there.
-     * Fallback: try latest Subscription row’s stripeCustomerId for this workspace.
-     */
-    private async ensureStripeCustomerForWorkspace(
-        workspaceId: string,
-    ): Promise<string> {
-        // If you have stripeCustomerId on Workspace, use that:
-        const ws = await this.prisma.workspace
-            .findUnique({
-                where: { id: workspaceId },
-                select: { stripeCustomerId: true },
-            })
-            .catch(() => null as any);
-
-        if (ws?.stripeCustomerId) return ws.stripeCustomerId;
-
-        // Fallback: read from latest subscription (if exists)
-        const lastSub = await this.prisma.subscription.findFirst({
-            where: { workspaceId, stripeCustomerId: { not: null } },
-            orderBy: { createdAt: 'desc' },
-            select: { stripeCustomerId: true },
-        });
-        if (lastSub?.stripeCustomerId) {
-            // Optionally, copy it back to workspace for faster future lookups
-            await this.safeSetWorkspaceStripeCustomerId(
-                workspaceId,
-                lastSub.stripeCustomerId,
-            );
-            return lastSub.stripeCustomerId;
-        }
-
-        // Create a new Stripe customer and persist linkage
-        const customer = await this.stripe.customers.create({
-            metadata: { workspaceId },
-        });
-
-        await this.safeSetWorkspaceStripeCustomerId(workspaceId, customer.id);
-        return customer.id;
-    }
-
-    /** Write back the customer id onto workspace if that column exists */
-    private async safeSetWorkspaceStripeCustomerId(
-        workspaceId: string,
-        stripeCustomerId: string,
-    ) {
-        try {
-            await this.prisma.workspace.update({
-                where: { id: workspaceId },
-                data: { stripeCustomerId },
-            });
-        } catch {
-            // If your Workspace model doesn’t have stripeCustomerId, ignore or store in another table.
-        }
-    }
-
-    // -------------------------------------------------------------------
-    // The remaining interface methods will be implemented next…
-    // (changePlan, cancel, resume, createPortalSession, queries, webhooks, etc.)
-    // -------------------------------------------------------------------
-
-    // stubs to satisfy interface for now; we’ll fill them in later
     async changePlan(input: ChangePlanDto): Promise<void> {
-        const {
-            workspaceId,
-            newPlanKey,
-            cycle,
-            proration = 'create_prorations',
-        } = input;
+        const { workspaceId, newPlanKey, cycle, immediate = true } = input;
 
-        // load current sub (needs stripeSubId)
-        const sub = await this.prisma.subscription.findFirst({
+        const current = await this.prisma.subscription.findFirst({
             where: {
                 workspaceId,
-                stripeSubId: { not: null },
+                razorpaySubId: { not: null },
                 status: { in: ['active', 'trialing', 'past_due', 'grace'] },
             },
             orderBy: { createdAt: 'desc' },
-            select: { stripeSubId: true },
+            select: { razorpaySubId: true },
         });
-        if (!sub?.stripeSubId)
-            throw new Error('No existing Stripe subscription for this workspace');
+        if (!current?.razorpaySubId)
+            throw new Error('No active Razorpay subscription to change');
 
-        const live = await this.stripe.subscriptions.retrieve(sub.stripeSubId, {
-            expand: ['items.data.price'],
-        });
-        const currentItem = live.items.data[0];
-        if (!currentItem) throw new Error('Subscription has no items');
-
-        // pick new price id
-        const priceId = this.getPriceId(
-            newPlanKey as PlanKey,
-            cycle as BillingCycle,
+        // 1) Cancel current subscription
+        await this.rzp.subscriptions.cancel(
+            current.razorpaySubId,
+            immediate ? false : true, // false = cancel now, true = cancel at cycle end
         );
 
-        await this.stripe.subscriptions.update(live.id, {
-            items: [{ id: currentItem.id, price: priceId }],
-            proration_behavior: proration,
-            // NOTE: do NOT set billing_cycle_anchor here → keeps renewal date (anchor)
-        });
-        // DB will update via webhook customer.subscription.updated
-        //? doubts in prorartion
+        // 2) Create new subscription right away (if immediate), else let current run to end and new will be bought later
+        if (immediate) {
+            const planId = await this.getRazorpayPlanId(newPlanKey, cycle);
+
+            // retrieve customer id from DB
+            const row = await this.prisma.subscription.findFirst({
+                where: { razorpaySubId: current.razorpaySubId },
+                select: { razorpayCustomerId: true, workspaceId: true },
+            });
+            const customerId =
+                row?.razorpayCustomerId ??
+                (await this.getRazorpayCustomerId(workspaceId));
+            if (!customerId)
+                throw new Error('Missing Razorpay customer for workspace');
+
+            const newSub = await this.rzp.subscriptions.create({
+                plan_id: planId,
+                total_count: cycle === 'monthly' ? 12 : 1,
+                customer_notify: 1,
+                notes: { workspaceId, planKey: newPlanKey, cycle, customerId },
+            });
+
+            // optimistic insert; webhook will finalize
+            await this.prisma.subscription
+                .create({
+                    data: {
+                        workspaceId,
+                        planKey: newPlanKey,
+                        billingCycle: cycle,
+                        status: 'active',
+                        periodStart: new Date(),
+                        periodEnd: this.computeNextPeriodEnd(new Date(), cycle),
+                        razorpayCustomerId: customerId,
+                        razorpaySubId: newSub.id,
+                    },
+                })
+                .catch(() => void 0);
+        }
     }
 
     async cancel(input: CancelDto): Promise<void> {
         const { workspaceId, atPeriodEnd } = input;
-
         const sub = await this.prisma.subscription.findFirst({
             where: {
                 workspaceId,
-                stripeSubId: { not: null },
+                razorpaySubId: { not: null },
                 status: { in: ['active', 'trialing', 'past_due', 'grace'] },
             },
             orderBy: { createdAt: 'desc' },
-            select: { stripeSubId: true },
+            select: { razorpaySubId: true },
         });
-        if (!sub?.stripeSubId)
-            throw new Error('No active Stripe subscription to cancel');
+        if (!sub?.razorpaySubId)
+            throw new Error('No active Razorpay subscription to cancel');
 
-        if (atPeriodEnd) {
-            await this.stripe.subscriptions.update(sub.stripeSubId, {
-                cancel_at_period_end: true,
-            });
-        } else {
-            await this.stripe.subscriptions.cancel(sub.stripeSubId);
-        }
-        // DB updates via webhook (updated/deleted)
+        await this.rzp.subscriptions.cancel(sub.razorpaySubId, atPeriodEnd ? true : false);
+        // webhook `subscription.cancelled` will persist final state
     }
 
     async resume(input: ResumeDto): Promise<void> {
-        const { workspaceId } = input;
-
-        const sub = await this.prisma.subscription.findFirst({
-            where: { workspaceId, stripeSubId: { not: null } },
-            orderBy: { createdAt: 'desc' },
-            select: { stripeSubId: true },
+        // Razorpay doesn’t resume a canceled sub; create a fresh one
+        await this.changePlan({
+            workspaceId: input.workspaceId,
+            newPlanKey: input.planKey,
+            cycle: input.cycle,
+            immediate: true,
         });
-        if (!sub?.stripeSubId)
-            throw new Error('No Stripe subscription for this workspace');
-
-        await this.stripe.subscriptions.update(sub.stripeSubId, {
-            cancel_at_period_end: false,
-        });
-        // DB updates via webhook
     }
 
     async createPortalSession(input: PortalDto): Promise<{ url: string }> {
-        const { workspaceId, returnUrl } = input;
-        const customerId = await this.ensureStripeCustomerForWorkspace(workspaceId);
-
-        const session = await this.stripe.billingPortal.sessions.create({
-            customer: customerId,
-            return_url:
-                returnUrl ??
-                `${process.env.APP_URL}/billing/portal-return?ws=${workspaceId}`,
-        });
-
-        if (!session.url) throw new Error('Stripe did not return a portal URL');
-        return { url: session.url };
+        // Razorpay has no hosted billing portal; return your app’s page
+        const url = `${process.env.APP_URL}/billing?ws=${encodeURIComponent(input.workspaceId)}`;
+        return { url };
     }
 
+    // ---------------------------
+    // Queries
+    // ---------------------------
     async getCurrentSubscription(
         workspaceId: string,
     ): Promise<SubscriptionDto | null> {
         const row = await this.prisma.subscription.findFirst({
             where: { workspaceId },
-            orderBy: [{ createdAt: 'desc' }],
+            orderBy: { createdAt: 'desc' },
         });
-        return row as any; // or map to DTO if needed
+        return row as any;
     }
 
     async getEntitlements(workspaceId: string): Promise<EntitlementsDto> {
         const sub = await this.getCurrentSubscription(workspaceId);
-
-        // defaults for free if no sub
-        const plan = sub?.planKey ?? ('STARTER' as PlanKey);
+        const plan = (sub?.planKey ?? 'STARTER') as PlanKey;
         const status = (sub?.status ?? 'canceled') as SubscriptionStatus;
 
-        // example plan config (tweak to your product)
         const PLAN_LIMITS: Record<PlanKey, Record<string, number | boolean>> = {
             STARTER: { projects: 3, customDomain: false, aiTokens: 100_000 },
             GROWTH: { projects: 20, customDomain: true, aiTokens: 1_000_000 },
             ENTERPRISE: { projects: 999, customDomain: true, aiTokens: 99_999_999 },
-            DEFAULT: {},
         };
 
-        // simple status-based downgrade sample:
         const effectivePlan: PlanKey =
             status === 'canceled' || status === 'frozen' ? 'STARTER' : plan;
 
@@ -327,21 +232,18 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
             customDomain: !!limits.customDomain,
         };
 
-        return {
-            workspaceId,
-            effectivePlan,
-            status,
-            limits,
-            features,
-        } as EntitlementsDto;
+        return { workspaceId, effectivePlan, status, limits, features };
     }
 
-    async upsertFromStripeSubscription(
-        payload: UpsertFromStripeSubscriptionDto,
+    // ---------------------------
+    // Webhook sync (Razorpay → DB)
+    // ---------------------------
+    async upsertFromRazorpaySubscription(
+        payload: UpsertFromRazorpaySubscriptionDto,
     ): Promise<void> {
         const {
-            stripeSubId,
-            stripeCustomerId,
+            razorpaySubId,
+            razorpayCustomerId,
             workspaceId,
             planKey,
             billingCycle,
@@ -353,7 +255,7 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         } = payload;
 
         await this.prisma.subscription.upsert({
-            where: { stripeSubId },
+            where: { razorpaySubId },
             create: {
                 workspaceId,
                 planKey,
@@ -361,8 +263,8 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
                 status,
                 periodStart,
                 periodEnd,
-                stripeCustomerId,
-                stripeSubId,
+                razorpayCustomerId,
+                razorpaySubId,
                 cancelAtPeriodEnd: !!cancelAtPeriodEnd,
                 cancelsAt: cancelsAt ?? null,
             },
@@ -373,34 +275,34 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
                 status,
                 periodStart,
                 periodEnd,
-                stripeCustomerId,
+                razorpayCustomerId,
                 cancelAtPeriodEnd: !!cancelAtPeriodEnd,
                 cancelsAt: cancelsAt ?? null,
             },
         });
     }
 
-    async setStatusActiveByStripeSubId(stripeSubId: string): Promise<void> {
+    async setStatusActiveByRazorpaySubId(razorpaySubId: string): Promise<void> {
         await this.prisma.subscription.updateMany({
-            where: { stripeSubId },
+            where: { razorpaySubId },
             data: { status: 'active' },
         });
     }
 
-    async setStatusPastDueByStripeSubId(stripeSubId: string): Promise<void> {
+    async setStatusPastDueByRazorpaySubId(razorpaySubId: string): Promise<void> {
         await this.prisma.subscription.updateMany({
-            where: { stripeSubId },
+            where: { razorpaySubId },
             data: { status: 'past_due' },
         });
     }
 
-    async setCanceledByStripeSubId(input: {
-        stripeSubId: string;
+    async setCanceledByRazorpaySubId(input: {
+        razorpaySubId: string;
         periodEnd?: Date;
     }): Promise<void> {
-        const { stripeSubId, periodEnd } = input;
+        const { razorpaySubId, periodEnd } = input;
         await this.prisma.subscription.updateMany({
-            where: { stripeSubId },
+            where: { razorpaySubId },
             data: {
                 status: 'canceled',
                 periodEnd: periodEnd ?? new Date(),
@@ -410,113 +312,158 @@ export default class PrismaBillingModuleRepo implements BillingmoduleRepo {
         });
     }
 
-    /**
-     * Return true if this Stripe event.id was already processed (for dedupe)
-     */
-    async isWebhookEventProcessed(eventId: string): Promise<boolean> {
-        // Defensive: empty/undefined ids are treated as "not processed"
-        if (!eventId) return false;
-
-        try {
-            const found = await this.prisma.webhookEvent.findUnique({
-                where: { id: eventId },
-                select: { id: true },
-            });
-            return !!found;
-        } catch (err) {
-            // If the table doesn't exist (e.g., migration not applied),
-            // fail closed by treating as not processed so you still handle the event.
-            // Optionally log this so you don’t miss creating the table.
-            console.warn('isWebhookEventProcessed failed (check migrations):', err);
-            return false;
-        }
+    // ---------------------------
+    // Idempotency / Reconciliation
+    // ---------------------------
+    async isWebhookEventProcessed(dedupeKey: string): Promise<boolean> {
+        if (!dedupeKey) return false;
+        const found = await this.prisma.webhookEvent
+            .findUnique({ where: { id: dedupeKey }, select: { id: true } })
+            .catch(() => null);
+        return !!found;
     }
 
-    /**
-     * Persist that a Stripe event.id has been processed (pair to the check above)
-     */
-    async markWebhookEventProcessed(eventId: string): Promise<void> {
-        if (!eventId) return;
-
-        try {
-            await this.prisma.webhookEvent.create({
-                data: { id: eventId },
+    async markWebhookEventProcessed(dedupeKey: string): Promise<void> {
+        if (!dedupeKey) return;
+        await this.prisma.webhookEvent
+            .create({ data: { id: dedupeKey } })
+            .catch((e: any) => {
+                if (e?.code !== 'P2002') throw e; // swallow duplicates
             });
-        } catch (err: any) {
-            // If called twice for the same event, unique PK on id will throw — that’s fine.
-            // Swallow "already exists" errors to keep idempotent behavior.
-            const isUniqueViolation =
-                typeof err?.code === 'string' &&
-                (err.code === 'P2002' || err.code === 'P2003'); // Prisma unique/constraint codes
-            if (!isUniqueViolation) {
-                throw err;
-            }
-        }
     }
 
     async listSubscriptionsForReconciliation(): Promise<
-        ReconciliationSubscriptionItemDto[]
+        Array<ReconciliationSubscriptionItemDto>
     > {
         const rows = await this.prisma.subscription.findMany({
-            where: { status: { in: ['active', 'trialing', 'past_due', 'grace'] } },
-            select: { workspaceId: true, stripeSubId: true },
+            where: {
+                status: { in: ['active', 'trialing', 'past_due', 'grace'] },
+                razorpaySubId: { not: null },
+            },
+            select: { workspaceId: true, razorpaySubId: true },
         });
-        return rows.filter((r) => !!r.stripeSubId) as any;
+        return rows as any;
     }
 
-    async patchSubscriptionByStripeSubId(
-        patch: Partial<SubscriptionDto> & { stripeSubId: string },
+    async patchSubscriptionByRazorpaySubId(
+        patch: Partial<SubscriptionDto> & { razorpaySubId: string },
     ): Promise<void> {
-        const { stripeSubId, ...data } = patch;
+        const { razorpaySubId, ...data } = patch;
         await this.prisma.subscription.updateMany({
-            where: { stripeSubId },
+            where: { razorpaySubId },
             data: data as any,
         });
     }
 
-    async getStripeCustomerId(workspaceId: string): Promise<string | null> {
+    // ---------------------------
+    // Customer linkage
+    // ---------------------------
+    async getRazorpayCustomerId(workspaceId: string): Promise<string | null> {
         try {
             const ws = await this.prisma.workspace.findUnique({
                 where: { id: workspaceId },
-                select: { stripeCustomerId: true },
+                select: { razorpayCustomerId: true },
             });
-            return ws?.stripeCustomerId ?? null;
+            return ws?.razorpayCustomerId ?? null;
         } catch {
             return null;
         }
     }
 
-    async setStripeCustomerId(
+    async setRazorpayCustomerId(
         workspaceId: string,
-        stripeCustomerId: string,
+        razorpayCustomerId: string,
     ): Promise<void> {
         try {
             await this.prisma.workspace.update({
                 where: { id: workspaceId },
-                data: { stripeCustomerId },
+                data: { razorpayCustomerId },
             });
         } catch {
-            // if you don't store it on workspace, ignore or store elsewhere
+            /* ignore if no column; store elsewhere if needed */
         }
     }
 
-    async mapPriceId(
-        priceId: string,
-    ): Promise<{ planKey: PlanKey; cycle: BillingCycle }> {
-        // Example mapping (replace with your real Stripe price IDs)
-        const map: Record<string, { planKey: PlanKey; cycle: BillingCycle }> = {
-            price_123MONTHLY_STARTER: { planKey: 'STARTER', cycle: 'monthly' },
-            price_456YEARLY_STARTER: { planKey: 'STARTER', cycle: 'yearly' },
-            price_789MONTHLY_GROWTH: { planKey: 'GROWTH', cycle: 'monthly' },
-            price_abcYEARLY_GROWTH: { planKey: 'GROWTH', cycle: 'yearly' },
-            price_defMONTHLY_ENTER: { planKey: 'ENTERPRISE', cycle: 'monthly' },
-            price_ghiYEARLY_ENTER: { planKey: 'ENTERPRISE', cycle: 'yearly' },
+    // ---------------------------
+    // Mapping helpers
+    // ---------------------------
+    async getRazorpayPlanId(
+        planKey: PlanKey,
+        cycle: BillingCycle,
+    ): Promise<string> {
+        const key = `${planKey}:${cycle}`;
+        const MAP: Record<string, string> = {
+            'STARTER:monthly': process.env.RZP_PLAN_STARTER_M!,
+            'STARTER:yearly': process.env.RZP_PLAN_STARTER_Y!,
+            'GROWTH:monthly': process.env.RZP_PLAN_GROWTH_M!,
+            'GROWTH:yearly': process.env.RZP_PLAN_GROWTH_Y!,
+            'ENTERPRISE:monthly': process.env.RZP_PLAN_ENTERPRISE_M!,
+            'ENTERPRISE:yearly': process.env.RZP_PLAN_ENTERPRISE_Y!,
         };
+        const id = MAP[key];
+        if (!id) throw new Error(`Unknown plan mapping for ${key}`);
+        return id;
+    }
 
-        const found = map[priceId];
-        if (!found) {
-            throw new Error(`Unknown Stripe price id: ${priceId}`);
+    async mapRazorpayPlanId(
+        planId: string,
+    ): Promise<{ planKey: PlanKey; cycle: BillingCycle }> {
+        const rev: Record<string, { planKey: PlanKey; cycle: BillingCycle }> = {
+            [process.env.RZP_PLAN_STARTER_M!]: {
+                planKey: 'STARTER',
+                cycle: 'monthly',
+            },
+            [process.env.RZP_PLAN_STARTER_Y!]: {
+                planKey: 'STARTER',
+                cycle: 'yearly',
+            },
+            [process.env.RZP_PLAN_GROWTH_M!]: { planKey: 'GROWTH', cycle: 'monthly' },
+            [process.env.RZP_PLAN_GROWTH_Y!]: { planKey: 'GROWTH', cycle: 'yearly' },
+            [process.env.RZP_PLAN_ENTERPRISE_M!]: {
+                planKey: 'ENTERPRISE',
+                cycle: 'monthly',
+            },
+            [process.env.RZP_PLAN_ENTERPRISE_Y!]: {
+                planKey: 'ENTERPRISE',
+                cycle: 'yearly',
+            },
+        };
+        const m = rev[planId];
+        if (!m) throw new Error(`Unknown Razorpay plan id ${planId}`);
+        return m;
+    }
+
+    // ---------------------------
+    // Utilities
+    // ---------------------------
+    private computeNextPeriodEnd(start: Date, cycle: BillingCycle): Date {
+        const d = new Date(start);
+        if (cycle === 'monthly') d.setMonth(d.getMonth() + 1);
+        else d.setFullYear(d.getFullYear() + 1);
+        return d;
+    }
+
+    /** Map Razorpay subscription.status → your app status */
+    public mapRazorpayStatus(s: string): SubscriptionStatus {
+        switch (s) {
+            case 'active':
+                return 'active';
+            case 'authenticated': // mandate created but not charged yet
+            case 'pending':
+                return 'trialing';
+            case 'halted':
+                return 'past_due';
+            case 'completed':
+                return 'canceled'; // finished term
+            case 'cancelled':
+                return 'canceled';
+            default:
+                return 'frozen';
         }
-        return found;
+    }
+
+    /** Build a stable dedupe key for Razorpay webhook (no event.id in payload) */
+    public static makeWebhookDedupeKey(rawBody: string) {
+        return crypto.createHash('sha256').update(rawBody).digest('hex');
     }
 }

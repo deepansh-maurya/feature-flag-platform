@@ -101,7 +101,7 @@ export class CancelDto {
   atPeriodEnd!: boolean;
 }
 
-export class ResumeDto {
+export class  ResumeDto {
   @ApiProperty()
   @IsString()
   workspaceId!: string;

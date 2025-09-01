@@ -1,32 +1,34 @@
 import { http } from "@/src/shared/lib/http";
 import { Cancel, ChangePlan, Entitlements, Portal, Resume, StartCheckout, Subscription } from "./types";
 
+const BASE_ROUTE = "/billing"
+
 export async function startCheckout(
   input: StartCheckout
 ): Promise<{ url: string }> {
-  const { data } = await http.post("/api/v1/billing/checkout", input);
+  const { data } = await http.post(BASE_ROUTE + "/start-checkout", input);
   return data as { url: string };
 }
 
 export async function changePlan(input: ChangePlan): Promise<void> {
-  await http.post("/api/v1/billing/change-plan", input);
+  await http.post(BASE_ROUTE + "/change-plan", input);
 }
 
 export async function cancel(input: Cancel): Promise<void> {
-  await http.post("/api/v1/billing/cancel", {
+  await http.post(BASE_ROUTE + "/cancel", {
     ...input,
     atPeriodEnd: input.atPeriodEnd ?? true,
   });
 }
 
 export async function resume(input: Resume): Promise<void> {
-  await http.post("/api/v1/billing/resume", input);
+  await http.post(BASE_ROUTE + "/resume", input);
 }
-    
+
 export async function createPortalSession(
   input: Portal
 ): Promise<{ url: string }> {
-  const { data } = await http.post("/api/v1/billing/portal", input);
+  const { data } = await http.post(BASE_ROUTE + "/portal", input);
   return data as { url: string };
 }
 
@@ -34,7 +36,7 @@ export async function createPortalSession(
 export async function getCurrentSubscription(
   workspaceId: string
 ): Promise<Subscription | null> {
-  const { data } = await http.get("/api/v1/billing/subscription", {
+  const { data } = await http.get(BASE_ROUTE + "/subscription", {
     params: { workspaceId },
   });
   return (data ?? null) as Subscription | null;
@@ -43,7 +45,7 @@ export async function getCurrentSubscription(
 export async function getEntitlements(
   workspaceId: string
 ): Promise<Entitlements> {
-  const { data } = await http.get("/api/v1/billing/entitlements", {
+  const { data } = await http.get(BASE_ROUTE + "/entitlements", {
     params: { workspaceId },
   });
   return data as Entitlements;

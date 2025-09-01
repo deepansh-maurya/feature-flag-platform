@@ -15,9 +15,9 @@ export interface StartCheckout {
   workspaceId: string;
   planKey: PlanKey;
   cycle: BillingCycle;
-  successUrl?: string; // optional: where to return after payment
-  cancelUrl?: string;  // optional: where to return if canceled
-  couponCode?: string; // optional promo
+  prefillName?: string;
+  prefillEmail?: string;
+  prefillContact?: string;
 }
 
 export interface ChangePlan {

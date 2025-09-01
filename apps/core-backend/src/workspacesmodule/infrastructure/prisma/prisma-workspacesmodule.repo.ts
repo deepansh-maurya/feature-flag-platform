@@ -1,8 +1,8 @@
 // infrastructure/prisma/prisma-workspacesmodule.repo.ts
 import { Injectable, BadRequestException, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { BillingStatus, PlanKey, RoleKey } from 'generated/prisma';
+import { BillingStatus, PlanKey, RoleKey } from '@prisma/client';
 import PrismaService, { PrismaTx } from 'src/infra/prisma/prisma.service';
-import { InviteSummary, MemberSummary, PlanLimits, UsageCounts, WorkspaceRole, WorkspacesmoduleRepo, WorkspaceSummary } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
+import { InviteSummary, MemberSummary, PlanLimits, UsageCounts, WorkspacesmoduleRepo, WorkspaceSummary } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
 import { WorkspaceEntity } from 'src/workspacesmodule/domain/workspacesmodule.entity';
 import { AcceptInviteDto, AddMemberDto, ArchiveWorkspaceDto, ChangeMemberRoleDto, CheckLimitDto, CreateWorkspaceDto, GetMemberRoleDto, GetWorkspaceDto, InviteMemberDto, ListMyWorkspacesDto, PaginationDto, RemoveMemberDto, RestoreWorkspaceDto, RevokeInviteDto, TransferOwnershipDto, UpdateWorkspaceDto } from 'src/workspacesmodule/interface/dto/create-workspacesmodule.dto';
 
@@ -111,15 +111,17 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       .replace(/(^-|-$)+/g, '');
   }
 
-  async ensureUniqueSlug(base: string): Promise<string> {
+  async ensureUniqueSlug(base: string, tx?: PrismaTx): Promise<string> {
     let slug = this.slugify(base);
     if (!slug) slug = 'workspace';
     let suffix = 0;
 
+    const db = tx ?? this.prisma
+
     // Try slug, slug-2, slug-3 ...
     // Use findUnique on slug since it’s unique
     while (true) {
-      const exists = await this.prisma.workspace.findUnique({
+      const exists = await db.workspace.findUnique({
         where: { slug },
         select: { id: true },
       });
@@ -133,7 +135,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   private toMemberSummary(row: any): MemberSummary {
     return {
       userId: row.userId,
-      role: row.role as WorkspaceRole,
+      role: row.role as RoleKey,
       joinedAt: row.createdAt,
     };
   }
@@ -143,7 +145,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     return {
       id: row.id,
       email: row.email,
-      role: row.roleKey.toUpperCase() as Exclude<WorkspaceRole, "OWNER">,
+      role: row.roleKey.toLowerCase(),
       invitedByUserId: row.invitedByUserId ?? "",   // if you added invitedByUserId
       expiresAt: row.expiresAt,
       createdAt: row.createdAt,
@@ -155,8 +157,8 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   // --------------------------
 
   async create(dto: CreateWorkspaceDto, tx?: PrismaTx): Promise<WorkspaceEntity> {
-    const slug = dto.slug ? this.slugify(dto.slug) : await this.ensureUniqueSlug(dto.name);
-    const finalSlug = dto.slug ? await this.ensureUniqueSlug(slug) : slug;
+    const slug = dto.slug ? this.slugify(dto.slug) : await this.ensureUniqueSlug(dto.name, tx);
+    const finalSlug = dto.slug ? await this.ensureUniqueSlug(slug, tx) : slug;
 
     const db = tx ?? this.prisma
 
@@ -290,7 +292,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
 
   // Membership 
 
-  async addMember(dto: AddMemberDto,tx?:PrismaTx): Promise<void> {
+  async addMember(dto: AddMemberDto, tx?: PrismaTx): Promise<void> {
     // Expect a UNIQUE index on (workspaceId, userId)
     try {
       const db = tx ?? this.prisma
@@ -332,7 +334,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     }
   }
 
-  async getMemberRole(dto: GetMemberRoleDto): Promise<WorkspaceRole | null> {
+  async getMemberRole(dto: GetMemberRoleDto): Promise<RoleKey | null> {
     const m = await this.prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
@@ -342,7 +344,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       },
       select: { roleKey: true },
     });
-    return m ? (m.roleKey as WorkspaceRole) : null;
+    return m ? (m.roleKey as RoleKey) : null;
   }
 
   async listMembers(dto: { workspaceId: string; pagination?: PaginationDto }): Promise<{ items: MemberSummary[]; nextCursor: string | null }> {
@@ -450,7 +452,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   async createInvite(dto: InviteMemberDto): Promise<InviteSummary> {
     // Prevent inviting OWNER via invites
     // (Service already restricts, but we double-guard here)
-    // dto.role is Exclude<WorkspaceRole, 'OWNER'> by type, so it’s safe.
+    // dto.role is Exclude<RoleKey, 'OWNER'> by type, so it’s safe.
 
     // Optional: prevent duplicate active invite for same (workspaceId, email)
     const now = new Date();
@@ -490,7 +492,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
 
   async acceptInvite(
     dto: AcceptInviteDto
-  ): Promise<{ workspaceId: string; role: Exclude<WorkspaceRole, 'OWNER'> } | null> {
+  ): Promise<{ workspaceId: string; role: Exclude<RoleKey, 'OWNER'> } | null> {
     const now = new Date();
 
     // Find a valid (not expired) invite by tokenHash
@@ -514,7 +516,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     await this.prisma.invite.delete({ where: { id: invite.id } });
 
     // Return the info needed by the service to add membership
-    const role = invite.roleKey.toUpperCase() as Exclude<WorkspaceRole, 'OWNER'>;
+    const role = invite.roleKey.toUpperCase() as Exclude<RoleKey, 'OWNER'>;
     return { workspaceId: invite.workspaceId, role };
   }
 

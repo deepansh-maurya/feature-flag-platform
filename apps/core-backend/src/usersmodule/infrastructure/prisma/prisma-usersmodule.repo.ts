@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import { CreateUserDto, GetUserByEmailDto, SoftDeleteUserDto, UpdateUserDto, UserDto } from '../../interface/dto/create-usersmodule.dto'
 import { UserRepo } from 'src/usersmodule/application/ports/usersmodule.repo';
-import { UserStatus } from 'generated/prisma';
+import { UserStatus } from '@prisma/client'
 
 @Injectable()
 export class PrismaUserRepository implements UserRepo {

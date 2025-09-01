@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useState } from "react";
 import "./Pricing.css";
-import { useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { Routes } from "../../../../../app/constants";
 
 type Primitive = number | string;
@@ -118,6 +118,7 @@ export default function Pricing({
 }: {
   toShowHeading: boolean;
 }) {
+  const path  = usePathname()
   const [yearly, setYearly] = useState<boolean>(false);
   const router = useRouter();
   const prices = useMemo(
@@ -130,7 +131,10 @@ export default function Pricing({
   );
 
   const goToRegisterPage = () => {
-    router.push(Routes.signup);
+    if(path?.includes("dashboard")){
+      return
+    }
+    router.push(Routes.signup());
   };
 
   return (
@@ -141,7 +145,7 @@ export default function Pricing({
             <h1 className="fx-title flex  justify-center items-center gap-6">
               <div
                 onClick={() => {
-                  router.push(Routes.landingPage);
+                  router.push(Routes.landingPage());
                 }}
                 className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner cursor-pointer"
               />
@@ -153,7 +157,7 @@ export default function Pricing({
               {/* LOGIN BUTTON */}
               <button
                 className="login-btn"
-                onClick={() => router.push(Routes.login)}
+                onClick={() => router.push(Routes.login())}
               >
                 Login
               </button>

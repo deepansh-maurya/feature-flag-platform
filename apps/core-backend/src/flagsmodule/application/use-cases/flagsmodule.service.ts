@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { EnvKey, FlagType } from 'generated/prisma';
+import { EnvKey, FlagType } from '@prisma/client'
 import { CreateFlagDto, CreateFlagEnvConfigDto, CreateVersionDto, CreateVersionEnvConfigDto, UpsertFlagMetaDto } from '../../interface/dto/create-flagsmodule.dto';
 import { FlagMetaDTO, FLAGS_REPO, FlagsRepository } from '../ports/flagsmodule.repo';
 

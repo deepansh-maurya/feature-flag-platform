@@ -1,4 +1,4 @@
-import AccountSettingsPage from "@/src/core/components/AccountSettingsPage/AccountSettingsPage.tsx";
+import AccountSettingsPage from "@/src/features/settings/components/AccountSettingsPage/AccountSettingsPage.tsx";
 
 export default function Account(){
     return <AccountSettingsPage />

@@ -1,4 +1,4 @@
-import TeamManagementPage from "@/src/core/components/TeamManagementPage/TeamManagementPage";
+import TeamManagementPage from "@/src/features/settings/components/TeamManagementPage/TeamManagementPage";
 
 export default function Team(){
     return <TeamManagementPage />

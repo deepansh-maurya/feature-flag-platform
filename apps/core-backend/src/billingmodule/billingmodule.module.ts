@@ -1,16 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AuditModuleService } from 'src/auditmodule/application/use-cases/auditmodule.service';
-import { PrismaAuditModuleRepo } from 'src/auditmodule/infrastructure/prisma/prisma-auditmodule.repo';
-import { AuditModuleController } from 'src/auditmodule/interface/auditmodule.controller';
+
 import PrismaService from 'src/infra/prisma/prisma.service';
+import { BillingmoduleController } from './interface/billingmodule.controller';
+import RazorpayBillingModuleRepo from './infrastructure/prisma/prisma-billingmodule.repo';
+import { BillingmoduleService } from './application/use-cases/billingmodule.service';
+import { BillingmoduleRepoToken } from './application/ports/billingmodule.repo';
 
 @Module({
-  controllers: [AuditModuleController],
+  controllers: [BillingmoduleController],
   providers: [
     PrismaService,
-    { provide: 'AuditModuleRepo', useClass: PrismaAuditModuleRepo },
-    { provide: AuditModuleService, useFactory: (repo: PrismaAuditModuleRepo) => new AuditModuleService(repo), inject: ['AuditModuleRepo'] },
+    BillingmoduleService,
+    { provide: BillingmoduleRepoToken, useClass: RazorpayBillingModuleRepo },
   ],
-  exports: [AuditModuleService],
+  exports: [BillingmoduleService],
 })
-export class AuditModule {}
+export class BillingModule {}

@@ -1,10 +1,9 @@
-// src/auditmodule/application/use-cases/auditmodule.service.ts
-import { Injectable } from '@nestjs/common';
-import { AuditModuleRepo, CreateAuditLog, ListAuditLogsParams } from '../ports/auditmodule.repo';
+import { Inject, Injectable } from '@nestjs/common';
+import { AuditModuleRepo, AuditmoduleRepoToken, CreateAuditLog, ListAuditLogsParams } from '../ports/auditmodule.repo';
 
 @Injectable()
 export class AuditModuleService {
-  constructor(private readonly repo: AuditModuleRepo) {}
+  constructor( @Inject(AuditmoduleRepoToken) private readonly repo: AuditModuleRepo) {}
 
   async append(dto: CreateAuditLog): Promise<void> {
     // (optional) enrich/validate dto here

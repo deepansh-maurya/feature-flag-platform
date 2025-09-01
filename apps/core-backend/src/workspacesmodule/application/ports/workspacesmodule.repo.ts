@@ -1,4 +1,5 @@
 // application/ports/workspacesmodule.repo.ts
+import { RoleKey } from "@prisma/client";
 import { BillingStatus } from "generated/prisma";
 import { PrismaTx } from "src/infra/prisma/prisma.service";
 import { WorkspaceEntity } from "src/workspacesmodule/domain/workspacesmodule.entity";
@@ -7,7 +8,6 @@ import { AcceptInviteDto, AddMemberDto, ArchiveWorkspaceDto, ByWorkspaceDto, Cha
 export const WorkspacesmoduleRepoToken = Symbol("WorkspacesmoduleRepo");
 
 // ---------- Roles / Enums ----------
-export type WorkspaceRole = "OWNER" | "ADMIN" | "EDITOR" | "VIEWER";
 
 export const LimitKind = {
   MEMBERS: "members",
@@ -36,14 +36,14 @@ export interface WorkspaceSummary {
 
 export interface MemberSummary {
   userId: string;
-  role: WorkspaceRole;
+  role: RoleKey;
   joinedAt: Date;
 }
 
 export interface InviteSummary {
   id: string;
   email: string;
-  role: Exclude<WorkspaceRole, "OWNER">;
+  role: Exclude<RoleKey, "owner">;
   invitedByUserId: string;
   expiresAt: Date;
   createdAt: Date;
@@ -95,7 +95,7 @@ export interface WorkspacesmoduleRepo {
   addMember(dto: AddMemberDto, tx?: PrismaTx): Promise<void>;
   changeMemberRole(dto: ChangeMemberRoleDto): Promise<void>;
   removeMember(dto: RemoveMemberDto): Promise<void>;
-  getMemberRole(dto: GetMemberRoleDto): Promise<WorkspaceRole | null>;
+  getMemberRole(dto: GetMemberRoleDto): Promise<RoleKey | null>;
   listMembers(dto: ByWorkspaceDto & { pagination?: PaginationDto }): Promise<{ items: MemberSummary[]; nextCursor: string | null }>;
 
   // Ownership
@@ -103,7 +103,7 @@ export interface WorkspacesmoduleRepo {
 
   // Invites
   createInvite(dto: InviteMemberDto): Promise<InviteSummary>;
-  acceptInvite(dto: AcceptInviteDto): Promise<{ workspaceId: string; role: Exclude<WorkspaceRole, "OWNER"> } | null>;
+  acceptInvite(dto: AcceptInviteDto): Promise<{ workspaceId: string; role: Exclude<RoleKey, "OWNER"> } | null>;
   revokeInvite(dto: RevokeInviteDto): Promise<void>;
   listInvites(dto: ByWorkspaceDto & { pagination?: PaginationDto }): Promise<{ items: InviteSummary[]; nextCursor: string | null }>;
 
@@ -113,7 +113,7 @@ export interface WorkspacesmoduleRepo {
   checkLimit(dto: CheckLimitDto): Promise<{ allowed: boolean; limit: number; used: number }>;
 
   // Utility
-  ensureUniqueSlug(slug: string): Promise<string>;                  // returns same slug or postfixed unique
+  ensureUniqueSlug(slug: string,tx?:PrismaTx): Promise<string>;                  // returns same slug or postfixed unique
   // Transaction boundary (optional)
   runInTransaction<T>(fn: (tx: WorkspacesmoduleRepo) => Promise<T>): Promise<T>;
 }

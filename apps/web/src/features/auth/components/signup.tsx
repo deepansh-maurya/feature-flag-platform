@@ -37,11 +37,13 @@ export default function SignupPage() {
     }
 
     register.mutate(
-      { name, email, password, workspace },
+      { fullName: name, email, password, workspace },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          console.log(data);
+
           // token persisted in api.ts; header set globally
-          router.push(Routes.dashboard()); // or Routes.onboarding/pricing if you have those
+          // router.push(Routes.login()); // or Routes.onboarding/pricing if you have those
         },
         onError: (err: any) => {
           const apiMsg =

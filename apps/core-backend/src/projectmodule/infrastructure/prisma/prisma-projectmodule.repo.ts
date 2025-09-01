@@ -15,7 +15,7 @@ import {
   SdkKeyDto,
   UpdateProjectDto,
 } from '../../interface/dto/create-projectmodule.dto';
-import { KeyStatus, SdkKeyType } from 'generated/prisma';
+import { KeyStatus, SdkKeyType } from '@prisma/client'
 
 @Injectable()
 export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
