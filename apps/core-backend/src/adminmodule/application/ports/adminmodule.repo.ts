@@ -1,4 +1,4 @@
-import { Plan, PlanFeature, PlanLimit, Price } from 'generated/prisma';
+import { Plan, PlanFeature, PlanLimit, Price } from '@prisma/client'
 import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
 
 // Aggregate return shape

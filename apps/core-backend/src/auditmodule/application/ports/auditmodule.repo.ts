@@ -68,6 +68,8 @@ export interface ListResult {
   nextCursor: string | null;
 }
 
+export const AuditmoduleRepoToken = Symbol("AuditmoduleRepoToken")
+
 export interface AuditModuleRepo {
   append(dto: CreateAuditLog): Promise<void>;
   getById(id: string): Promise<AuditLogRecord | null>;

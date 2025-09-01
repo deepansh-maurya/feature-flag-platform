@@ -9,7 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { KeyStatus, SdkKeyType } from 'generated/prisma';
+import { KeyStatus, SdkKeyType } from '@prisma/client'
 
 /* =========================
 * Response DTOs (reads)

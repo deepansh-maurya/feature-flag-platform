@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BillingmoduleRepo, BillingmoduleRepoToken, } from '../ports/billingmodule.repo';
+import { BillingmoduleRepo, BillingmoduleRepoToken, CheckoutInitDto, ResumeDto, } from '../ports/billingmodule.repo';
 import { BillingEntity } from 'src/billingmodule/domain/billingmodule.entity';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class BillingmoduleService {
     }
 
     /** Start a new checkout session (delegates to repo which talks to Stripe) */
-    async startCheckout(workspaceId: string, planKey: any, cycle: any): Promise<{ url: string }> {
+    async startCheckout(workspaceId: string, planKey: any, cycle: any): Promise<CheckoutInitDto> {
         return this.repo.startCheckout({ workspaceId, planKey, cycle });
     }
 
@@ -30,13 +30,13 @@ export class BillingmoduleService {
     }
 
     /** Resume subscription (if cancel_at_period_end was set) */
-    async resumeSubscription(workspaceId: string): Promise<void> {
-        return this.repo.resume({ workspaceId });
+    async resumeSubscription(ResumeDto:ResumeDto): Promise<void> {
+        return this.repo.resume(ResumeDto);
     }
 
     /** For webhooks: upsert subscription snapshot coming from Stripe */
-    async upsertFromStripeSubscription(dto: any): Promise<void> {
-        return this.repo.upsertFromStripeSubscription(dto);
+    async upsertFromRazorpaySubscription(dto: any): Promise<void> {
+        return this.repo.upsertFromRazorpaySubscription(dto);
     }
 
     /** For webhooks: mark event processed (idempotency) */

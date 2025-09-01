@@ -60,7 +60,6 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
         },
       });
 
-      //! stripe customer id
       const dbWorkspace = await this.workspace.create({ name: user.workspace!, ownerUserId: dbuser.id }, tx)
       await this.workspace.addMember({ workspaceId: dbWorkspace.id!, role: "ADMIN", userId: dbuser.id }, tx)
 

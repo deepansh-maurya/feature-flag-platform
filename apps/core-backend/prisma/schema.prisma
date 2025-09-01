@@ -838,39 +838,6 @@ model Subscription {
   @@index([workspaceId, status])
 }
 
-model Order {
-  id              String   @id @default(uuid())
-
-  workspaceId     String
-  subscriptionId  String?           // if you later extend to recurring billing
-
-  razorpayOrderId String?   @unique  // e.g. "order_Jv...xyz" from Razorpay
-  razorpayPaymentId String?         // filled after success
-  razorpaySignature String?         // filled if you verify signature client-side
-
-  amount          Int               // in paise (100 INR = 10000)
-  currency        String            // "INR"
-  status          OrderStatus @default(pending)
-
-  purpose         String?           // e.g. "plan_upgrade", "extra_seats"
-  metadata        Json?             // any extra you want (planKey, couponId, etc.)
-
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-enum OrderStatus {
-  pending      // created, waiting for payment
-  authorized   // payment authorized but not captured
-  paid         // payment captured successfully
-  failed       // payment failed
-  refunded     // refunded after settlement
-}
-
-
-
-
 // =============================
 // Invoices (per workspace)
 // =============================

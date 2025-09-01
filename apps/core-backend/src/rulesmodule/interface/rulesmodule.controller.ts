@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RulesmoduleService } from '../application/use-cases/rulesmodule.service';
-import { EnvKey } from 'generated/prisma';
+import { EnvKey } from '@prisma/client'
 import { PublishRuleSetDto, UpsertRuleSetDto } from './dto/create-rulesmodule.dto';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
 

@@ -4,6 +4,7 @@ import { ChangePasswordDto, DeleteUserDto, LoginDto, LogoutDto, RegisterDto } fr
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
 import { JwtPayload } from '../infrastructure/strategy/jwt.strategy';
+import { Response } from 'express';
 
 @Controller({ path: 'auth', version: "1" })
 export class AuthmoduleController {
@@ -11,14 +12,18 @@ export class AuthmoduleController {
 
   @Public()
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
-    return this.svc.register(dto);
+  async register(@Body() dto: RegisterDto, res: Response) {
+    const { accessToken, refreshToken } = await this.svc.register(dto);
+    res.cookie("refresh", refreshToken, this.svc.refreshCookieOptions())
+    return accessToken
   }
 
   @Public()
   @Post('login')
-  async login(@Body() dto: LoginDto) {
-    return this.svc.login(dto);   
+  async login(@Body() dto: LoginDto, res: Response) {
+    const { accessToken, refreshToken } = await this.svc.login(dto);
+    res.cookie("refresh", refreshToken, this.svc.refreshCookieOptions())
+    return accessToken
   }
 
   @UseGuards(JwtAuthGuard)

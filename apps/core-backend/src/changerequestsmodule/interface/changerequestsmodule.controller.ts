@@ -17,7 +17,7 @@ import {
 } from './dto/create-changerequestsmodule.dto';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)  
 @Controller('change-requests')
 export class ChangeRequestController {
   constructor(private readonly svc: ChangeRequestService) {}

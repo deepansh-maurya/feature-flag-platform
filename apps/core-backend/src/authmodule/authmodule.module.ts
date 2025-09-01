@@ -16,7 +16,7 @@ import { JwtAuthGuard } from './infrastructure/guards/jwt-auth.guard';
     { provide: AuthmoduleRepoToken, useClass: PrismaAuthmoduleRepo },
     { provide: WorkspacesmoduleRepoToken, useClass: PrismaWorkspacesmoduleRepo },
   ],
-  exports: [AuthmoduleService,JwtAuthGuard],
+  exports: [AuthmoduleService],
 })
-export class Authmodule {}
+export class Authmodule { }
 

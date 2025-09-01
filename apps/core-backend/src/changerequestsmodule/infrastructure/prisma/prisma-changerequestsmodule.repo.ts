@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import {
-  CHANGEREQUEST_REPO,
   ChangeRequestRepo,
 } from '../../application/ports/changerequestsmodule.repo';
 import {
@@ -12,7 +11,7 @@ import {
   MarkAppliedChangeRequestDto,
   RejectChangeRequestDto,
 } from '../../interface/dto/create-changerequestsmodule.dto';
-import { ChangeRequestStatus } from 'generated/prisma';
+import { ChangeRequestStatus } from '@prisma/client';
 
 @Injectable()
 export class PrismaChangeRequestRepository implements ChangeRequestRepo {

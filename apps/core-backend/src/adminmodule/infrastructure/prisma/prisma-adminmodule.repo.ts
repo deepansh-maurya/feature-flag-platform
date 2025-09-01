@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, UnauthorizedExcepti
 import { AdminmoduleRepo, PlanAggregate } from '../../application/ports/adminmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
-import { PlanStatus } from 'generated/prisma';
+import { PlanStatus } from '@prisma/client'
 import * as bcrypt from "bcrypt"
 
 type DbPlanAgg = any;
