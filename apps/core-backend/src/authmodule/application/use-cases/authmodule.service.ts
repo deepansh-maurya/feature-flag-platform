@@ -16,9 +16,8 @@ export class AuthmoduleService {
 
   async login(data: LoginDto) {
     const user = AuthEntity.create(data)
-    const id = await this.repo.login(user)
-
-    return this.issueTokens(id, { sub: id }, data.workspaceId)
+    const result = await this.repo.login(user)
+    return this.issueTokens(result.id, { sub: result.id }, result.wid)
   }
 
   async logout(data: string) {

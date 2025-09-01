@@ -4,7 +4,7 @@ export const AuthmoduleRepoToken = Symbol('AuthmoduleRepo');
 
 export interface AuthmoduleRepo {
   register(user: AuthEntity): Promise<{id:string,wid:string}>
-  login(user: AuthEntity): Promise<string>
+  login(user: AuthEntity): Promise<{ id: string; wid: string }>
   logout(refreshToken: string): Promise<void>
   changePassword(user: { password: string, confirmPassword: string }): Promise<void>
   delete(userId: string): Promise<void>

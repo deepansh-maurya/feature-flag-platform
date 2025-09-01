@@ -18,10 +18,6 @@ export class RegisterDto {
 }
 
 export class LoginDto {
-  @IsUUID()
-  workspaceId: string;
-
-
   @IsEmail()
   email: string;
 

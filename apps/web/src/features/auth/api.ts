@@ -34,7 +34,6 @@ export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 export const LoginInputSchema = z.object({
     email: z.email(),
     password: z.string().min(8).max(128),
-    remember: z.boolean()
 });
 export type LoginInput = z.infer<typeof LoginInputSchema>;
 
@@ -63,7 +62,7 @@ export function persistAccessToken(token?: string, remember?: boolean) {
         setAuthToken(undefined);
         return;
     }
-    console.log(token, remember);
+    console.log(token, remember,"from api");
     // set axios header for this runtime
     setAuthToken(token);
 
@@ -125,6 +124,8 @@ export async function register(input: RegisterInput): Promise<AuthResponse> {
 
 export async function login(input: LoginInput): Promise<AuthResponse> {
     LoginInputSchema.parse(input);
+    console.log(input);
+    
     const { data } = await http.post(`${base}/login`, input);
     const parsed = AuthResponseSchema.parse(data);
     persistAccessToken(parsed.accessToken);

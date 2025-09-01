@@ -30,10 +30,14 @@ export class AuthmoduleController {
 
   @Public()
   @Post('login')
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(@Body() dto: LoginDto, @Res() res: Response) {
+    console.log(dto, 16);
+
     const { accessToken, refreshToken } = await this.svc.login(dto);
     res.cookie("refresh", refreshToken, this.svc.refreshCookieOptions())
-    return accessToken
+    console.log("end");
+
+    return res.json({ accessToken })
   }
 
   @UseGuards(JwtAuthGuard)

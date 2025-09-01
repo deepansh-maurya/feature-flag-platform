@@ -43,7 +43,7 @@ export default function SignupPage() {
           console.log(data);
 
           // token persisted in api.ts; header set globally
-          // router.push(Routes.login()); // or Routes.onboarding/pricing if you have those
+          router.push(Routes.dashboard()); // or Routes.onboarding/pricing if you have those
         },
         onError: (err: any) => {
           const apiMsg =

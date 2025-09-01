@@ -29,7 +29,7 @@ export default function LoginPage() {
     }
 
     login.mutate(
-      { email, password, remember },
+      { email, password },
       {
         onSuccess: async (data) => {
           // (Optional) if you want "remember me" to affect persistence later,

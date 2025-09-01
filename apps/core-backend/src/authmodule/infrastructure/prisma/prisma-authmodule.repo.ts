@@ -32,7 +32,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     private readonly prisma: PrismaService,
     @Inject(WorkspacesmoduleRepoToken)
     private readonly workspace: WorkspacesmoduleRepo,
-  ) {}
+  ) { }
 
   /**
    * Register a user.
@@ -87,7 +87,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * - You’ll typically issue tokens at the service layer, not in the repo.
    * - Here we just validate credentials and throw if invalid.
    */
-  async login(user: AuthEntity): Promise<string> {
+  async login(user: AuthEntity): Promise<{ id: string; wid: string }> {
     const email = user.email?.trim().toLowerCase();
     const pass = user.password;
 
@@ -109,15 +109,18 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
       throw new UnauthorizedException('Invalid credentials.');
     }
 
-    return dbUser.id;
-    // Intentionally return void. Token creation is handled by your service layer.
+    const dbWorkspace = await this.prisma.workspace.findFirst({
+      where: { ownerUserId: dbUser.id! }
+    })
+
+    return { id: dbUser.id, wid: dbWorkspace!.id };
   }
 
   /**
    * Logout:
    * - Revoke a refresh token by hashing it then marking revoked.
    * - If you don’t store refresh tokens: just no-op.
-   */
+   */ 
   async logout(refreshToken: string): Promise<void> {
     if (!refreshToken) return;
 
