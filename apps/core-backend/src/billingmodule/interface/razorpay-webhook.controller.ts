@@ -1,167 +1,222 @@
 import {
-    Controller, Post, Req, Res, HttpCode, Inject,
+  Controller, Post, Req, Res, HttpCode, Inject,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import Stripe from 'stripe';
-import {  BillingmoduleRepo, BillingmoduleRepoToken } from '../application/ports/billingmodule.repo';
-import { BillingCycle, PlanKey } from 'generated/prisma';
+import * as crypto from 'crypto';
+import {
+  BillingmoduleRepo,
+  BillingmoduleRepoToken,
+  PlanKey,
+  BillingCycle,
+  SubscriptionStatus,
+  UpsertFromRazorpaySubscriptionDto,
+} from '../application/ports/billingmodule.repo';
+
+/**
+ * IMPORTANT (main.ts):
+ * app.use('/webhook/razorpay', express.raw({ type: 'application/json' }));
+ * Do NOT use JSON body parser for this route — we need the raw bytes for HMAC.
+ */
 
 @Controller()
 export class RazorpayWebhookController {
-    private stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2025-07-30" as any});
+  constructor(
+    @Inject(BillingmoduleRepoToken) private readonly repo: BillingmoduleRepo,
+  ) {}
 
-    constructor(
-        @Inject(BillingmoduleRepoToken) private readonly repo: BillingmoduleRepo,
-    ) { }
+  @Post('/webhook/razorpay')
+  @HttpCode(200)
+  async handle(@Req() req: Request, @Res() res: Response) {
+    const sig = req.headers['x-razorpay-signature'] as string | undefined;
+    if (!sig) return res.status(400).send('Missing x-razorpay-signature');
 
-    @Post('/webhook/razorpay')
-    @HttpCode(200)
-    async handle(@Req() req: Request, @Res() res: Response) {
-        const sig = req.headers['stripe-signature'] as string | undefined;
-        if (!sig) return res.status(400).send('Missing stripe-signature');
+    // Razorpay requires HMAC-SHA256 over the *raw* body using your WEBHOOK SECRET (not key_secret).
+    const rawBody =
+      (req as any).rawBody instanceof Buffer
+        ? (req as any).rawBody
+        : Buffer.from(typeof (req as any).body === 'string'
+            ? (req as any).body
+            : JSON.stringify((req as any).body || {}));
 
-        let event: Stripe.Event;
-        try {
-            event = this.stripe.webhooks.constructEvent(
-                (req as any).rawBody ?? (req as any).body, // raw body from main.ts
-                sig,
-                process.env.STRIPE_WEBHOOK_SECRET!,
-            );
-        } catch (err) {
-            return res.status(400).send(`Webhook signature verification failed: ${(err as Error).message}`);
-        }
+    const expected = crypto
+      .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
+      .update(rawBody)
+      .digest('hex');
 
-        // Idempotency: skip if seen
-        if (await this.repo.isWebhookEventProcessed(event.id)) {
-            return res.send(); // 200 OK
-        }
-
-        try {
-            switch (event.type) {
-                // ——— SUBSCRIPTION LIFECYCLE ———
-                case 'customer.subscription.created':
-                case 'customer.subscription.updated':
-                case 'customer.subscription.deleted': {
-                    const sub = event.data.object as Stripe.Subscription;   
-                    const dto = await this.mapStripeSubscriptionToDto(sub);
-                    await this.repo.upsertFromStripeSubscription(dto as any);
-
-                    // If Stripe actually canceled the sub immediately, guard with a local cancel
-                    if (event.type === 'customer.subscription.deleted' || sub.status === 'canceled') {
-                        await this.repo.setCanceledByStripeSubId({
-                            stripeSubId: sub.id,
-                            periodEnd: sub.ended_at ? new Date(sub.ended_at * 1000) : undefined,
-                        });
-                    }
-                    break;
-                }
-
-                case 'invoice.paid': {
-                    const inv = event.data.object as Stripe.Invoice & { subscription?: string | Stripe.Subscription };
-
-                    const subId =
-                        typeof inv.subscription === 'string'
-                            ? inv.subscription
-                            : inv.subscription?.id;
-
-                    if (subId) {
-                        await this.repo.setStatusActiveByStripeSubId(subId);
-                    }
-                    break;
-                }
-
-
-                case 'invoice.payment_failed': {
-                    const inv = event.data.object as Stripe.Invoice & { subscription?: string | Stripe.Subscription };
-                    const subId = typeof inv.subscription === 'string' ? inv.subscription : inv.subscription?.id;
-                    if (subId) await this.repo.setStatusPastDueByStripeSubId(subId);
-                    break;
-                }
-
-                // Optional but often helpful to catch 3DS/dunning flows:
-                case 'customer.subscription.trial_will_end':
-                case 'invoice.upcoming':
-                case 'checkout.session.completed':
-                default:
-                    // Ignore or add logging for observability
-                    break;
-            }
-
-            await this.repo.markWebhookEventProcessed(event.id);
-            return res.send(); // 200 OK
-        } catch (err) {
-            // Let Stripe retry by returning 5xx on failures
-            console.error('Webhook handling failed:', err);
-            return res.status(500).send('Webhook handling failed');
-        }
+    // timing-safe comparison
+    const isValid =
+      expected.length === sig.length &&
+      crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
+    if (!isValid) {
+      return res.status(400).send('Webhook signature verification failed');
     }
 
-    // ---------- Helpers ----------
-
-    /** Translate Stripe.Subscription → UpsertFromStripeSubscriptionDto */
-    private async mapStripeSubscriptionToDto(s: Stripe.Subscription) {
-        const stripeSubId = s.id;
-        const stripeCustomerId = typeof s.customer === 'string' ? s.customer : s.customer.id;
-
-        // Resolve workspaceId:
-        // Prefer customer.metadata.workspaceId; if absent, try subscription metadata, else fetch customer
-        let workspaceId: string | undefined;
-        if (typeof s.customer !== 'string' && (s.customer as Stripe.Customer).metadata?.workspaceId) {
-            workspaceId = (s.customer as Stripe.Customer).metadata.workspaceId;
-        }
-        else if ((s.metadata as any)?.workspaceId) {
-            workspaceId = (s.metadata as any).workspaceId;
-        }
-        else if (typeof s.customer === 'string') {
-            const cust = await this.stripe.customers.retrieve(stripeCustomerId);
-            if (!cust.deleted && (cust as Stripe.Customer).metadata?.workspaceId) {
-                workspaceId = (cust as Stripe.Customer).metadata.workspaceId;
-            }
-        }
-
-        if (!workspaceId) {
-            throw new Error(`Cannot resolve workspaceId for subscription ${stripeSubId}`);
-        }
-
-        // Map price → (planKey, cycle)
-        const price = s.items.data[0]?.price;
-        if (!price?.id) {
-            throw new Error(`Subscription ${stripeSubId} has no price`);
-        }
-        const { planKey, cycle } = await this.repo.mapPriceId(price.id);
-
-        // Periods & status
-        const periodStart = new Date(((s as any).current_period_start ?? 0) * 1000);
-        const periodEnd = new Date(((s as any).current_period_end ?? 0) * 1000);
-
-        // Local status mapping: mirror Stripe, keep your enums
-        const status = this.mapStripeStatus(s.status);
-
-        return {
-            stripeSubId,    
-            stripeCustomerId,
-            workspaceId,
-            planKey: planKey as PlanKey,
-            billingCycle: cycle as BillingCycle,
-            status,
-            periodStart,
-            periodEnd,
-            cancelAtPeriodEnd: !!s.cancel_at_period_end,
-            cancelsAt: s.cancel_at ? new Date(s.cancel_at * 1000) : null,
-        };
+    // Razorpay doesn't include event.id; dedupe on a hash of the raw body
+    const dedupeKey = crypto.createHash('sha256').update(rawBody).digest('hex');
+    if (await this.repo.isWebhookEventProcessed(dedupeKey)) {
+      return res.send(); // already handled
     }
 
-    private mapStripeStatus(s: Stripe.Subscription.Status) {
-        // Your app enums: 'active' | 'trialing' | 'past_due' | 'grace' | 'frozen' | 'canceled'
-        switch (s) {
-            case 'active': return 'active';
-            case 'trialing': return 'trialing';
-            case 'past_due': return 'past_due';
-            case 'unpaid': return 'frozen';     // choose: map unpaid → frozen
-            case 'canceled': return 'canceled';
-            case 'incomplete':
-            case 'incomplete_expired':
-            default: return 'frozen';           // treat unknown/bad states as frozen
+    try {
+      const body: any = JSON.parse(rawBody.toString('utf8'));
+      const event = body?.event as string | undefined;
+
+      switch (event) {
+        // -------- SUBSCRIPTION LIFE CYCLE --------
+        case 'subscription.activated':
+        case 'subscription.charged':
+        case 'subscription.pending':
+        case 'subscription.halted':
+        case 'subscription.completed':
+        case 'subscription.paused':
+        case 'subscription.resumed':
+        case 'subscription.cancelled': {
+          const sub = body?.payload?.subscription?.entity;
+          if (!sub?.id) break;
+
+          const dto = await this.mapRazorpaySubscriptionToDto(sub);
+          await this.repo.upsertFromRazorpaySubscription(dto);
+
+          // Extra guards for “canceled now”
+          if (event === 'subscription.cancelled' || sub.status === 'cancelled') {
+            await this.repo.setCanceledByRazorpaySubId({
+              razorpaySubId: sub.id,
+              periodEnd: this.extractPeriodEnd(sub, dto.billingCycle),
+            });
+          }
+          break;
         }
+
+        // -------- PAYMENTS (initial or recurring) --------
+        case 'payment.captured': {
+          // You may link payment → subscription via notes or order/mandate refs
+          // If you can resolve a subscription id from this payload, mark active:
+          const subId = this.tryGetSubIdFromPayment(body);
+          if (subId) await this.repo.setStatusActiveByRazorpaySubId(subId);
+          break;
+        }
+
+        case 'payment.failed': {
+          const subId = this.tryGetSubIdFromPayment(body);
+          if (subId) await this.repo.setStatusPastDueByRazorpaySubId(subId);
+          break;
+        }
+
+        default:
+          // Unhandled events can be logged for observability
+          // console.log('Unhandled Razorpay event:', event);
+          break;
+      }
+
+      await this.repo.markWebhookEventProcessed(dedupeKey);
+      return res.send(); // 200 OK
+    } catch (err) {
+      console.error('Razorpay webhook handling failed:', err);
+      // Return 5xx so Razorpay retries
+      return res.status(500).send('Webhook handling failed');
     }
+  }
+
+  // ----------------- Helpers -----------------
+
+  /**
+   * Map Razorpay subscription payload → your Upsert DTO
+   * Expected fields commonly present on Razorpay sub:
+   *  - id, status, plan_id, customer_id, current_start, current_end, start_at
+   *  - notes: { workspaceId, planKey?, cycle? } (we set these when creating)
+   */
+  private async mapRazorpaySubscriptionToDto(sub: any): Promise<UpsertFromRazorpaySubscriptionDto> {
+    const razorpaySubId = sub.id as string;
+    const razorpayCustomerId = (sub.customer_id as string) ?? null;
+
+    // Resolve workspaceId: prefer notes set when you created the subscription
+    const workspaceId =
+      sub?.notes?.workspaceId ??
+      sub?.customer_notes?.workspaceId ?? // if you ever store on customer
+      null;
+
+    if (!workspaceId) {
+      throw new Error(`Cannot resolve workspaceId for subscription ${razorpaySubId}`);
+    }
+
+    // Map plan id -> (planKey, cycle)
+    const planId = sub?.plan_id as string | undefined;
+    if (!planId) throw new Error(`Subscription ${razorpaySubId} has no plan_id`);
+
+    const { planKey, cycle } = await this.repo.mapRazorpayPlanId(planId);
+
+    // Periods
+    const periodStart = this.extractPeriodStart(sub);
+    const periodEnd   = this.extractPeriodEnd(sub, cycle);
+
+    // Status mapping
+    const status = this.mapRazorpayStatus(sub?.status as string);
+
+    // Scheduled cancel flags (Razorpay doesn't expose cancel_at_period_end like Stripe)
+    const cancelAtPeriodEnd = false;
+    const cancelsAt: Date | null = null;
+
+    return {
+      razorpaySubId,
+      razorpayCustomerId,
+      workspaceId,
+      planKey: planKey as PlanKey,
+      billingCycle: cycle as BillingCycle,
+      status,
+      periodStart,
+      periodEnd,
+      cancelAtPeriodEnd,
+      cancelsAt,
+    };
+  }
+
+  /** Convert Razorpay status → your app status */
+  private mapRazorpayStatus(s: string): SubscriptionStatus {
+    // Razorpay statuses: created | authenticated | active | pending | halted | completed | paused | cancelled
+    switch (s) {
+      case 'active':         return 'active';
+      case 'authenticated':  return 'trialing'; // mandate authorized but not charged
+      case 'pending':        return 'trialing';
+      case 'halted':         return 'past_due';
+      case 'completed':      return 'canceled';
+      case 'paused':         return 'frozen';
+      case 'cancelled':      return 'canceled';
+      default:               return 'frozen';
+    }
+  }
+
+  /** Period start: prefer current_start, fallback to start_at, else now */
+  private extractPeriodStart(sub: any): Date {
+    const start =
+      (typeof sub.current_start === 'number' && sub.current_start) ||
+      (typeof sub.start_at === 'number' && sub.start_at) ||
+      Math.floor(Date.now() / 1000);
+    return new Date(start * 1000);
+  }
+
+  /** Period end: prefer current_end; else compute next end from cycle */
+  private extractPeriodEnd(sub: any, cycle: BillingCycle): Date {
+    if (typeof sub.current_end === 'number' && sub.current_end) {
+      return new Date(sub.current_end * 1000);
+    }
+    // Fallback: compute 1 month/year from periodStart if Razorpay didn't include
+    const start = this.extractPeriodStart(sub);
+    const d = new Date(start);
+    if (cycle === 'monthly') d.setMonth(d.getMonth() + 1);
+    else d.setFullYear(d.getFullYear() + 1);
+    return d;
+  }
+
+  /**
+   * Try to resolve a subscription id from a payment event:
+   * - Sometimes present in payment.notes.subscription_id (if you set when creating)
+   * - Or payment.invoice_id -> fetch invoice links in your infra if needed (optional)
+   */
+  private tryGetSubIdFromPayment(body: any): string | null {
+    const payment = body?.payload?.payment?.entity;
+    if (!payment) return null;
+    const fromNotes = payment?.notes?.subscription_id || payment?.notes?.razorpay_subscription_id;
+    if (typeof fromNotes === 'string') return fromNotes;
+    return null;
+  }
 }

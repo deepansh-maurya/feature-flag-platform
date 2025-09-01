@@ -1,86 +1,132 @@
-import { BillingCycle, PlanKey } from "generated/prisma";
-import { CancelDto, ChangePlanDto, EntitlementsDto, PortalDto, ReconciliationSubscriptionItemDto, ResumeDto, StartCheckout, StartCheckoutDto, SubscriptionDto, UpsertFromStripeSubscriptionDto, VerifyHandlerDto } from "src/billingmodule/interface/dto/create-billingmodule.dto";
+// src/billingmodule/application/ports/billingmodule.repo.ts
+export type PlanKey = 'STARTER' | 'GROWTH' | 'ENTERPRISE';
+export type BillingCycle = 'monthly' | 'yearly';
+export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'grace' | 'frozen' | 'canceled';
 
-// billingmodule.repo.ts
 export const BillingmoduleRepoToken = Symbol('BillingmoduleRepo');
 
-/** Domain types (match your Prisma model + enums) */
+// ---------- DTOs ----------
+export class StartCheckoutDto {
+  workspaceId!: string;
+  planKey!: PlanKey;
+  cycle!: BillingCycle;
+  prefillName?: string;
+  prefillEmail?: string;
+  prefillContact?: string;
+  // if you already have a saved Razorpay customer, pass it to skip creation
+  razorpayCustomerId?: string;
+}
+
+export class ChangePlanDto {
+  workspaceId!: string;
+  newPlanKey!: PlanKey;
+  cycle!: BillingCycle;
+  // Razorpay has no native prorations; you decide policy in code
+  immediate?: boolean; // default true: cancel now + create new
+  carryOverDays?: boolean; // if true, extend next period manually
+}
+
+export class CancelDto {
+  workspaceId!: string;
+  atPeriodEnd!: boolean; // maps to cancel_at_cycle_end: 1|0
+}
+
+export class ResumeDto {
+  workspaceId!: string;
+  // Razorpay can’t truly "resume" a canceled sub → we create a new subscription
+  planKey!: PlanKey;
+  cycle!: BillingCycle;
+}
+
+export class PortalDto {
+  workspaceId!: string;
+  returnUrl?: string;
+}
+
+export class SubscriptionDto {
+  id!: string;
+  workspaceId!: string;
+  planKey!: PlanKey;
+  status!: SubscriptionStatus;
+  periodStart!: Date;
+  periodEnd!: Date;
+  billingCycle!: BillingCycle;
+  razorpayCustomerId?: string | null;
+  razorpaySubId?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  cancelsAt?: Date | null;
+  createdAt!: Date;
+  updatedAt!: Date;
+}
+
+export class EntitlementsDto {
+  workspaceId!: string;
+  effectivePlan!: PlanKey;
+  status!: SubscriptionStatus;
+  limits!: Record<string, number | boolean>;
+  features!: Record<string, boolean>;
+}
+
+// Webhook upsert payload (Razorpay → DB)
+export class UpsertFromRazorpaySubscriptionDto {
+  razorpaySubId!: string;
+  razorpayCustomerId!: string | null;
+  workspaceId!: string;
+  planKey!: PlanKey;
+  billingCycle!: BillingCycle;
+  status!: SubscriptionStatus;
+  periodStart!: Date;
+  periodEnd!: Date;
+  cancelAtPeriodEnd?: boolean;
+  cancelsAt?: Date | null;
+}
+
+export class ReconciliationSubscriptionItemDto {
+  workspaceId!: string;
+  razorpaySubId!: string;
+}
+
+// Returned to FE to open Razorpay Checkout modal
+export class CheckoutInitDto {
+  keyId!: string;
+  subscriptionId!: string;
+  planKey!: PlanKey;
+  cycle!: BillingCycle;
+  amount!: number;     // paise
+  currency!: 'INR';
+  notes!: Record<string, string>;
+  prefill?: { name?: string; email?: string; contact?: string };
+}
 
 export interface BillingmoduleRepo {
-  // ---------------------------------------------------------------------------
-  // Commands (FE -> your API)  — These call Stripe and return URLs or 204s
-  // ---------------------------------------------------------------------------
-  /** Create Stripe Checkout Session URL for buying a subscription */
-  startCheckout(input: StartCheckoutDto): Promise<StartCheckout>;
-  verifyHandler(input: VerifyHandlerDto): Promise<boolean>
-
-  /** Change plan (upgrade/downgrade); DB sync happens via webhook */
+  // Commands
+  startCheckout(input: StartCheckoutDto): Promise<CheckoutInitDto>;
   changePlan(input: ChangePlanDto): Promise<void>;
-
-  /** Cancel subscription (immediate or at period end); DB sync via webhook */
   cancel(input: CancelDto): Promise<void>;
-
-  /** Resume subscription (if cancel_at_period_end was set); DB sync via webhook */
   resume(input: ResumeDto): Promise<void>;
+  createPortalSession(input: PortalDto): Promise<{ url: string }>; // your app’s own "billing portal" page
 
-  /** Create Stripe Billing Portal session URL (manage payment method/invoices) */
-  createPortalSession(input: PortalDto): Promise<{ url: string }>;
-
-  // ---------------------------------------------------------------------------
-  // Queries (your UI reads fast from your DB)
-  // ---------------------------------------------------------------------------
-  /** Read the current subscription for a workspace from DB (or null if none) */
+  // Queries
   getCurrentSubscription(workspaceId: string): Promise<SubscriptionDto | null>;
-
-  /** Compute feature access/limits from planKey + status */
   getEntitlements(workspaceId: string): Promise<EntitlementsDto>;
 
-  // ---------------------------------------------------------------------------
-  // Stripe-sync (Webhook handlers call these to persist Stripe → DB)
-  // Keep these low-level & idempotent. Implementation upserts by stripeSubId.
-  // ---------------------------------------------------------------------------
-  /** Upsert Subscription from a Stripe Subscription payload (already parsed) */
-  upsertFromStripeSubscription(payload: UpsertFromStripeSubscriptionDto): Promise<void>;
+  // Webhook sync (Razorpay → DB)
+  upsertFromRazorpaySubscription(payload: UpsertFromRazorpaySubscriptionDto): Promise<void>;
+  setStatusActiveByRazorpaySubId(razorpaySubId: string): Promise<void>;
+  setStatusPastDueByRazorpaySubId(razorpaySubId: string): Promise<void>;
+  setCanceledByRazorpaySubId(input: { razorpaySubId: string; periodEnd?: Date }): Promise<void>;
 
-  /** On invoice paid → usually flip to active if needed */
-  setStatusActiveByStripeSubId(stripeSubId: string): Promise<void>;
-
-  /** On invoice payment_failed → mark past_due */
-  setStatusPastDueByStripeSubId(stripeSubId: string): Promise<void>;
-
-  /** Mark canceled (immediate) with final periodEnd if provided */
-  setCanceledByStripeSubId(input: {
-    stripeSubId: string;
-    periodEnd?: Date;
-  }): Promise<void>;
-
-  // ---------------------------------------------------------------------------
-  // Reconciliation / Idempotency helpers
-  // ---------------------------------------------------------------------------
-  /** Return true if this Stripe event.id was already processed (for dedupe) */
-  isWebhookEventProcessed(eventId: string): Promise<boolean>;
-
-  /** Persist that a Stripe event.id has been processed */
-  markWebhookEventProcessed(eventId: string): Promise<void>;
-
-  /** For nightly jobs: list all known subscriptions that appear "active-ish" */
+  // Idempotency / Reconciliation
+  isWebhookEventProcessed(dedupeKey: string): Promise<boolean>;
+  markWebhookEventProcessed(dedupeKey: string): Promise<void>;
   listSubscriptionsForReconciliation(): Promise<Array<ReconciliationSubscriptionItemDto>>;
+  patchSubscriptionByRazorpaySubId(patch: Partial<SubscriptionDto> & { razorpaySubId: string }): Promise<void>;
 
-  /** Directly patch a subscription row when reconciling mismatches */
-  patchSubscriptionByStripeSubId(patch: Partial<SubscriptionDto> & { stripeSubId: string }): Promise<void>;
+  // Customer linkage
+  getRazorpayCustomerId(workspaceId: string): Promise<string | null>;
+  setRazorpayCustomerId(workspaceId: string, razorpayCustomerId: string): Promise<void>;
 
-  // ---------------------------------------------------------------------------
-  // Customer linkage utilities (often needed before first checkout)
-  // ---------------------------------------------------------------------------
-  /** Get stored Stripe customer id for a workspace (if you cache it on workspace) */
-  getStripeCustomerId(workspaceId: string): Promise<string | null>;
-
-  /** Save/attach a Stripe customer id for a workspace */
-  setStripeCustomerId(workspaceId: string, stripeCustomerId: string): Promise<void>;
-
-  // ---------------------------------------------------------------------------
-  // Mapping helpers (infra can implement using your price map)
-  // ---------------------------------------------------------------------------
-  /** Given a Stripe price id, return the domain PlanKey + BillingCycle */
-  mapPriceId(priceId: string): Promise<{ planKey: PlanKey; cycle: BillingCycle }>;
+  // Mapping helpers
+  getRazorpayPlanId(planKey: PlanKey, cycle: BillingCycle): Promise<string>;
+  mapRazorpayPlanId(planId: string): Promise<{ planKey: PlanKey; cycle: BillingCycle }>;
 }

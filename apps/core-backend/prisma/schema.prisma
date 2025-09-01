@@ -195,7 +195,7 @@ model Workspace {
   billingStatus    BillingStatus @default(active)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
-
+  razorpayCustomerId String?
   flags            Flag[]                  @relation("WorkspaceFlags")
   projects         Project[]               @relation("WorkspaceProjects")
   members          WorkspaceMember[]       @relation("WorkspaceMembers")
@@ -828,8 +828,8 @@ model Subscription {
   billingCycle      BillingCycle
   cancelAtPeriodEnd Boolean            @default(false)
   cancelsAt         DateTime?
-  stripeCustomerId  String?
-  stripeSubId       String?            @unique
+  razorpayCustomerId String?
+  razorpaySubId      String?  @unique
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
