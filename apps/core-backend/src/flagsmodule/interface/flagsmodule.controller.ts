@@ -9,10 +9,13 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { FlagsmoduleService } from '../application/use-cases/flagsmodule.service';
 import { CreateFlagDto, CreateVersionDto, UpsertFlagMetaDto } from './dto/create-flagsmodule.dto';
+import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('flagsmodule')
 export class FlagsmoduleController {
   constructor(private readonly svc: FlagsmoduleService) {}

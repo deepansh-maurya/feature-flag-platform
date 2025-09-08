@@ -3,12 +3,19 @@ import { AuthmoduleService } from '../application/use-cases/authmodule.service';
 import { ChangePasswordDto, DeleteUserDto, LoginDto, LogoutDto, RegisterDto } from './dto/create-authmodule.dto';
 import { Public } from './decorators/public.decorator';
 import { JwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
-import { JwtPayload } from '../infrastructure/strategy/jwt.strategy';
-import { Response } from 'express';
+import { JwtPayload, RefreshJwtStrategy } from '../infrastructure/strategy/jwt.strategy';
+import { Request, Response } from 'express';
 
 @Controller({ path: 'auth', version: "1" })
 export class AuthmoduleController {
   constructor(private readonly svc: AuthmoduleService) { }
+
+  @UseGuards(RefreshJwtStrategy)
+  @Get("refresh")
+  async refreshAccessToken(@Req() req: Request & JwtPayload) {
+    return await this.svc.refreshToken({ userId: req.sub, email: req.email, workspaceId: req.workspaceId })
+  }
+
 
   @Public()
   @Post('register')
@@ -30,10 +37,14 @@ export class AuthmoduleController {
 
   @Public()
   @Post('login')
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(@Body() dto: LoginDto, @Res() res: Response) {
+    console.log(dto, 16);
+
     const { accessToken, refreshToken } = await this.svc.login(dto);
     res.cookie("refresh", refreshToken, this.svc.refreshCookieOptions())
-    return accessToken
+    console.log("end");
+
+    return res.json({ accessToken })
   }
 
   @UseGuards(JwtAuthGuard)

@@ -99,14 +99,12 @@ export function useProjectByKey(workspaceId?: string, key?: string) {
 }
 
 export function useProjects(
-  workspaceId?: string,
   limit: number = 20,
   cursor?: string
 ) {
   return useQuery<ListProjectsResultDto>({
-    queryKey: QK.projects(workspaceId ?? 'nil', limit, cursor),
-    enabled: !!workspaceId,
-    queryFn: () => listProjects(workspaceId as string, limit, cursor),
+    queryKey: QK.projects('nil', limit, cursor),
+    queryFn: () => listProjects( limit, cursor),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   }); 

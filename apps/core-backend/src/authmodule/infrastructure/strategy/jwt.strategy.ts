@@ -1,7 +1,12 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common"
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common"
 import { PassportStrategy } from "@nestjs/passport"
 import { Request } from "express"
 import { ExtractJwt, Strategy } from "passport-jwt"
+import PrismaService from "src/infra/prisma/prisma.service"
+import { USER_REPO } from "src/usersmodule/application/ports/usersmodule.repo"
+import { PrismaUserRepository } from "src/usersmodule/infrastructure/prisma/prisma-usersmodule.repo"
+import { WorkspacesmoduleRepo, WorkspacesmoduleRepoToken } from "src/workspacesmodule/application/ports/workspacesmodule.repo"
+import { sha256 } from "../prisma/prisma-authmodule.repo"
 
 export interface JwtPayload extends Request {
     sub: string
@@ -19,33 +24,46 @@ function fromCookie(cookieName: string) {
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 
-    constructor() {
+    constructor(@Inject(USER_REPO) private readonly user: PrismaUserRepository,
+        @Inject(WorkspacesmoduleRepoToken)
+        private readonly workspace: WorkspacesmoduleRepo,
+    ) {
         super({
             // Try header first, then cookie (adjust if you only use one)
             jwtFromRequest: ExtractJwt.fromExtractors([
                 ExtractJwt.fromAuthHeaderAsBearerToken(),
                 fromCookie('access_token'),
             ]),
-            secretOrKey: process.env.JWT_ACCESS_SECRET!,   // set in env
+            secretOrKey: process.env.JWT_SECRET!,   // set in env
             ignoreExpiration: false,
         });
     }
-
 
     /**
      * Runs ONLY after signature/expiry checks pass.
      * Whatever you return here becomes `req.user`.
      */
     async validate(payload: JwtPayload) {
-        // Example: fail if user marked disabled in DB (uncomment if you want DB check)
-        // const user = await this.usersService.findById(payload.sub);
-        // if (!user || user.disabled) throw new UnauthorizedException('User disabled');
-
-
 
         if (!payload?.sub) {
             throw new UnauthorizedException('Invalid token payload');
         }
+
+
+        const user = await this.user.findById(payload.sub);
+        console.log(user, 46);
+
+        if (!user || user.isDeleted) {
+            console.log("here");
+
+            throw new UnauthorizedException('User disabled');
+        }
+
+        const workspace = await this.workspace.get({ id: payload.workspaceId })
+        console.log(workspace, 51);
+
+        if (!workspace) throw new UnauthorizedException('User disabled');
+
 
         return {
             userId: payload.sub,
@@ -54,6 +72,55 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
             roles: payload.role ?? [],
         };
     }
+}
 
 
+@Injectable()
+export class RefreshJwtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
+    constructor(@Inject(USER_REPO) private readonly user: PrismaUserRepository,
+        @Inject(WorkspacesmoduleRepoToken)
+        private readonly workspace: WorkspacesmoduleRepo,
+        private readonly prisma: PrismaService) {
+        super({
+            jwtFromRequest: ExtractJwt.fromExtractors([
+                ExtractJwt.fromAuthHeaderAsBearerToken(),
+                fromCookie('refresh_token'),
+            ]),
+            secretOrKey: process.env.JWT_REFRESH_SECRET!,
+            ignoreExpiration: false,
+        });
+    }
+
+    async validate(payload: JwtPayload, req: Request) {
+
+        const comingToken =
+            ExtractJwt.fromAuthHeaderAsBearerToken()(req) ??
+            fromCookie('refresh_token')(req);
+
+        if (!comingToken) {
+            throw new UnauthorizedException('Refresh token missing');
+        }
+
+        const token = await this.prisma.refreshToken.findFirst({
+            where: {
+                userId: payload.sub,
+                workspaceId: payload.workspaceId,
+                tokenHash: sha256(comingToken)
+            }
+        })
+
+        if (!token) {
+            throw new UnauthorizedException('Refresh token missing');
+        }
+
+        const user = await this.user.findById(payload.sub);
+
+        if (!user || user.isDeleted) {
+            throw new UnauthorizedException('User disabled');
+        }
+        const workspace = await this.workspace.get({ id: payload.workspaceId })
+
+        if (!workspace) throw new UnauthorizedException('User disabled');
+        return { userId: payload.sub, email: payload.email, workspaceId: workspace.id };
+    }
 }

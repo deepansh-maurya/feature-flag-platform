@@ -189,7 +189,7 @@ model Workspace {
   name               String
   slug               String                  @unique
   stripeCustomerId   String
-  ownerUserId        String
+  ownerUserId        String                  @unique()
   archivedAt         DateTime?
   owner              User                    @relation("WorkspaceOwner", fields: [ownerUserId], references: [id], onDelete: Restrict)
   planKey            String                  @default("free")

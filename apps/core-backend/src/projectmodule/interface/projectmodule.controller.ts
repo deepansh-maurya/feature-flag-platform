@@ -7,6 +7,7 @@ import {
   Patch,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ProjectmoduleService } from '../application/use-cases/projectmodule.service';
 import {
@@ -18,11 +19,16 @@ import {
   RotateSdkKeyDto,
 } from '../interface/dto/create-projectmodule.dto';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
+import { Request } from 'express';
+
+interface CRequest extends Request {
+  workspaceId: string
+}
 
 @UseGuards(JwtAuthGuard)
 @Controller('projects')
 export class ProjectmoduleController {
-  constructor(private readonly svc: ProjectmoduleService) {}
+  constructor(private readonly svc: ProjectmoduleService) { }
 
   /* -------------------- Projects -------------------- */
   @Post()
@@ -45,11 +51,11 @@ export class ProjectmoduleController {
 
   @Get()
   listProjects(
-    @Query('workspaceId') workspaceId: string,
+    @Req() req: CRequest,
     @Query('limit') limit = 20,
     @Query('cursor') cursor?: string,
   ) {
-    return this.svc.listProjects(workspaceId, Number(limit), cursor);
+    return this.svc.listProjects(req.workspaceId, Number(limit), cursor);
   }
 
   @Patch(':id')

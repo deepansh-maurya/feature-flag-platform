@@ -17,11 +17,19 @@ export class RegisterDto {
   fullName: string;
 }
 
+export class RefreshDto {
+  @IsString()
+  
+  userId:string 
+  @IsString()
+
+  email:string
+  @IsString()
+
+  workspaceId:string
+}
+
 export class LoginDto {
-  @IsUUID()
-  workspaceId: string;
-
-
   @IsEmail()
   email: string;
 
