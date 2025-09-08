@@ -17,6 +17,18 @@ export class RegisterDto {
   fullName: string;
 }
 
+export class RefreshDto {
+  @IsString()
+  
+  userId:string 
+  @IsString()
+
+  email:string
+  @IsString()
+
+  workspaceId:string
+}
+
 export class LoginDto {
   @IsEmail()
   email: string;

@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { AuthmoduleRepo, AuthmoduleRepoToken } from '../ports/authmodule.repo';
 import { AuthEntity } from 'src/authmodule/domain/authmodule.entity';
 import * as jwt from "jsonwebtoken";
-import { LoginDto, RegisterDto } from 'src/authmodule/interface/dto/create-authmodule.dto';
+import { LoginDto, RefreshDto, RegisterDto } from 'src/authmodule/interface/dto/create-authmodule.dto';
 import { CookieOptions } from 'express';
 @Injectable()
 export class AuthmoduleService {
@@ -11,13 +11,19 @@ export class AuthmoduleService {
   async register(data: RegisterDto) {
     const user = AuthEntity.create(data)
     const result = await this.repo.register(user)
-    return this.issueTokens(result.id, { sub: result.id }, result.wid)
+    return await this.issueTokens(result.id, { sub: result.id, workspaceId: result.wid }, result.wid)
   }
 
   async login(data: LoginDto) {
     const user = AuthEntity.create(data)
     const result = await this.repo.login(user)
-    return this.issueTokens(result.id, { sub: result.id }, result.wid)
+    console.log(result, 20);
+
+    return await this.issueTokens(result.id, { sub: result.id, workspaceId: result.wid }, result.wid)
+  }
+
+  async refreshToken(data: RefreshDto) {
+    return this.issueTokens(data.userId, { sub: data.userId, email: data.email }, data.workspaceId)
   }
 
   async logout(data: string) {

@@ -1,4 +1,3 @@
-// apps/web/src/projects/components/api.ts
 import { http } from "@/src/shared/lib/http";
 import {
   // Projects
@@ -19,19 +18,18 @@ import {
   SdkKeyType,
 } from "./types";
 
-/** -------------------- Projects -------------------- */
 
 export async function createProject(
   input: CreateProjectDto
 ): Promise<ProjectSummaryDto> {
-  const { data } = await http.post("/api/v1/projects", input);
+  const { data } = await http.post("/projects", input);
   return data as ProjectSummaryDto;
 }
 
 export async function findProjectById(
   id: string
 ): Promise<ProjectSummaryDto | null> {
-  const { data } = await http.get(`/api/v1/projects/${id}`);
+  const { data } = await http.get(`/projects/${id}`);
   return (data ?? null) as ProjectSummaryDto | null;
 }
 
@@ -44,7 +42,7 @@ export async function findProjectByKey(
   key: string
 ): Promise<ProjectSummaryDto | null> {
   const { data } = await http.get(
-    `/api/v1/projects/by-key`,
+    `/projects/by-key`,
     { params: { workspaceId, key } }
   );
   return (data ?? null) as ProjectSummaryDto | null;
@@ -54,12 +52,11 @@ export async function findProjectByKey(
  * Cursor pagination: /projects?workspaceId=...&limit=...&cursor=...
  */
 export async function listProjects(
-  workspaceId: string,
   limit: number,
   cursor?: string
 ): Promise<ListProjectsResultDto> {
-  const { data } = await http.get("/api/v1/projects", {
-    params: { workspaceId, limit, cursor },
+  const { data } = await http.get("/projects", {
+    params: {limit, cursor },
   });
   return data as ListProjectsResultDto;
 }
@@ -68,7 +65,7 @@ export async function updateProject(
   input: UpdateProjectDto
 ): Promise<ProjectSummaryDto> {
   const { id, ...patch } = input as any;
-  const { data } = await http.patch(`/api/v1/projects/${id}`, patch);
+  const { data } = await http.patch(`/projects/${id}`, patch);
   return data as ProjectSummaryDto;
 }
 
@@ -79,7 +76,7 @@ export async function addEnvironment(
 ): Promise<EnvironmentDto> {
   const { projectId, ...body } = input as any;
   const { data } = await http.post(
-    `/api/v1/projects/${projectId}/environments`,
+    `/projects/${projectId}/environments`,
     body
   );
   return data as EnvironmentDto;
@@ -89,7 +86,7 @@ export async function listEnvironments(
   projectId: string
 ): Promise<EnvironmentDto[]> {
   const { data } = await http.get(
-    `/api/v1/projects/${projectId}/environments`
+    `/projects/${projectId}/environments`
   );
   return data as EnvironmentDto[];
 }
@@ -99,7 +96,7 @@ export async function findEnvironment(
   envKey: string
 ): Promise<EnvironmentDto | null> {
   const { data } = await http.get(
-    `/api/v1/projects/${projectId}/environments/${encodeURIComponent(envKey)}`
+    `/projects/${projectId}/environments/${encodeURIComponent(envKey)}`
   );
   return (data ?? null) as EnvironmentDto | null;
 }
@@ -115,7 +112,7 @@ export async function issueSdkKey(
 ): Promise<SdkKeyDto> {
   const { projectId, envKey, ...body } = input as any;
   const { data } = await http.post(
-    `/api/v1/projects/${projectId}/environments/${encodeURIComponent(
+    `/projects/${projectId}/environments/${encodeURIComponent(
       envKey
     )}/sdk-keys`,
     body
@@ -129,7 +126,7 @@ export async function issueSdkKey(
  */
 export async function revokeSdkKey(input: RevokeSdkKeyDto): Promise<void> {
   const { keyId, reason } = input as any;
-  await http.post(`/api/v1/sdk-keys/${keyId}/revoke`, { reason });
+  await http.post(`/sdk-keys/${keyId}/revoke`, { reason });
 }
 
 /**
@@ -139,7 +136,7 @@ export async function rotateSdkKey(
   input: RotateSdkKeyDto
 ): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }> {
   const { keyId } = input as any;
-  const { data } = await http.post(`/api/v1/sdk-keys/${keyId}/rotate`);
+  const { data } = await http.post(`/sdk-keys/${keyId}/rotate`);
   return data as { newKey: SdkKeyDto; oldKey?: SdkKeyDto };
 }
 
@@ -151,7 +148,7 @@ export async function listSdkKeys(
   envKey?: string,
   type?: SdkKeyType
 ): Promise<SdkKeyDto[]> {
-  const { data } = await http.get(`/api/v1/projects/${projectId}/sdk-keys`, {
+  const { data } = await http.get(`/projects/${projectId}/sdk-keys`, {
     params: { envKey, type },
   });
   return data as SdkKeyDto[];

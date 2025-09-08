@@ -22,7 +22,7 @@ export const BCRYPT_ROUNDS = 12;
  * Utility: hash any secret/token with a cryptographic hash (not reversible).
  * Use for refresh tokens so we never store the raw token.
  */
-function sha256(input: string): string {
+export function sha256(input: string): string {
   return crypto.createHash('sha256').update(input).digest('hex');
 }
 
@@ -60,6 +60,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
           email,
           passwordHash,
           name: user.fullName!,
+          status:"active"
         },
       });
 

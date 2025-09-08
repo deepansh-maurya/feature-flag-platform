@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./TopNavBar.module.css";
 import { Routes } from "../../../../app/constants";
 import { useRouter } from "next/navigation";
 import Observer from "../../../../app/observer";
 import Link from "next/link";
+import { useProjects } from "@/src/features/projects/hooks";
+import { ProjectSummaryDto } from "@/src/features/projects/types";
 
-const projects = [{ name: "Project" }];
+// const projects = [{ name: "Project" }];
 
 const user = {
   name: "Deepansh",
@@ -25,16 +27,24 @@ const tabs = [
 ];
 
 export default function TopNavBar() {
+  const { data: projects, isLoading } = useProjects(20);
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState(projects[0]);
+  const [selectedProject, setSelectedProject] = useState<ProjectSummaryDto>();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState({ tab: "", route: () => {} });
   const router = useRouter();
 
+  useEffect(() => {
+    if (projects?.items && projects.items.length > 0) {
+      setSelectedProject(projects.items[0]);
+    }
+  }, [projects]);
+  
   return (
     <header className={styles.navbar}>
       {/* LEFT: Project dropdown */}
       <div className={styles.left}>
+        <div className="h-8 w-8 rounded-lg mr-5 bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner" />
         <div
           className={styles.projectDropdown}
           onClick={() => setProjectMenuOpen((v) => !v)}
@@ -53,7 +63,7 @@ export default function TopNavBar() {
         </button>
         {projectMenuOpen && (
           <div className={styles.projectMenu}>
-            {projects.map((p) => (
+            {projects?.items?.map((p) => (
               <div
                 key={p.name}
                 className={styles.projectMenuItem}

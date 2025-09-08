@@ -34,6 +34,7 @@ export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 export const LoginInputSchema = z.object({
     email: z.email(),
     password: z.string().min(8).max(128),
+    remember: z.boolean()
 });
 export type LoginInput = z.infer<typeof LoginInputSchema>;
 
@@ -54,7 +55,7 @@ const TOKEN_STORAGE_KEY = 'ff_access_token';
 let installed = false;
 
 export function persistAccessToken(token?: string, remember?: boolean) {
-    
+
     if (typeof window === 'undefined') return; // SSR guard
     if (!token) {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -62,7 +63,7 @@ export function persistAccessToken(token?: string, remember?: boolean) {
         setAuthToken(undefined);
         return;
     }
-    console.log(token, remember,"from api");
+    console.log(token, remember, "from api");
     // set axios header for this runtime
     setAuthToken(token);
 
@@ -125,10 +126,10 @@ export async function register(input: RegisterInput): Promise<AuthResponse> {
 export async function login(input: LoginInput): Promise<AuthResponse> {
     LoginInputSchema.parse(input);
     console.log(input);
-    
-    const { data } = await http.post(`${base}/login`, input);
+
+    const { data } = await http.post(`${base}/login`, { email: input.email, password: input.password });
     const parsed = AuthResponseSchema.parse(data);
-    persistAccessToken(parsed.accessToken);
+    persistAccessToken(parsed.accessToken,input.remember);
     return parsed;
 }
 
