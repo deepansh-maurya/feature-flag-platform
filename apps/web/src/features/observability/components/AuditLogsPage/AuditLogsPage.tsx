@@ -32,15 +32,15 @@ type EventKind =
 
 type LogRow = {
   id: string;
-  ts: string;           // ISO
-  timeLabel: string;    // "4 min ago" (demo)
-  actor: string;        // user who did it
-  env?: EnvKey;         // affected env (if any)
-  flag?: string;        // affected flag (if any)
+  ts: string; // ISO
+  timeLabel: string; // "4 min ago" (demo)
+  actor: string; // user who did it
+  env?: EnvKey; // affected env (if any)
+  flag?: string; // affected flag (if any)
   kind: EventKind;
-  title: string;        // human summary
-  before?: any;         // JSON or string
-  after?: any;          // JSON or string
+  title: string; // human summary
+  before?: any; // JSON or string
+  after?: any; // JSON or string
   meta?: Record<string, any>; // extras (ip, userAgent, keyId, crId…)
 };
 
@@ -321,8 +321,11 @@ const LOGS: LogRow[] = [
 ];
 
 // Filter lists from data
-const USERS = ["All", ...Array.from(new Set(LOGS.map(l => l.actor)))];
-const FLAGS = ["All", ...Array.from(new Set(LOGS.map(l => l.flag).filter(Boolean)))];
+const USERS = ["All", ...Array.from(new Set(LOGS.map((l) => l.actor)))];
+const FLAGS = [
+  "All",
+  ...Array.from(new Set(LOGS.map((l) => l.flag).filter(Boolean)))
+];
 const TYPES = [
   "All",
   "Flag",
@@ -334,9 +337,10 @@ const TYPES = [
 ] as const;
 
 // Map kind → human category
-function kindCategory(kind: EventKind): typeof TYPES[number] {
+function kindCategory(kind: EventKind): (typeof TYPES)[number] {
   if (kind.startsWith("flag.")) return "Flag";
-  if (kind.startsWith("rule.") || kind === "rollout.changed") return "Targeting";
+  if (kind.startsWith("rule.") || kind === "rollout.changed")
+    return "Targeting";
   if (kind.startsWith("sdk.key")) return "SDK Keys";
   if (kind.startsWith("member.")) return "Members";
   if (kind.startsWith("cr.")) return "Approvals";
@@ -346,12 +350,12 @@ function kindCategory(kind: EventKind): typeof TYPES[number] {
 export default function AuditLogsPage() {
   const [user, setUser] = useState("All");
   const [flag, setFlag] = useState("All");
-  const [type, setType] = useState<typeof TYPES[number]>("All");
+  const [type, setType] = useState<(typeof TYPES)[number]>("All");
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
-    return LOGS.filter(l => {
+    return LOGS.filter((l) => {
       if (user !== "All" && l.actor !== user) return false;
       if (flag !== "All" && l.flag !== flag) return false;
       if (type !== "All" && kindCategory(l.kind) !== type) return false;
@@ -372,7 +376,7 @@ export default function AuditLogsPage() {
 
   function exportCsv() {
     const header = ["id", "ts", "actor", "env", "flag", "kind", "title"];
-    const rows = filtered.map(l => [
+    const rows = filtered.map((l) => [
       l.id,
       l.ts,
       l.actor,
@@ -381,7 +385,7 @@ export default function AuditLogsPage() {
       l.kind,
       l.title.replace(/,/g, ";")
     ]);
-    const csv = [header.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const csv = [header.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -403,84 +407,133 @@ export default function AuditLogsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <button className={styles.csvBtn} onClick={exportCsv}>Export CSV</button>
+          <button className={styles.csvBtn} onClick={exportCsv}>
+            Export CSV
+          </button>
         </div>
       </div>
 
       {/* Filters */}
       <div className={styles.filters}>
-        <select className={styles.filterSelect} value={user} onChange={e => setUser(e.target.value)}>
-          {USERS.map((u) => <option key={u}>{u}</option>)}
+        <select
+          className={styles.filterSelect}
+          value={user}
+          onChange={(e) => setUser(e.target.value)}
+        >
+          {USERS.map((u) => (
+            <option key={u}>{u}</option>
+          ))}
         </select>
-        <select className={styles.filterSelect} value={flag} onChange={e => setFlag(e.target.value)}>
-          {FLAGS.map((f) => <option key={f}>{f}</option>)}
+        <select
+          className={styles.filterSelect}
+          value={flag}
+          onChange={(e) => setFlag(e.target.value)}
+        >
+          {FLAGS.map((f) => (
+            <option key={f}>{f}</option>
+          ))}
         </select>
-        <select className={styles.filterSelect} value={type} onChange={e => setType(e.target.value as any)}>
-          {TYPES.map((t) => <option key={t}>{t}</option>)}
+        <select
+          className={styles.filterSelect}
+          value={type}
+          onChange={(e) => setType(e.target.value as any)}
+        >
+          {TYPES.map((t) => (
+            <option key={t}>{t}</option>
+          ))}
         </select>
       </div>
 
       {/* Timeline */}
-      <div className={styles.timeline}>
-        {filtered.map((log) => {
-          const isOpen = openId === log.id;
-          return (
-            <div className={styles.logItem} key={log.id}>
-              <div className={styles.logMeta}>
-                <span className={styles.badgeCat + " " + styles["cat_" + kindCategory(log.kind).toLowerCase().replace(/\s/g,"")]}>
-                  {kindCategory(log.kind)}
-                </span>
-                {log.env && <span className={styles.envTag}>{log.env}</span>}
-                {log.flag && <span className={styles.flagTag}>{log.flag}</span>}
-                <span className={styles.logTitle}>{log.title}</span>
-                <span className={styles.logUser}>by {log.actor}</span>
-                <span className={styles.logTime}>{log.timeLabel}</span>
-              </div>
-
-              {/* Controls */}
-              <div className={styles.logControls}>
-                <span className={styles.eventId}>
-                  <code>{log.id}</code>
-                  <button className={styles.copyBtn} onClick={() => copy(log.id)} title="Copy event id">📋</button>
-                </span>
-                <button className={styles.detailBtn} onClick={() => setOpenId(isOpen ? null : log.id)}>
-                  {isOpen ? "Hide details" : "View details"}
-                </button>
-              </div>
-
-              {/* Diff / Details */}
-              {isOpen && (
-                <div className={styles.details}>
-                  <div className={styles.detailCols}>
-                    <div>
-                      <div className={styles.detailLabel}>Before</div>
-                      <pre className={styles.pre}>{fmt(log.before)}</pre>
-                    </div>
-                    <div>
-                      <div className={styles.detailLabel}>After</div>
-                      <pre className={styles.pre}>{fmt(log.after)}</pre>
-                    </div>
-                  </div>
-                  {log.meta && (
-                    <div className={styles.metaGrid}>
-                      {Object.entries(log.meta).map(([k, v]) => (
-                        <div key={k} className={styles.metaItem}>
-                          <div className={styles.metaKey}>{k}</div>
-                          <div className={styles.metaVal}><code>{typeof v === "string" ? v : JSON.stringify(v)}</code></div>
-                        </div>
-                      ))}
-                    </div>
+      {filtered.length > 0 ? (
+        <div className={styles.timeline}>
+          {filtered.map((log) => {
+            const isOpen = openId === log.id;
+            return (
+              <div className={styles.logItem} key={log.id}>
+                <div className={styles.logMeta}>
+                  <span
+                    className={
+                      styles.badgeCat +
+                      " " +
+                      styles[
+                        "cat_" +
+                          kindCategory(log.kind)
+                            .toLowerCase()
+                            .replace(/\s/g, "")
+                      ]
+                    }
+                  >
+                    {kindCategory(log.kind)}
+                  </span>
+                  {log.env && <span className={styles.envTag}>{log.env}</span>}
+                  {log.flag && (
+                    <span className={styles.flagTag}>{log.flag}</span>
                   )}
+                  <span className={styles.logTitle}>{log.title}</span>
+                  <span className={styles.logUser}>by {log.actor}</span>
+                  <span className={styles.logTime}>{log.timeLabel}</span>
                 </div>
-              )}
-            </div>
-          );
-        })}
 
-        {filtered.length === 0 && (
-          <div className={styles.empty}>No events match your filters.</div>
-        )}
-      </div>
+                {/* Controls */}
+                <div className={styles.logControls}>
+                  <span className={styles.eventId}>
+                    <code>{log.id}</code>
+                    <button
+                      className={styles.copyBtn}
+                      onClick={() => copy(log.id)}
+                      title="Copy event id"
+                    >
+                      📋
+                    </button>
+                  </span>
+                  <button
+                    className={styles.detailBtn}
+                    onClick={() => setOpenId(isOpen ? null : log.id)}
+                  >
+                    {isOpen ? "Hide details" : "View details"}
+                  </button>
+                </div>
+
+                {/* Diff / Details */}
+                {isOpen && (
+                  <div className={styles.details}>
+                    <div className={styles.detailCols}>
+                      <div>
+                        <div className={styles.detailLabel}>Before</div>
+                        <pre className={styles.pre}>{fmt(log.before)}</pre>
+                      </div>
+                      <div>
+                        <div className={styles.detailLabel}>After</div>
+                        <pre className={styles.pre}>{fmt(log.after)}</pre>
+                      </div>
+                    </div>
+                    {log.meta && (
+                      <div className={styles.metaGrid}>
+                        {Object.entries(log.meta).map(([k, v]) => (
+                          <div key={k} className={styles.metaItem}>
+                            <div className={styles.metaKey}>{k}</div>
+                            <div className={styles.metaVal}>
+                              <code>
+                                {typeof v === "string" ? v : JSON.stringify(v)}
+                              </code>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className={styles.empty}>No events match your filters.</div>
+          )}
+        </div>
+      ) : (
+        <div className="text-center">No Logs</div>
+      )}
     </div>
   );
 }
@@ -489,5 +542,9 @@ export default function AuditLogsPage() {
 function fmt(v: any) {
   if (v == null) return "—";
   if (typeof v === "string") return v;
-  try { return JSON.stringify(v, null, 2); } catch { return String(v); }
+  try {
+    return JSON.stringify(v, null, 2);
+  } catch {
+    return String(v);
+  }
 }

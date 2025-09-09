@@ -39,12 +39,17 @@ export default function TopNavBar() {
       setSelectedProject(projects.items[0]);
     }
   }, [projects]);
-  
+
   return (
     <header className={styles.navbar}>
       {/* LEFT: Project dropdown */}
       <div className={styles.left}>
-        <div className="h-8 w-8 rounded-lg mr-5 bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner" />
+        <div
+          onClick={() => {
+            router.push(Routes.dashboard());
+          }}
+          className="h-8 w-8 rounded-lg mr-5 bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner"
+        />
         <div
           className={styles.projectDropdown}
           onClick={() => setProjectMenuOpen((v) => !v)}

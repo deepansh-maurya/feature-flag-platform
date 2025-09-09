@@ -19,7 +19,7 @@ export class AuthmoduleService {
     const result = await this.repo.login(user)
     console.log(result, 20);
 
-    return await this.issueTokens(result.id, { sub: result.id, workspaceId: result.wid }, result.wid)
+    return await this.issueTokens(result.id, { sub: result.id, workspaceId: result.wid }, result.wid) 
   }
 
   async refreshToken(data: RefreshDto) {
@@ -43,12 +43,12 @@ export class AuthmoduleService {
     const accessToken = jwt.sign(
       { sub: userId, ...payload },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" },
+      { expiresIn: "1m" },
     );
 
     // Refresh token
     const refreshToken = jwt.sign(
-      { sub: userId },
+      { sub: userId, ...payload },
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "7d" },
     );
@@ -67,9 +67,9 @@ export class AuthmoduleService {
   refreshCookieOptions(): CookieOptions {
     return {
       httpOnly: true,
-      secure: true,
-      sameSite: true ? 'strict' : 'lax',
-      path: '/api/auth',        // scope if you want; or '/'
+      secure: false,
+      sameSite: 'lax',
+      path: '/',        // scope if you want; or '/'
       maxAge: 15 * 24 * 60 * 60 * 1000, // align with refresh exp
       // domain: '.yourdomain.com' // set when using subdomains
     };

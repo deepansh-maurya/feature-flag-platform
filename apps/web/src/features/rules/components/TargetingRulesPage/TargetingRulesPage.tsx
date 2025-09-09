@@ -163,7 +163,7 @@ const INITIAL_FLAGS: Flag[] = [initialFlag1, initialFlag2, initialFlag3];
 // Page: renders ALL flags as an accordion
 // -----------------------------------------------------------------------------
 export default function TargetingRulesPage() {
-  const [flags, setFlags] = useState<Flag[]>(INITIAL_FLAGS);
+  const [flags, setFlags] = useState<Flag[]>([]);
   const [openKeys, setOpenKeys] = useState<Record<string, boolean>>({
     [INITIAL_FLAGS[0].key]: true
   });
@@ -184,30 +184,34 @@ export default function TargetingRulesPage() {
       </div>
 
       <div className={styles.accordion}>
-        {flags.map((f) => {
-          const isOpen = !!openKeys[f.key];
-          return (
-            <div key={f.key} className={styles.flagItem}>
-              <button
-                className={styles.flagHeader}
-                onClick={() => setOpenKeys((o) => ({ [f.key]: !o[f.key] }))}
-                aria-expanded={isOpen}
-              >
-                <span className={styles.caret}>{isOpen ? "▾" : "▸"}</span>
-                <span className={styles.flagKey}>{f.key}</span>
-                <span className={styles.flagMeta}>
-                  Last updated {f.updatedAt}
-                </span>
-              </button>
+        {flags.length > 0 ? (
+          flags.map((f) => {
+            const isOpen = !!openKeys[f.key];
+            return (
+              <div key={f.key} className={styles.flagItem}>
+                <button
+                  className={styles.flagHeader}
+                  onClick={() => setOpenKeys((o) => ({ [f.key]: !o[f.key] }))}
+                  aria-expanded={isOpen}
+                >
+                  <span className={styles.caret}>{isOpen ? "▾" : "▸"}</span>
+                  <span className={styles.flagKey}>{f.key}</span>
+                  <span className={styles.flagMeta}>
+                    Last updated {f.updatedAt}
+                  </span>
+                </button>
 
-              {isOpen && (
-                <div className={styles.flagBody}>
-                  <FlagRulesBuilder flag={f} onChange={updateFlag} />
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {isOpen && (
+                  <div className={styles.flagBody}>
+                    <FlagRulesBuilder flag={f} onChange={updateFlag} />
+                  </div>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center">No Rules</div>
+        )}
       </div>
     </div>
   );

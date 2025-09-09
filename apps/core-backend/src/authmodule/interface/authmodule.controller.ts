@@ -2,18 +2,21 @@ import { Body, Controller, Delete, Get, Post, Req, Res, UseGuards, Version } fro
 import { AuthmoduleService } from '../application/use-cases/authmodule.service';
 import { ChangePasswordDto, DeleteUserDto, LoginDto, LogoutDto, RegisterDto } from './dto/create-authmodule.dto';
 import { Public } from './decorators/public.decorator';
-import { JwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
-import { JwtPayload, RefreshJwtStrategy } from '../infrastructure/strategy/jwt.strategy';
+import { JwtAuthGuard, RefreshAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
+import { JwtPayload } from '../infrastructure/strategy/jwt.strategy';
 import { Request, Response } from 'express';
 
 @Controller({ path: 'auth', version: "1" })
 export class AuthmoduleController {
   constructor(private readonly svc: AuthmoduleService) { }
 
-  @UseGuards(RefreshJwtStrategy)
-  @Get("refresh")
+  @UseGuards(RefreshAuthGuard)
+  @Post("refresh")
   async refreshAccessToken(@Req() req: Request & JwtPayload) {
-    return await this.svc.refreshToken({ userId: req.sub, email: req.email, workspaceId: req.workspaceId })
+
+    const { userId, email, workspaceId } = req.user as any;
+
+    return this.svc.refreshToken({ userId, email, workspaceId });
   }
 
 

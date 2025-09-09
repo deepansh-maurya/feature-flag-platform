@@ -17,8 +17,8 @@ type SdkKey = {
   lastRotated?: string;
   note?: string;
   // Policy fields (display-only for now)
-  ipAllowlist?: string[];        // for server keys
-  referrerAllowlist?: string[];  // for client keys
+  ipAllowlist?: string[]; // for server keys
+  referrerAllowlist?: string[]; // for client keys
 };
 
 type EnvRow = {
@@ -113,7 +113,8 @@ const initialData: EnvRow[] = [
 function randomKey(prefix: string) {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
   let s = "";
-  for (let i = 0; i < 12; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+  for (let i = 0; i < 12; i++)
+    s += alphabet[Math.floor(Math.random() * alphabet.length)];
   return `${prefix}-${s}`;
 }
 function formatPct(n: number) {
@@ -123,7 +124,7 @@ function formatPct(n: number) {
 }
 
 export default function SdkKeysPage() {
-  const [rows, setRows] = useState<EnvRow[]>(initialData);
+  const [rows, setRows] = useState<EnvRow[]>([]);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({}); // map key string -> revealed?
   const [toast, setToast] = useState<string>("");
 
@@ -152,7 +153,10 @@ export default function SdkKeysPage() {
               ? {
                   ...k,
                   key: randomKey(`${type === "server" ? "srv" : "cli"}-${env}`),
-                  lastRotated: new Date().toISOString().slice(0, 16).replace("T", " ")
+                  lastRotated: new Date()
+                    .toISOString()
+                    .slice(0, 16)
+                    .replace("T", " ")
                 }
               : k
           )
@@ -162,19 +166,27 @@ export default function SdkKeysPage() {
     withToast(`Regenerated ${type} key for ${env}`);
   }
 
-  function handleRevoke(env: EnvRow["env"], type: KeyType, action: "revoke" | "restore") {
+  function handleRevoke(
+    env: EnvRow["env"],
+    type: KeyType,
+    action: "revoke" | "restore"
+  ) {
     setRows((prev) =>
       prev.map((r) => {
         if (r.env !== env) return r;
         return {
           ...r,
           keys: r.keys.map((k) =>
-            k.type === type ? { ...k, status: action === "revoke" ? "revoked" : "active" } : k
+            k.type === type
+              ? { ...k, status: action === "revoke" ? "revoked" : "active" }
+              : k
           )
         };
       })
     );
-    withToast(`${action === "revoke" ? "Revoked" : "Restored"} ${type} key for ${env}`);
+    withToast(
+      `${action === "revoke" ? "Revoked" : "Restored"} ${type} key for ${env}`
+    );
   }
 
   // flatten rows for table display (one row per key)
@@ -201,119 +213,157 @@ export default function SdkKeysPage() {
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead className="head">
-            <tr>
-              <th>Environment</th>
-              <th>Type</th>
-              <th>SDK Key</th>
-              <th>Created</th>
-              <th>Last Used</th>
-              <th>Usage</th>
-              <th>Status</th>
-              <th>Policies</th>
-              <th style={{ textAlign: "center" }}>Actions</th>
-            </tr>
+            {flat.length > 0 && (
+              <tr>
+                <th>Environment</th>
+                <th>Type</th>
+                <th>SDK Key</th>
+                <th>Created</th>
+                <th>Last Used</th>
+                <th>Usage</th>
+                <th>Status</th>
+                <th>Policies</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
+              </tr>
+            )}
           </thead>
           <tbody className="body">
-            {flat.map((row) => {
-              const pct = Math.min(100, (row.usage / row.limit) * 100);
-              const masked = row.key.replace(/.(?=.{4})/g, "•");
-              const show = revealed[row.key];
-              return (
-                <tr key={`${row.env}-${row.type}`}>
-                  <td>
-                    <span className={styles.envTag}>{row.env}</span>
-                  </td>
-                  <td>
-                    <span className={row.type === "server" ? styles.typeServer : styles.typeClient}>
-                      {row.type}
-                    </span>
-                  </td>
-                  <td className={styles.sdkKeyCell}>
-                    <span className={styles.sdkKey}>{show ? row.key : masked}</span>
-                    <button
-                      className={styles.copyBtn}
-                      onClick={() => handleCopyKey(row.key)}
-                      title="Copy"
-                    >
-                      📋
-                    </button>
-                    <button
-                      className={styles.eyeBtn}
-                      onClick={() => toggleReveal(row.key)}
-                      title={show ? "Hide" : "Reveal"}
-                    >
-                      {show ? "🙈" : "👁️"}
-                    </button>
-                  </td>
-                  <td>
-                    <div>{row.created}</div>
-                    {row.lastRotated && <div className={styles.dim}>rotated {row.lastRotated}</div>}
-                  </td>
-                  <td>{row.lastUsed}</td>
-                  <td>
-                    <div className={styles.usageRow}>
-                      <span className={styles.usageVal}>{row.usage.toLocaleString()}</span>
-                      <span className={styles.usageLimit}>/ {row.limit.toLocaleString()}</span>
-                    </div>
-                    <div className={styles.usageBar}>
-                      <div className={styles.usageFill} style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className={styles.usagePct}>{formatPct(pct)}</div>
-                  </td>
-                  <td>
-                    <span
-                      className={
-                        row.status === "active" ? styles.statusActive : styles.statusRevoked
-                      }
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className={styles.policyCell}>
-                    {row.type === "server" && row.ipAllowlist?.length ? (
-                      <div>
-                        <span className={styles.pill}>IP</span>{" "}
-                        <code className={styles.codeList}>{row.ipAllowlist.join(", ")}</code>
-                      </div>
-                    ) : null}
-                    {row.type === "client" && row.referrerAllowlist?.length ? (
-                      <div>
-                        <span className={styles.pill}>Referrers</span>{" "}
-                        <code className={styles.codeList}>
-                          {row.referrerAllowlist.join(", ")}
-                        </code>
-                      </div>
-                    ) : null}
-                    {row.note && <div className={styles.dim}>note: {row.note}</div>}
-                  </td>
-                  <td className={styles.actionCol}>
-                    <div className={styles.actionStack}>
-                      <button
-                        className={styles.regenBtn}
-                        onClick={() => handleRegenerate(row.env, row.type)}
+            {flat.length > 0 ? (
+              flat.map((row) => {
+                const pct = Math.min(100, (row.usage / row.limit) * 100);
+                const masked = row.key.replace(/.(?=.{4})/g, "•");
+                const show = revealed[row.key];
+                return (
+                  <tr key={`${row.env}-${row.type}`}>
+                    <td>
+                      <span className={styles.envTag}>{row.env}</span>
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          row.type === "server"
+                            ? styles.typeServer
+                            : styles.typeClient
+                        }
                       >
-                        Regenerate
+                        {row.type}
+                      </span>
+                    </td>
+                    <td className={styles.sdkKeyCell}>
+                      <span className={styles.sdkKey}>
+                        {show ? row.key : masked}
+                      </span>
+                      <button
+                        className={styles.copyBtn}
+                        onClick={() => handleCopyKey(row.key)}
+                        title="Copy"
+                      >
+                        📋
                       </button>
-                      {row.status === "active" ? (
-                        <button
-                          className={styles.revokeBtn}
-                          onClick={() => handleRevoke(row.env, row.type, "revoke")}
-                        >
-                          Revoke
-                        </button>
-                      ) : (
-                        <button
-                          className={styles.restoreBtn}
-                          onClick={() => handleRevoke(row.env, row.type, "restore")}
-                        >
-                          Restore
-                        </button>
+                      <button
+                        className={styles.eyeBtn}
+                        onClick={() => toggleReveal(row.key)}
+                        title={show ? "Hide" : "Reveal"}
+                      >
+                        {show ? "🙈" : "👁️"}
+                      </button>
+                    </td>
+                    <td>
+                      <div>{row.created}</div>
+                      {row.lastRotated && (
+                        <div className={styles.dim}>
+                          rotated {row.lastRotated}
+                        </div>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
+                    </td>
+                    <td>{row.lastUsed}</td>
+                    <td>
+                      <div className={styles.usageRow}>
+                        <span className={styles.usageVal}>
+                          {row.usage.toLocaleString()}
+                        </span>
+                        <span className={styles.usageLimit}>
+                          / {row.limit.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className={styles.usageBar}>
+                        <div
+                          className={styles.usageFill}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className={styles.usagePct}>{formatPct(pct)}</div>
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          row.status === "active"
+                            ? styles.statusActive
+                            : styles.statusRevoked
+                        }
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className={styles.policyCell}>
+                      {row.type === "server" && row.ipAllowlist?.length ? (
+                        <div>
+                          <span className={styles.pill}>IP</span>{" "}
+                          <code className={styles.codeList}>
+                            {row.ipAllowlist.join(", ")}
+                          </code>
+                        </div>
+                      ) : null}
+                      {row.type === "client" &&
+                      row.referrerAllowlist?.length ? (
+                        <div>
+                          <span className={styles.pill}>Referrers</span>{" "}
+                          <code className={styles.codeList}>
+                            {row.referrerAllowlist.join(", ")}
+                          </code>
+                        </div>
+                      ) : null}
+                      {row.note && (
+                        <div className={styles.dim}>note: {row.note}</div>
+                      )}
+                    </td>
+                    <td className={styles.actionCol}>
+                      <div className={styles.actionStack}>
+                        <button
+                          className={styles.regenBtn}
+                          onClick={() => handleRegenerate(row.env, row.type)}
+                        >
+                          Regenerate
+                        </button>
+                        {row.status === "active" ? (
+                          <button
+                            className={styles.revokeBtn}
+                            onClick={() =>
+                              handleRevoke(row.env, row.type, "revoke")
+                            }
+                          >
+                            Revoke
+                          </button>
+                        ) : (
+                          <button
+                            className={styles.restoreBtn}
+                            onClick={() =>
+                              handleRevoke(row.env, row.type, "restore")
+                            }
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td className="text-center">No Keys</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -321,10 +371,22 @@ export default function SdkKeysPage() {
       <div className={styles.hintBox}>
         <div className={styles.hintTitle}>Notes</div>
         <ul className={styles.hintList}>
-          <li><strong>Server keys</strong> should be kept secret and can be IP‑restricted.</li>
-          <li><strong>Client keys</strong> are public and can be referrer‑restricted.</li>
-          <li><strong>Regenerate</strong> rotates the key; update your services accordingly.</li>
-          <li><strong>Revoke</strong> immediately disables a key (grace logic is backend‑side).</li>
+          <li>
+            <strong>Server keys</strong> should be kept secret and can be
+            IP‑restricted.
+          </li>
+          <li>
+            <strong>Client keys</strong> are public and can be
+            referrer‑restricted.
+          </li>
+          <li>
+            <strong>Regenerate</strong> rotates the key; update your services
+            accordingly.
+          </li>
+          <li>
+            <strong>Revoke</strong> immediately disables a key (grace logic is
+            backend‑side).
+          </li>
         </ul>
       </div>
     </div>

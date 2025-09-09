@@ -51,7 +51,7 @@ export type LogoutInput = z.infer<typeof LogoutInputSchema>;
 
 /** ───────── Helpers (optional persistence) ───────── */
 
-const TOKEN_STORAGE_KEY = 'ff_access_token';
+export const TOKEN_STORAGE_KEY = 'ff_access_token';
 let installed = false;
 
 export function persistAccessToken(token?: string, remember?: boolean) {

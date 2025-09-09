@@ -48,7 +48,7 @@ export default class AdminJwtStrategy extends PassportStrategy(
             where: { id: payload.id, deviceId: payload.deviceId },
         });
         
-        if (!admin) throw new UnauthorizedException('unauthorized');
+        if (!admin) throw new UnauthorizedException('unauthorized user');
 
         return {
             id: payload.id,

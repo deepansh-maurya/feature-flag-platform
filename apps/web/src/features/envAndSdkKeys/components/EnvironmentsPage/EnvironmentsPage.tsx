@@ -1,4 +1,3 @@
-// EnvironmentsPage.tsx
 "use client";
 
 import React, { useMemo, useState } from "react";
@@ -19,9 +18,9 @@ export type Env = {
 };
 
 const initialEnvs: Env[] = [
-  { name: "dev", isDefault: false, linkedFlags: ["onboarding_ui", "dark_mode_v2"], key: "development", isProd: false },
-  { name: "stage", isDefault: false, linkedFlags: ["dark_mode_v2"], key: "staging", isProd: false },
-  { name: "prod", isDefault: true, linkedFlags: ["dark_mode_v2", "referral_program"], key: "production", isProd: true },
+  // { name: "dev", isDefault: false, linkedFlags: ["onboarding_ui", "dark_mode_v2"], key: "development", isProd: false },
+  // { name: "stage", isDefault: false, linkedFlags: ["dark_mode_v2"], key: "staging", isProd: false },
+  // { name: "prod", isDefault: true, linkedFlags: ["dark_mode_v2", "referral_program"], key: "production", isProd: true },
 ];
 
 export default function EnvironmentsPage() {
@@ -29,7 +28,10 @@ export default function EnvironmentsPage() {
   const [openCreate, setOpenCreate] = useState(false);
 
   const envNames = useMemo(() => envs.map((e) => e.name.toLowerCase()), [envs]);
-  const envKeys = useMemo(() => envs.map((e) => (e.key || e.name).toLowerCase()), [envs]);
+  const envKeys = useMemo(
+    () => envs.map((e) => (e.key || e.name).toLowerCase()),
+    [envs]
+  );
 
   function setDefault(idx: number) {
     setEnvs((curr) => curr.map((e, i) => ({ ...e, isDefault: i === idx })));
@@ -43,7 +45,9 @@ export default function EnvironmentsPage() {
   function addEnvFromModal(newEnv: Env) {
     setEnvs((curr) => {
       // if marked default, unset others
-      const next = newEnv.isDefault ? curr.map((e) => ({ ...e, isDefault: false })) : curr;
+      const next = newEnv.isDefault
+        ? curr.map((e) => ({ ...e, isDefault: false }))
+        : curr;
       return [...next, newEnv];
     });
   }
@@ -52,21 +56,30 @@ export default function EnvironmentsPage() {
     <div className={styles.wrapper}>
       <div className={styles.headerRow}>
         <div className={styles.headerTitle}>Environments</div>
-        <button className={styles.addBtn} onClick={() => setOpenCreate(true)}>+ Add Environment</button>
+        <button className={styles.addBtn} onClick={() => setOpenCreate(true)}>
+          + Add Environment
+        </button>
       </div>
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
           <thead className="head">
-            <tr>
-              <th>Name</th>
-              <th>Default</th>
-              <th>Linked Flags</th>
-              <th style={{ textAlign: "center" }}>Actions</th>
-            </tr>
+            {envs.length > 0 ? (
+              <tr>
+                <th>Name</th>
+                <th>Default</th>
+                <th>Linked Flags</th>
+                <th style={{ textAlign: "center" }}>Actions</th>
+              </tr>
+            ) : (
+              <tr className="">
+                {" "}
+                <td className="text-center">No Envs</td>{" "}
+              </tr>
+            )}
           </thead>
           <tbody className="body">
-            {envs.map((env, idx) => (
+            {envs?.map((env, idx) => (
               <tr key={(env.key || env.name) + String(idx)}>
                 <td className={styles.envName}>{env.name}</td>
                 <td>

@@ -33,7 +33,7 @@ export class AdminJwtAuthGuard extends AuthGuard('jwt') {
   handleRequest(err: any, user: any, _info: any, _context: any) {
     if (err || !user) {
       // _info can contain 'TokenExpiredError', 'No auth token', etc.
-      throw err || new UnauthorizedException('Unauthorized');
+      throw err || new UnauthorizedException('Unauthorized user');
     }
     return user; // attaches to req.user
   }

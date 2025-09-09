@@ -1,13 +1,23 @@
-import axios from 'axios';
-import { API_BASE } from './config';
+import axios from "axios";
+import { API_BASE } from "./config";
 
-export const http = axios.create({ baseURL: API_BASE, withCredentials: true });
+const token =
+  typeof window !== "undefined"
+    ? localStorage.getItem('ff_access_token') ||
+    sessionStorage.getItem('ff_access_token')
+    : null;
+
+export const http = axios.create({
+  baseURL: API_BASE,
+  withCredentials: true,
+  headers: token ? { Authorization: `Bearer ${token}` } : {}
+});
 
 export function setAuthToken(token?: string) {
   console.log(API_BASE);
 
-  if (token) http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  else delete http.defaults.headers.common['Authorization'];
+  if (token) http.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  else delete http.defaults.headers.common["Authorization"];
 }
 
 let isRefreshing = false;
@@ -32,13 +42,13 @@ http.interceptors.response.use(
           const newAccessToken = res.data.accessToken;
 
           localStorage.setItem("accessToken", newAccessToken);
-
+          setAuthToken()
           refreshQueue.forEach((cb) => cb(newAccessToken));
           refreshQueue = [];
           return http(originalRequest);
         } catch (refreshError) {
           console.log(refreshError);
-          
+
           localStorage.removeItem("accessToken");
           // window.location.href = "/login";
           return Promise.reject(refreshError);
@@ -58,4 +68,3 @@ http.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-

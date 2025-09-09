@@ -9,14 +9,14 @@ type RuleHit = { id: string; count: number };
 type FlagAnalytics = {
   name: string;
   env: EnvKey;
-  evaluations: number;             // total evals in window
-  enabled: number;                 // enabled evals
-  disabled: number;                // disabled evals
-  apiRequests: number;             // SDK/API calls attributed
-  uniqueUsers: number;             // distinct users (estimated)
-  variants?: VariantStat[];        // if multivariant
-  topRules?: RuleHit[];            // matched rules by count
-  trend: number[];                 // last 7 days counts (for sparkline)
+  evaluations: number; // total evals in window
+  enabled: number; // enabled evals
+  disabled: number; // disabled evals
+  apiRequests: number; // SDK/API calls attributed
+  uniqueUsers: number; // distinct users (estimated)
+  variants?: VariantStat[]; // if multivariant
+  topRules?: RuleHit[]; // matched rules by count
+  trend: number[]; // last 7 days counts (for sparkline)
 };
 
 // ---------------------------
@@ -69,7 +69,10 @@ const MOCK: FlagAnalytics[] = [
       { key: "A", count: 520 },
       { key: "B", count: 480 }
     ],
-    topRules: [{ id: "first-session", count: 560 }, { id: "fallthrough", count: 340 }],
+    topRules: [
+      { id: "first-session", count: 560 },
+      { id: "fallthrough", count: 340 }
+    ],
     trend: [120, 135, 140, 130, 150, 165, 160]
   }
 ];
@@ -86,7 +89,7 @@ export default function AnalyticsPage() {
   const [selected, setSelected] = useState<string | null>(null);
 
   const flags = useMemo(
-    () => (env === "all" ? MOCK : MOCK.filter(f => f.env === env)),
+    () => (env === "all" ? MOCK : MOCK.filter((f) => f.env === env)),
     [env]
   );
 
@@ -106,15 +109,31 @@ export default function AnalyticsPage() {
   }, [flags]);
 
   const selectedFlag = useMemo(
-    () => flags.find(f => f.name === selected) || null,
+    () => flags.find((f) => f.name === selected) || null,
     [flags, selected]
   );
 
   function exportCsv() {
     // minimal CSV from overall + per-flag
-    const header = ["flag", "env", "evaluations", "enabled", "disabled", "apiRequests", "uniqueUsers"];
-    const rows = flags.map(f => [f.name, f.env, f.evaluations, f.enabled, f.disabled, f.apiRequests, f.uniqueUsers]);
-    const csv = [header.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const header = [
+      "flag",
+      "env",
+      "evaluations",
+      "enabled",
+      "disabled",
+      "apiRequests",
+      "uniqueUsers"
+    ];
+    const rows = flags.map((f) => [
+      f.name,
+      f.env,
+      f.evaluations,
+      f.enabled,
+      f.disabled,
+      f.apiRequests,
+      f.uniqueUsers
+    ]);
+    const csv = [header.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -130,77 +149,113 @@ export default function AnalyticsPage() {
       <div className={styles.headerRow}>
         <div className={styles.headerTitle}>Feature Flag Analytics</div>
         <div className={styles.headerControls}>
-          <select className={styles.select} value={env} onChange={(e) => setEnv(e.target.value as any)}>
+          <select
+            className={styles.select}
+            value={env}
+            onChange={(e) => setEnv(e.target.value as any)}
+          >
             <option value="all">All env</option>
             <option value="dev">dev</option>
             <option value="stage">stage</option>
             <option value="prod">prod</option>
           </select>
-          <select className={styles.select} value={range} onChange={(e) => setRange(e.target.value as any)}>
+          <select
+            className={styles.select}
+            value={range}
+            onChange={(e) => setRange(e.target.value as any)}
+          >
             <option value="24h">Last 24h</option>
             <option value="7d">Last 7d</option>
             <option value="30d">Last 30d</option>
           </select>
-          <button className={styles.csvBtn} onClick={exportCsv}>Export CSV</button>
+          <button className={styles.csvBtn} onClick={exportCsv}>
+            Export CSV
+          </button>
         </div>
       </div>
 
       {/* Overall section (MUST-HAVE KPIs) */}
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Overview</div>
-        <div className={styles.kpiGrid}>
-          <Kpi label="Total evaluations" value={overall.evaluations.toLocaleString()} />
-          <Kpi label="Enabled %" value={`${pct(overall.enabled, overall.evaluations)}%`} />
-          <Kpi label="API requests" value={overall.api.toLocaleString()} />
-          <Kpi label="Unique users" value={overall.users.toLocaleString()} />
+      {flags.length > 0 && (
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Overview</div>
+          <div className={styles.kpiGrid}>
+            <Kpi
+              label="Total evaluations"
+              value={overall.evaluations.toLocaleString()}
+            />
+            <Kpi
+              label="Enabled %"
+              value={`${pct(overall.enabled, overall.evaluations)}%`}
+            />
+            <Kpi label="API requests" value={overall.api.toLocaleString()} />
+            <Kpi label="Unique users" value={overall.users.toLocaleString()} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Flags grid */}
-      <div className={styles.section}>
-        <div className={styles.sectionTitle}>Per‑flag</div>
-        <div className={styles.flagsGrid}>
-          {flags.map((f) => (
-            <div key={f.name} className={styles.flagCard}>
-              <div className={styles.flagHeader}>
-                <span className={styles.flagName}>{f.name}</span>
-                <span className={styles.envTag}>{f.env}</span>
-              </div>
-
-              <div className={styles.miniStats}>
-                <div className={styles.miniRow}>
-                  <span className={styles.dim}>Evaluations</span>
-                  <span className={styles.val}>{f.evaluations.toLocaleString()}</span>
+      {flags.length > 0 ? (
+        <div className={styles.section}>
+          <div className={styles.sectionTitle}>Per‑flag</div>
+          <div className={styles.flagsGrid}>
+            {flags.map((f) => (
+              <div key={f.name} className={styles.flagCard}>
+                <div className={styles.flagHeader}>
+                  <span className={styles.flagName}>{f.name}</span>
+                  <span className={styles.envTag}>{f.env}</span>
                 </div>
-                <div className={styles.miniRow}>
-                  <span className={styles.dim}>Enabled %</span>
-                  <span className={styles.val}>{pct(f.enabled, f.evaluations)}%</span>
-                </div>
-                <div className={styles.miniRow}>
-                  <span className={styles.dim}>API</span>
-                  <span className={styles.val}>{f.apiRequests.toLocaleString()}</span>
-                </div>
-              </div>
 
-              <Sparkline data={f.trend} />
-
-              {f.variants && f.variants.length > 0 && (
-                <div className={styles.variantRow}>
-                  {f.variants.map(v => (
-                    <span key={v.key} className={styles.variantPill}>
-                      {v.key}: {pct(v.count, f.variants!.reduce((a,b)=>a+b.count,0))}%
+                <div className={styles.miniStats}>
+                  <div className={styles.miniRow}>
+                    <span className={styles.dim}>Evaluations</span>
+                    <span className={styles.val}>
+                      {f.evaluations.toLocaleString()}
                     </span>
-                  ))}
+                  </div>
+                  <div className={styles.miniRow}>
+                    <span className={styles.dim}>Enabled %</span>
+                    <span className={styles.val}>
+                      {pct(f.enabled, f.evaluations)}%
+                    </span>
+                  </div>
+                  <div className={styles.miniRow}>
+                    <span className={styles.dim}>API</span>
+                    <span className={styles.val}>
+                      {f.apiRequests.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
-              )}
 
-              <button className={styles.detailBtn} onClick={() => setSelected(f.name)}>
-                View details
-              </button>
-            </div>
-          ))}
+                <Sparkline data={f.trend} />
+
+                {f.variants && f.variants.length > 0 && (
+                  <div className={styles.variantRow}>
+                    {f.variants.map((v) => (
+                      <span key={v.key} className={styles.variantPill}>
+                        {v.key}:{" "}
+                        {pct(
+                          v.count,
+                          f.variants!.reduce((a, b) => a + b.count, 0)
+                        )}
+                        %
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  className={styles.detailBtn}
+                  onClick={() => setSelected(f.name)}
+                >
+                  View details
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="text-center">No Analytics</div>
+      )}
 
       {/* Selected flag detail (drawer style, no horizontal scroll) */}
       {selectedFlag && (
@@ -208,16 +263,36 @@ export default function AnalyticsPage() {
           <div className={styles.detailHeader}>
             <div>
               <div className={styles.detailTitle}>{selectedFlag.name}</div>
-              <div className={styles.detailSub}>Environment: <span className={styles.envTag}>{selectedFlag.env}</span></div>
+              <div className={styles.detailSub}>
+                Environment:{" "}
+                <span className={styles.envTag}>{selectedFlag.env}</span>
+              </div>
             </div>
-            <button className={styles.closeBtn} onClick={() => setSelected(null)}>✕</button>
+            <button
+              className={styles.closeBtn}
+              onClick={() => setSelected(null)}
+            >
+              ✕
+            </button>
           </div>
 
           <div className={styles.detailGrid}>
-            <Kpi label="Evaluations" value={selectedFlag.evaluations.toLocaleString()} />
-            <Kpi label="Enabled" value={`${selectedFlag.enabled.toLocaleString()} (${pct(selectedFlag.enabled, selectedFlag.evaluations)}%)`} />
-            <Kpi label="Disabled" value={`${selectedFlag.disabled.toLocaleString()} (${pct(selectedFlag.disabled, selectedFlag.evaluations)}%)`} />
-            <Kpi label="Unique users" value={selectedFlag.uniqueUsers.toLocaleString()} />
+            <Kpi
+              label="Evaluations"
+              value={selectedFlag.evaluations.toLocaleString()}
+            />
+            <Kpi
+              label="Enabled"
+              value={`${selectedFlag.enabled.toLocaleString()} (${pct(selectedFlag.enabled, selectedFlag.evaluations)}%)`}
+            />
+            <Kpi
+              label="Disabled"
+              value={`${selectedFlag.disabled.toLocaleString()} (${pct(selectedFlag.disabled, selectedFlag.evaluations)}%)`}
+            />
+            <Kpi
+              label="Unique users"
+              value={selectedFlag.uniqueUsers.toLocaleString()}
+            />
           </div>
 
           <div className={styles.detailBlocks}>
@@ -225,9 +300,14 @@ export default function AnalyticsPage() {
               <div className={styles.blockTitle}>Variant distribution</div>
               {selectedFlag.variants?.length ? (
                 <div className={styles.variantRowLarge}>
-                  {selectedFlag.variants.map(v => (
+                  {selectedFlag.variants.map((v) => (
                     <span key={v.key} className={styles.variantPill}>
-                      {v.key}: {pct(v.count, selectedFlag.variants!.reduce((a,b)=>a+b.count,0))}%
+                      {v.key}:{" "}
+                      {pct(
+                        v.count,
+                        selectedFlag.variants!.reduce((a, b) => a + b.count, 0)
+                      )}
+                      %
                     </span>
                   ))}
                 </div>
@@ -240,8 +320,11 @@ export default function AnalyticsPage() {
               <div className={styles.blockTitle}>Top rules matched</div>
               {selectedFlag.topRules?.length ? (
                 <ul className={styles.ruleList}>
-                  {selectedFlag.topRules.map(r => (
-                    <li key={r.id}><code className={styles.code}>{r.id}</code> — {r.count.toLocaleString()}</li>
+                  {selectedFlag.topRules.map((r) => (
+                    <li key={r.id}>
+                      <code className={styles.code}>{r.id}</code> —{" "}
+                      {r.count.toLocaleString()}
+                    </li>
                   ))}
                 </ul>
               ) : (
@@ -272,15 +355,22 @@ function Kpi({ label, value }: { label: string; value: React.ReactNode }) {
 
 function Sparkline({ data, big = false }: { data: number[]; big?: boolean }) {
   const max = Math.max(...data, 1);
-  const pts = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * 100;
-    const y = 100 - (v / max) * 100;
-    return `${x},${y}`;
-  }).join(" ");
+  const pts = data
+    .map((v, i) => {
+      const x = (i / (data.length - 1)) * 100;
+      const y = 100 - (v / max) * 100;
+      return `${x},${y}`;
+    })
+    .join(" ");
   return (
     <div className={big ? styles.sparkWrapBig : styles.sparkWrap}>
       <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-        <polyline points={pts} fill="none" stroke="currentColor" strokeWidth="4" />
+        <polyline
+          points={pts}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="4"
+        />
       </svg>
     </div>
   );
