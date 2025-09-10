@@ -14,7 +14,7 @@ import {
   WorkspacesmoduleRepo,
   WorkspacesmoduleRepoToken,
 } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
-import { RoleKey } from '@prisma/client';
+import { BillingStatus, RoleKey, User, Workspace } from '@prisma/client';
 
 export const BCRYPT_ROUNDS = 12;
 
@@ -88,7 +88,15 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * - You’ll typically issue tokens at the service layer, not in the repo.
    * - Here we just validate credentials and throw if invalid.
    */
-  async login(user: AuthEntity): Promise<{ id: string; wid: string }> {
+  async login(user: AuthEntity): Promise<{
+    id: string; wid: string, user: {
+      id: string;
+      email: string;
+      name: string;
+      passwordHash: string | null;
+      isDeleted: boolean;
+    }, workspace: any
+  }> {
     const email = user.email?.trim().toLowerCase();
     const pass = user.password;
 
@@ -98,7 +106,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
 
     const dbUser = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, passwordHash: true, isDeleted: true },
+      select: { id: true, passwordHash: true, isDeleted: true, name: true, email: true },
     });
 
     console.log(dbUser, 104);
@@ -120,7 +128,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     console.log(dbWorkspace, 120);
 
 
-    return { id: dbUser.id, wid: dbWorkspace!.id };
+    return { id: dbUser.id, wid: dbWorkspace!.id, user: dbUser, workspace: dbWorkspace };
   }
 
   /**

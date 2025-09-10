@@ -1,6 +1,4 @@
-import {
-  Controller, Post, Req, Res, HttpCode, Inject,
-} from '@nestjs/common';
+import { Controller, Post, Req, Res, HttpCode, Inject } from '@nestjs/common';
 import { Request, Response } from 'express';
 import * as crypto from 'crypto';
 import {
@@ -24,7 +22,7 @@ export class RazorpayWebhookController {
     @Inject(BillingmoduleRepoToken) private readonly repo: BillingmoduleRepo,
   ) {}
 
-  @Post('/webhook/razorpay')
+  @Post('/webhook/rzp')
   @HttpCode(200)
   async handle(@Req() req: Request, @Res() res: Response) {
     const sig = req.headers['x-razorpay-signature'] as string | undefined;
@@ -34,9 +32,11 @@ export class RazorpayWebhookController {
     const rawBody =
       (req as any).rawBody instanceof Buffer
         ? (req as any).rawBody
-        : Buffer.from(typeof (req as any).body === 'string'
-            ? (req as any).body
-            : JSON.stringify((req as any).body || {}));
+        : Buffer.from(
+            typeof (req as any).body === 'string'
+              ? (req as any).body
+              : JSON.stringify((req as any).body || {}),
+          );
 
     const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
@@ -78,7 +78,10 @@ export class RazorpayWebhookController {
           await this.repo.upsertFromRazorpaySubscription(dto);
 
           // Extra guards for “canceled now”
-          if (event === 'subscription.cancelled' || sub.status === 'cancelled') {
+          if (
+            event === 'subscription.cancelled' ||
+            sub.status === 'cancelled'
+          ) {
             await this.repo.setCanceledByRazorpaySubId({
               razorpaySubId: sub.id,
               periodEnd: this.extractPeriodEnd(sub, dto.billingCycle),
@@ -125,7 +128,9 @@ export class RazorpayWebhookController {
    *  - id, status, plan_id, customer_id, current_start, current_end, start_at
    *  - notes: { workspaceId, planKey?, cycle? } (we set these when creating)
    */
-  private async mapRazorpaySubscriptionToDto(sub: any): Promise<UpsertFromRazorpaySubscriptionDto> {
+  private async mapRazorpaySubscriptionToDto(
+    sub: any,
+  ): Promise<UpsertFromRazorpaySubscriptionDto> {
     const razorpaySubId = sub.id as string;
     const razorpayCustomerId = (sub.customer_id as string) ?? null;
 
@@ -136,18 +141,21 @@ export class RazorpayWebhookController {
       null;
 
     if (!workspaceId) {
-      throw new Error(`Cannot resolve workspaceId for subscription ${razorpaySubId}`);
+      throw new Error(
+        `Cannot resolve workspaceId for subscription ${razorpaySubId}`,
+      );
     }
 
     // Map plan id -> (planKey, cycle)
     const planId = sub?.plan_id as string | undefined;
-    if (!planId) throw new Error(`Subscription ${razorpaySubId} has no plan_id`);
+    if (!planId)
+      throw new Error(`Subscription ${razorpaySubId} has no plan_id`);
 
     const { planKey, cycle } = await this.repo.mapRazorpayPlanId(planId);
 
     // Periods
     const periodStart = this.extractPeriodStart(sub);
-    const periodEnd   = this.extractPeriodEnd(sub, cycle);
+    const periodEnd = this.extractPeriodEnd(sub, cycle);
 
     // Status mapping
     const status = this.mapRazorpayStatus(sub?.status as string);
@@ -174,14 +182,22 @@ export class RazorpayWebhookController {
   private mapRazorpayStatus(s: string): SubscriptionStatus {
     // Razorpay statuses: created | authenticated | active | pending | halted | completed | paused | cancelled
     switch (s) {
-      case 'active':         return 'active';
-      case 'authenticated':  return 'trialing'; // mandate authorized but not charged
-      case 'pending':        return 'trialing';
-      case 'halted':         return 'past_due';
-      case 'completed':      return 'canceled';
-      case 'paused':         return 'frozen';
-      case 'cancelled':      return 'canceled';
-      default:               return 'frozen';
+      case 'active':
+        return 'active';
+      case 'authenticated':
+        return 'trialing'; // mandate authorized but not charged
+      case 'pending':
+        return 'trialing';
+      case 'halted':
+        return 'past_due';
+      case 'completed':
+        return 'canceled';
+      case 'paused':
+        return 'frozen';
+      case 'cancelled':
+        return 'canceled';
+      default:
+        return 'frozen';
     }
   }
 
@@ -215,7 +231,9 @@ export class RazorpayWebhookController {
   private tryGetSubIdFromPayment(body: any): string | null {
     const payment = body?.payload?.payment?.entity;
     if (!payment) return null;
-    const fromNotes = payment?.notes?.subscription_id || payment?.notes?.razorpay_subscription_id;
+    const fromNotes =
+      payment?.notes?.subscription_id ||
+      payment?.notes?.razorpay_subscription_id;
     if (typeof fromNotes === 'string') return fromNotes;
     return null;
   }

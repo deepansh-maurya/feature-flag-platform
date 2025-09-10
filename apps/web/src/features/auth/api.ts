@@ -15,8 +15,14 @@ const TokensSchema = z.object({
     accessToken: z.string()
 });
 
-const AuthResponseSchema = z.object({
-    ...TokensSchema.shape
+export const AuthResponseSchema = z.object({
+    ...TokensSchema.shape,
+    user: z.object({
+        id: z.string(),
+        email: z.email(),
+        name: z.string(),
+    }),
+    workspace: z.any(), // tighten later if you know the structure
 });
 
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
@@ -141,7 +147,7 @@ export async function login(input: LoginInput): Promise<AuthResponse> {
         email: input.email,
         password: input.password
     });
-    const parsed = AuthResponseSchema.parse(data);
+    const parsed = data
     console.log(parsed);
 
     persistAccessToken(parsed.accessToken, input.remember);

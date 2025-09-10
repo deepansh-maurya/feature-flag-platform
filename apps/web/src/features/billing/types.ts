@@ -12,7 +12,6 @@ export type SubscriptionStatus =
 
 // Commands
 export interface StartCheckout {
-  workspaceId: string;
   planKey: PlanKey;
   cycle: BillingCycle;
   prefillName?: string;

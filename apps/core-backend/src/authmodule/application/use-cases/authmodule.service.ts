@@ -19,7 +19,7 @@ export class AuthmoduleService {
     const result = await this.repo.login(user)
     console.log(result, 20);
 
-    return await this.issueTokens(result.id, result.wid)
+    return { ...await this.issueTokens(result.id, result.wid), user: result.user, workspace: result.workspace }
   }
 
   async refreshToken(data: RefreshDto) {

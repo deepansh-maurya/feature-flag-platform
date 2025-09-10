@@ -6,11 +6,13 @@ import FlagCard from "../../../../public/img/image.png";
 import { AppConst, Routes } from "../../../../app/constants";
 import { useRouter } from "next/navigation";
 import { useLogin } from "../hooks";
+import { useAppContext } from "@/src/shared/context/AppContext";
+import { useWorkspace } from "../../settings/hook";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
   const router = useRouter();
-
+  const { user, setUser, setWorkspace } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true); // visual only for now
@@ -32,9 +34,25 @@ export default function LoginPage() {
       { email, password, remember },
       {
         onSuccess: async (data) => {
-          // (Optional) if you want "remember me" to affect persistence later,
-          // you can adjust token storage in your api.ts.
-          router.push(Routes.dashboard()); // or wherever you send logged-in users
+          console.log(data);
+          
+          //@ts-ignore
+          const user = data.user as any;
+          setUser({
+            email: user?.email,
+            id: user.id,
+            name: user.name
+          });
+
+          //@ts-ignore
+          const { data: workspace } = useWorkspace((data.workspace as any).id);
+
+          setWorkspace({
+            id: workspace!.id,
+            name: workspace!.name
+          });
+
+          router.push(Routes.dashboard());
         },
         onError: (err: any) => {
           const apiMsg =

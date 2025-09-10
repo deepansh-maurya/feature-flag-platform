@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { UnauthorizedException, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import * as express from "express"
 async function bootstrap() {
@@ -25,8 +25,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Only the webhook path uses raw; the rest can use JSON body parser (Nest does it internally)
-  app.use('/webhook/rzp', express.raw({ type: 'application/json' }));
+c
 
   await app.listen(8000, '0.0.0.0');
   console.log('Listening at:', await app.getUrl());

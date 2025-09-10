@@ -132,6 +132,12 @@ export default function Pricing({
 
   const goToRegisterPage = () => {
     if(path?.includes("dashboard")){
+
+
+      
+      
+
+
       return
     }
     router.push(Routes.signup());

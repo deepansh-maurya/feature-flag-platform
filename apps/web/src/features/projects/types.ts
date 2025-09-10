@@ -1,5 +1,3 @@
-// apps/web/src/projects/components/types.ts
-
 export enum SdkKeyType {
   client = "client",
   server = "server",
