@@ -1,5 +1,5 @@
-import { http, setAuthToken } from '@/src/shared/lib/http';
-import { z } from 'zod';
+import { http, setAuthToken } from "@/src/shared/lib/http";
+import { z } from "zod";
 
 /** ───────── Types & Schemas ───────── */
 
@@ -7,16 +7,16 @@ export const UserSchema = z.object({
     id: z.string(),
     email: z.email(),
     name: z.string(),
-    createdAt: z.string().optional(), // ISO (optional if not returned)
+    createdAt: z.string().optional() // ISO (optional if not returned)
 });
 export type User = z.infer<typeof UserSchema>;
 
 const TokensSchema = z.object({
-    accessToken: z.string(),
+    accessToken: z.string()
 });
 
 const AuthResponseSchema = z.object({
-    ...TokensSchema.shape,
+    ...TokensSchema.shape
 });
 
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
@@ -25,9 +25,8 @@ export const RegisterInputSchema = z.object({
     workspace: z.string(),
     fullName: z.string().min(2).max(64),
     email: z.email(),
-    password: z.string().min(8).max(128),
+    password: z.string().min(8).max(128)
 });
-
 
 export type RegisterInput = z.infer<typeof RegisterInputSchema>;
 
@@ -40,46 +39,57 @@ export type LoginInput = z.infer<typeof LoginInputSchema>;
 
 export const ChangePasswordInputSchema = z.object({
     currentPassword: z.string().min(8).max(128),
-    newPassword: z.string().min(8).max(128),
+    newPassword: z.string().min(8).max(128)
 });
 export type ChangePasswordInput = z.infer<typeof ChangePasswordInputSchema>;
 
 export const LogoutInputSchema = z.object({
-    allDevices: z.boolean().optional(), // if your backend supports it
+    allDevices: z.boolean().optional() // if your backend supports it
 });
 export type LogoutInput = z.infer<typeof LogoutInputSchema>;
 
 /** ───────── Helpers (optional persistence) ───────── */
 
-export const TOKEN_STORAGE_KEY = 'ff_access_token';
+export const TOKEN_STORAGE_KEY = "ff_access_token";
 let installed = false;
 
 export function persistAccessToken(token?: string, remember?: boolean) {
+    console.log("1");
 
-    if (typeof window === 'undefined') return; // SSR guard
+    if (typeof window === "undefined") return; // SSR guard
+    console.log(2);
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+
     if (!token) {
         localStorage.removeItem(TOKEN_STORAGE_KEY);
-        sessionStorage.removeItem(TOKEN_STORAGE_KEY)
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
         setAuthToken(undefined);
         return;
     }
-    console.log(token, remember, "from api");
+
+    console.log(3);
     // set axios header for this runtime
-    setAuthToken(token);
 
     if (remember) {
         // persist across browser restarts
         localStorage.setItem(TOKEN_STORAGE_KEY, token);
         sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        console.log(4);
+
+
+
     } else {
         // session-only (cleared on browser close)
         sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
         localStorage.removeItem(TOKEN_STORAGE_KEY);
+        console.log(5);
+
     }
 }
 
 export function loadAccessTokenFromStorage() {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
     // prefer session token (non-remember) over persistent token
     const t =
         sessionStorage.getItem(TOKEN_STORAGE_KEY) ||
@@ -89,18 +99,18 @@ export function loadAccessTokenFromStorage() {
 }
 
 export function installAuthStorageSync() {
-    if (typeof window === 'undefined' || installed) return () => { };
+    if (typeof window === "undefined" || installed) return () => { };
     const handler = (e: StorageEvent) => {
         if (e.key !== TOKEN_STORAGE_KEY) return;
         const t = e.newValue || undefined;
         setAuthToken(t);
     };
-    window.addEventListener('storage', handler);
+    window.addEventListener("storage", handler);
     installed = true;
 
     // allow cleanup if your component unmounts (good practice)
     return () => {
-        window.removeEventListener('storage', handler);
+        window.removeEventListener("storage", handler);
         installed = false;
     };
 }
@@ -109,7 +119,7 @@ export function installAuthStorageSync() {
  * Assumes Bearer auth for protected routes.
  */
 
-const base = '/auth';
+const base = "/auth";
 
 export async function register(input: RegisterInput): Promise<AuthResponse> {
     console.log(`${base}/register`);
@@ -127,13 +137,21 @@ export async function login(input: LoginInput): Promise<AuthResponse> {
     LoginInputSchema.parse(input);
     console.log(input);
 
-    const { data } = await http.post(`${base}/login`, { email: input.email, password: input.password });
+    const { data } = await http.post(`${base}/login`, {
+        email: input.email,
+        password: input.password
+    });
     const parsed = AuthResponseSchema.parse(data);
-    persistAccessToken(parsed.accessToken,input.remember);
+    console.log(parsed);
+
+    persistAccessToken(parsed.accessToken, input.remember);
+    setAuthToken(parsed.accessToken);
     return parsed;
 }
 
-export async function changePassword(input: ChangePasswordInput): Promise<{ ok: true }> {
+export async function changePassword(
+    input: ChangePasswordInput
+): Promise<{ ok: true }> {
     ChangePasswordInputSchema.parse(input);
     const { data } = await http.post(`${base}/change-password`, input);
     // expect { ok: true } from backend; relax if your API returns different
@@ -155,11 +173,13 @@ export async function logout(input?: LogoutInput): Promise<{ ok: true }> {
  * This version supports an optional { password } confirm if you use it.
  */
 export const DeleteAccountInputSchema = z.object({
-    password: z.string().min(8).max(128).optional(),
+    password: z.string().min(8).max(128).optional()
 });
 export type DeleteAccountInput = z.infer<typeof DeleteAccountInputSchema>;
 
-export async function deleteAccount(input?: DeleteAccountInput): Promise<{ ok: true }> {
+export async function deleteAccount(
+    input?: DeleteAccountInput
+): Promise<{ ok: true }> {
     if (input) DeleteAccountInputSchema.parse(input);
     // axios allows body on DELETE via { data }
     const { data } = await http.delete(`${base}/me`, { data: input ?? {} });

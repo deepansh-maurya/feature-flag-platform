@@ -11,7 +11,7 @@ export class AuthmoduleService {
   async register(data: RegisterDto) {
     const user = AuthEntity.create(data)
     const result = await this.repo.register(user)
-    return await this.issueTokens(result.id, { sub: result.id, workspaceId: result.wid }, result.wid)
+    return await this.issueTokens(result.id, result.wid)
   }
 
   async login(data: LoginDto) {
@@ -19,11 +19,11 @@ export class AuthmoduleService {
     const result = await this.repo.login(user)
     console.log(result, 20);
 
-    return await this.issueTokens(result.id, { sub: result.id, workspaceId: result.wid }, result.wid) 
+    return await this.issueTokens(result.id, result.wid)
   }
 
   async refreshToken(data: RefreshDto) {
-    return this.issueTokens(data.userId, { sub: data.userId, email: data.email }, data.workspaceId)
+    return this.issueTokens(data.userId, data.workspaceId)
   }
 
   async logout(data: string) {
@@ -38,17 +38,17 @@ export class AuthmoduleService {
     await this.repo.changePassword(data)
   }
 
-  private async issueTokens(userId: string, payload: object, workspaceId: string) {
+  private async issueTokens(userId: string, workspaceId: string) {
     // Access token
     const accessToken = jwt.sign(
-      { sub: userId, ...payload },
+      { sub: userId, wid: workspaceId, },
       process.env.JWT_SECRET!,
       { expiresIn: "1m" },
     );
 
     // Refresh token
     const refreshToken = jwt.sign(
-      { sub: userId, ...payload },
+      { sub: userId, wid: workspaceId, },
       process.env.JWT_REFRESH_SECRET!,
       { expiresIn: "7d" },
     );

@@ -60,7 +60,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
           email,
           passwordHash,
           name: user.fullName!,
-          status:"active"
+          status: "active"
         },
       });
 
@@ -101,6 +101,9 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
       select: { id: true, passwordHash: true, isDeleted: true },
     });
 
+    console.log(dbUser, 104);
+
+
     if (!dbUser || dbUser.isDeleted) {
       throw new UnauthorizedException('Invalid credentials.');
     }
@@ -114,6 +117,9 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
       where: { ownerUserId: dbUser.id! }
     })
 
+    console.log(dbWorkspace, 120);
+
+
     return { id: dbUser.id, wid: dbWorkspace!.id };
   }
 
@@ -121,7 +127,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * Logout:
    * - Revoke a refresh token by hashing it then marking revoked.
    * - If you don’t store refresh tokens: just no-op.
-   */ 
+   */
   async logout(refreshToken: string): Promise<void> {
     if (!refreshToken) return;
 

@@ -40,9 +40,10 @@ http.interceptors.response.use(
             { withCredentials: true }
           );
           const newAccessToken = res.data.accessToken;
-
-          localStorage.setItem("accessToken", newAccessToken);
-          setAuthToken()
+          localStorage.removeItem("ff_access_token")
+          localStorage.setItem("ff_access_token", newAccessToken); //?!Todo:
+          setAuthToken(newAccessToken)
+          originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
           refreshQueue.forEach((cb) => cb(newAccessToken));
           refreshQueue = [];
           return http(originalRequest);

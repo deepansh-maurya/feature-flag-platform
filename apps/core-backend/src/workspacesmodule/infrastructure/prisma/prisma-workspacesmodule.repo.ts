@@ -183,6 +183,8 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   }
 
   async get(dto: GetWorkspaceDto): Promise<WorkspaceEntity | null> {
+    console.log(dto, 186);  
+
     if (!dto.id && !dto.slug) throw new BadRequestException('id or slug required');
 
     const row = await this.prisma.workspace.findFirst({

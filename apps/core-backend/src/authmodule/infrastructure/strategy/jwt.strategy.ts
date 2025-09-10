@@ -15,7 +15,7 @@ export interface JwtPayload extends Request {
     sub: string;
     email: string;
     role: string;
-    workspaceId: string;
+    wid: string;
     iat: number;
     eat: string;
 }
@@ -47,12 +47,15 @@ export default class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
      * Whatever you return here becomes `req.user`.
      */
     async validate(payload: JwtPayload) {
+
+        console.log(payload, 51);
+
+
         if (!payload?.sub) {
             throw new UnauthorizedException('Invalid token payload');
         }
 
         const user = await this.user.findById(payload.sub);
-        console.log(user, 46);
 
         if (!user || user.isDeleted) {
             console.log('here');
@@ -60,19 +63,35 @@ export default class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
             throw new UnauthorizedException('User disabled');
         }
 
-        const workspace = await this.workspace.get({ id: payload.workspaceId });
-        console.log(payload.workspaceId, 51);
+        const workspace = await this.workspace.get({ id: payload.wid });
+        console.log(payload.wid, 51);
 
         if (!workspace) throw new UnauthorizedException('User disabled');
 
         return {
             userId: payload.sub,
             email: payload.email,
-            workspaceId: payload.workspaceId,
+            workspaceId: payload.wid,
             roles: payload.role ?? [],
         };
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(
@@ -106,10 +125,13 @@ export class RefreshJwtStrategy extends PassportStrategy(
 
         const verified = jwt.verify(comingToken, process.env.JWT_REFRESH_SECRET!);
 
+        console.log(verified, 128);
+
+
         const token = await this.prisma.refreshToken.findFirst({
             where: {
                 userId: verified.sub as string,
-                workspaceId: (verified as any).workspaceId,
+                workspaceId: (verified as any).wid,
                 tokenHash: sha256(comingToken),
             },
         });
@@ -123,7 +145,7 @@ export class RefreshJwtStrategy extends PassportStrategy(
             throw new UnauthorizedException('User disabled');
         }
 
-        const workspace = await this.workspace.get({ id: (verified as any).workspaceId });
+        const workspace = await this.workspace.get({ id: (verified as any).wid });
         if (!workspace) throw new UnauthorizedException('Workspace missing');
 
         console.log({

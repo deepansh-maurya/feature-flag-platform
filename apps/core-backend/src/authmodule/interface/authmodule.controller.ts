@@ -44,6 +44,8 @@ export class AuthmoduleController {
     console.log(dto, 16);
 
     const { accessToken, refreshToken } = await this.svc.login(dto);
+    console.log(accessToken, refreshToken, 47);
+
     res.cookie("refresh", refreshToken, this.svc.refreshCookieOptions())
     console.log("end");
 
