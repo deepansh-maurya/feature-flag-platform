@@ -32,7 +32,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     private readonly prisma: PrismaService,
     @Inject(WorkspacesmoduleRepoToken)
     private readonly workspace: WorkspacesmoduleRepo,
-  ) { }
+  ) {}
 
   /**
    * Register a user.
@@ -60,7 +60,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
           email,
           passwordHash,
           name: user.fullName!,
-          status: "active"
+          status: 'active',
         },
       });
 
@@ -89,13 +89,15 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * - Here we just validate credentials and throw if invalid.
    */
   async login(user: AuthEntity): Promise<{
-    id: string; wid: string, user: {
+    id: string;
+    wid: string;
+    user: {
       id: string;
       email: string;
       name: string;
-      passwordHash: string | null;
       isDeleted: boolean;
-    }, workspace: any
+    };
+    workspace: any;
   }> {
     const email = user.email?.trim().toLowerCase();
     const pass = user.password;
@@ -106,11 +108,16 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
 
     const dbUser = await this.prisma.user.findUnique({
       where: { email },
-      select: { id: true, passwordHash: true, isDeleted: true, name: true, email: true },
+      select: {
+        id: true,
+        passwordHash: true,
+        isDeleted: true,
+        name: true,
+        email: true,
+      },
     });
 
     console.log(dbUser, 104);
-
 
     if (!dbUser || dbUser.isDeleted) {
       throw new UnauthorizedException('Invalid credentials.');
@@ -122,13 +129,19 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     }
 
     const dbWorkspace = await this.prisma.workspace.findFirst({
-      where: { ownerUserId: dbUser.id! }
-    })
+      where: { ownerUserId: dbUser.id! },
+    });
 
     console.log(dbWorkspace, 120);
 
+    const { passwordHash, ...safeUser } = dbUser;
 
-    return { id: dbUser.id, wid: dbWorkspace!.id, user: dbUser, workspace: dbWorkspace };
+    return {
+      id: dbUser.id,
+      wid: dbWorkspace!.id,
+      user: safeUser,
+      workspace: dbWorkspace,
+    };
   }
 
   /**
@@ -264,5 +277,39 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
       throw new UnauthorizedException('Invalid refresh token.');
     }
     return row.userId;
+  }
+
+  async get(id: string): Promise<{
+    user: { id: string; email: string; name: string; isDeleted: boolean };
+    workspace: any;
+  }> {
+    console.log(id, 286);
+
+    const dbUser = await this.prisma.user.findFirst({
+      where: { id },
+      select: {
+        id: true,
+        passwordHash: true,
+        isDeleted: true,
+        name: true,
+        email: true,
+      },
+    });
+
+    console.log(dbUser, 299);
+
+    if (!dbUser) {
+      throw new NotFoundException();
+    }
+
+    const dbWorkspace = await this.prisma.workspace.findFirst({
+      where: { ownerUserId: dbUser.id! },
+    });
+
+    if (!dbWorkspace) {
+      throw new NotFoundException();
+    }
+
+    return { user: dbUser, workspace: dbWorkspace };
   }
 }

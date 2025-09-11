@@ -1,5 +1,6 @@
 "use client";
 
+import { PlanKey } from "@/src/features/billing/types";
 import { createContext, useContext, useState, ReactNode } from "react";
 
 export interface AppContextState {
@@ -11,7 +12,7 @@ export interface AppContextState {
   workspace?: {
     id: string;
     name?: string;
-    plan?: "FREE" | "PRO";
+    plan?: PlanKey
   };
   setUser: (user: AppContextState["user"]) => void;
   setWorkspace: (ws: AppContextState["workspace"]) => void;

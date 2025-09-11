@@ -1,8 +1,12 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "./Pricing.css";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { Routes } from "../../../../../app/constants";
+import { useOpenCheckout } from "../../hooks";
+import { useAppContext } from "@/src/shared/context/AppContext";
+import { PlanKey } from "../../types";
+import { useMe } from "@/src/features/auth/hooks";
 
 type Primitive = number | string;
 type PlanLimits = {
@@ -118,7 +122,8 @@ export default function Pricing({
 }: {
   toShowHeading: boolean;
 }) {
-  const path  = usePathname()
+  const { setUser, setWorkspace } = useAppContext();
+  const path = usePathname();
   const [yearly, setYearly] = useState<boolean>(false);
   const router = useRouter();
   const prices = useMemo(
@@ -129,18 +134,66 @@ export default function Pricing({
     }),
     [yearly]
   );
-
-  const goToRegisterPage = () => {
-    if(path?.includes("dashboard")){
-
-
-      
-      
-
-
-      return
+  const { data, isSuccess } = useMe();
+  useEffect(() => {
+    if (isSuccess && data) {
+      //@ts-ignore
+      setUser((prev) => prev ?? data.user);
+      //@ts-ignore
+      setWorkspace((prev) => prev ?? data.workspace);
     }
-    router.push(Routes.signup());
+  }, [isSuccess, data, setUser, setWorkspace]);
+
+  const openCheckout = useOpenCheckout();
+  const { user, workspace } = useAppContext();
+  console.log(user, workspace);
+
+  const goToRegisterPage = (plankey: PlanKey) => {
+    if (path?.includes("dashboard")) {
+      console.log(plankey,workspace?.id);
+
+      openCheckout.mutate(
+        {
+          cycle: yearly ? "yearly" : "monthly",
+          planKey: yearly
+            ? (plankey.toUpperCase() as any)
+            : plankey.toUpperCase(),
+          prefillName: user?.name,
+          prefillEmail: user?.email,
+          workspaceId: workspace!.id
+        },
+        {
+          onSuccess(data, variables, context) {
+            console.log(data);
+            const options = {
+              key: data.keyId,
+              subscription_id: data.subscriptionId,
+              amount: data.amount,
+              currency: data.currency,
+              name: "Flagly Inc.",
+              description: `${data.planKey} subscription`,
+              handler: function (response: any) {
+                console.log("Frontend success:", response);
+              },
+              prefill: {
+                name: user?.name,
+                email: user?.email
+              },
+              method: {
+                netbanking: true,
+                card: true,
+                upi: true,
+                wallet: true
+              },
+              theme: { color: "#3399cc" }
+            };
+
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+          }
+        }
+      );
+    } else router.push(Routes.signup());
   };
 
   return (
@@ -160,7 +213,6 @@ export default function Pricing({
 
             <p className="fx-sub flex  justify-center items-center">
               Powerful flags, safe rollouts, instant control.
-              {/* LOGIN BUTTON */}
               <button
                 className="login-btn"
                 onClick={() => router.push(Routes.login())}
@@ -215,7 +267,7 @@ export default function Pricing({
                 )}
               </div>
 
-              <button className="cta" onClick={goToRegisterPage}>
+              <button className="cta" onClick={() => goToRegisterPage(key)}>
                 {key === "starter"
                   ? "Start Starter →"
                   : key === "growth"

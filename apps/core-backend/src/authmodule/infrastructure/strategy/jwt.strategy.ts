@@ -47,10 +47,6 @@ export default class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
      * Whatever you return here becomes `req.user`.
      */
     async validate(payload: JwtPayload) {
-
-        console.log(payload, 51);
-
-
         if (!payload?.sub) {
             throw new UnauthorizedException('Invalid token payload');
         }
@@ -58,13 +54,10 @@ export default class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         const user = await this.user.findById(payload.sub);
 
         if (!user || user.isDeleted) {
-            console.log('here');
-
             throw new UnauthorizedException('User disabled');
         }
 
         const workspace = await this.workspace.get({ id: payload.wid });
-        console.log(payload.wid, 51);
 
         if (!workspace) throw new UnauthorizedException('User disabled');
 

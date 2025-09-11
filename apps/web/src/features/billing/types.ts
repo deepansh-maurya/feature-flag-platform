@@ -12,6 +12,7 @@ export type SubscriptionStatus =
 
 // Commands
 export interface StartCheckout {
+  workspaceId: string;
   planKey: PlanKey;
   cycle: BillingCycle;
   prefillName?: string;
@@ -48,7 +49,7 @@ export interface Subscription {
   stripeSubId: string;
   priceId: string;
   currentPeriodStart: string; // ISO
-  currentPeriodEnd: string;   // ISO
+  currentPeriodEnd: string; // ISO
   cancelAtPeriodEnd: boolean;
 }
 
@@ -74,4 +75,15 @@ export interface Entitlements {
     rbac: boolean;
     sso: boolean;
   };
+}
+
+export interface CheckoutInitDto {
+  keyId: string;
+  subscriptionId: string;
+  planKey: PlanKey;
+  cycle: BillingCycle;
+  amount: number; // paise
+  currency: "INR";
+  notes: Record<string, string>;
+  prefill?: { name?: string; email?: string; contact?: string };
 }

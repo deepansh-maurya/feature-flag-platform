@@ -5,7 +5,6 @@ export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'grace' | 
 
 export const BillingmoduleRepoToken = Symbol('BillingmoduleRepo');
 
-// ---------- DTOs ----------
 export class StartCheckoutDto {
   workspaceId!: string;
   planKey!: PlanKey;
@@ -13,7 +12,6 @@ export class StartCheckoutDto {
   prefillName?: string;
   prefillEmail?: string;
   prefillContact?: string;
-  // if you already have a saved Razorpay customer, pass it to skip creation
   razorpayCustomerId?: string;
 }
 

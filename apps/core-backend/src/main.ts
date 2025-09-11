@@ -25,7 +25,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-c
+  // Only the webhook path uses raw; the rest can use JSON body parser (Nest does it internally)
+  app.use('/webhook/rzp', express.raw({ type: 'application/json' }));
 
   await app.listen(8000, '0.0.0.0');
   console.log('Listening at:', await app.getUrl());

@@ -68,8 +68,8 @@ export function usePrefetchBilling(workspaceId?: string) {
 export function useOpenCheckout() {
   return useMutation({
     mutationFn: (dto: StartCheckout) => startCheckout(dto),
-    onSuccess: ({ url }) => {
-      window.location.assign(url);
+    onSuccess: (data) => {
+     return data
     },
   });
 }

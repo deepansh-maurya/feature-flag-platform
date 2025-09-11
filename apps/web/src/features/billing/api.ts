@@ -1,13 +1,13 @@
 import { http } from "@/src/shared/lib/http";
-import { Cancel, ChangePlan, Entitlements, Portal, Resume, StartCheckout, Subscription } from "./types";
+import { Cancel, ChangePlan, CheckoutInitDto, Entitlements, Portal, Resume, StartCheckout, Subscription } from "./types";
 
 const BASE_ROUTE = "/billing"
 
 export async function startCheckout(
   input: StartCheckout
-): Promise<{ url: string }> {
+): Promise<CheckoutInitDto> {
   const { data } = await http.post(BASE_ROUTE + "/start-checkout", input);
-  return data as { url: string };
+  return data 
 }
 
 export async function changePlan(input: ChangePlan): Promise<void> {
@@ -51,11 +51,6 @@ export async function getEntitlements(
   return data as Entitlements;
 }
 
-// ---------- Convenience helpers for your UI ----------
-export async function openCheckout(input: StartCheckout): Promise<void> {
-  const { url } = await startCheckout(input);
-  window.location.assign(url);
-}
 
 export async function openBillingPortal(
   input: Portal

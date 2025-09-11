@@ -45,11 +45,12 @@ export default function LoginPage() {
           });
 
           //@ts-ignore
-          const { data: workspace } = useWorkspace((data.workspace as any).id);
+          const workspace = data.workspace
 
           setWorkspace({
             id: workspace!.id,
-            name: workspace!.name
+            name: workspace!.name,
+            plan:workspace.planKey
           });
 
           router.push(Routes.dashboard());

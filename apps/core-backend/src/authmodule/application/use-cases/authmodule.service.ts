@@ -22,6 +22,10 @@ export class AuthmoduleService {
     return { ...await this.issueTokens(result.id, result.wid), user: result.user, workspace: result.workspace }
   }
 
+  async getUser(id:string){
+    return await this.repo.get(id)
+  }
+
   async refreshToken(data: RefreshDto) {
     return this.issueTokens(data.userId, data.workspaceId)
   }
@@ -43,7 +47,7 @@ export class AuthmoduleService {
     const accessToken = jwt.sign(
       { sub: userId, wid: workspaceId, },
       process.env.JWT_SECRET!,
-      { expiresIn: "1m" },
+      { expiresIn: "15m" },
     );
 
     // Refresh token

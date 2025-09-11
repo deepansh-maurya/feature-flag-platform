@@ -42,10 +42,11 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       prefillEmail,
       prefillContact,
     } = input;
+    console.log(input,45);
 
     const planId = await this.getRazorpayPlanId(planKey, cycle);
+    console.log(planId, 47);
 
-    // (Optional) attach/store customer id on workspace
     let customerId =
       input.razorpayCustomerId ??
       (await this.getRazorpayCustomerId(workspaceId));
@@ -60,7 +61,8 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       await this.setRazorpayCustomerId(workspaceId, customerId);
     }
 
-    // Create Subscription (NOT Order) — Checkout will be opened on FE with subscription_id
+    console.log(customerId, 63);
+
     const sub = await this.rzp.subscriptions.create({
       plan_id: planId,
       total_count: cycle === 'monthly' ? 12 : 1, // adjust policy as needed
@@ -68,24 +70,24 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       notes: { workspaceId, planKey, cycle, customerId },
     });
 
-    // Persist a pending row (optional; final state comes via webhook)
-    await this.prisma.subscription
-      .create({
-        data: {
-          workspaceId,
-          planKey,
-          billingCycle: cycle,
-          status: 'trialing', // or 'active' after first charge; webhook is source of truth
-          periodStart: new Date(),
-          periodEnd: this.computeNextPeriodEnd(new Date(), cycle),
-          razorpayCustomerId: customerId,
-          razorpaySubId: sub.id,
-        },
-      })
-      .catch(() => void 0); // if unique constraint, ignore; webhook will upsert
+    console.log(sub, 73);
 
-    // after creating the subscription
-    const plan = await this.rzp.plans.fetch(planId); // has item.amount (paise) & item.currency
+    const subs = await this.prisma.subscription.create({
+      data: {
+        workspaceId,
+        planKey,
+        billingCycle: cycle,
+        status: 'trialing',
+        periodStart: new Date(),
+        periodEnd: this.computeNextPeriodEnd(new Date(), cycle),
+        razorpayCustomerId: customerId,
+        razorpaySubId: sub.id,
+      },
+    });
+
+    console.log(subs, 91);
+
+    const plan = await this.rzp.plans.fetch(planId);
     const amountPaise = plan.item.amount;
     const currency = plan.item.currency;
 

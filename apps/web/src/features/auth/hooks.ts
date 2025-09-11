@@ -1,8 +1,5 @@
-'use client';
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { z } from 'zod';
+"use client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
   register as apiRegister,
@@ -10,39 +7,24 @@ import {
   changePassword as apiChangePassword,
   logout as apiLogout,
   deleteAccount as apiDeleteAccount,
-  UserSchema,
   type User,
-} from './api';
-import { http } from '@/src/shared/lib/http';
+  fetchMe
+} from "./api";
 
+const ME_QK = ["auth", "me"] as const;
 
-const ME_QK = ['auth', 'me'] as const;
-
-/** Fetch current user (assumes GET /api/v1/auth/me returns { user: ... } or just user) */
-async function fetchMe(): Promise<User> {
-  const { data } = await http.get('/api/v1/auth/me');
-  // Accept either { user } or plain user
-  const parsed = z
-    .object({ user: UserSchema })
-    .or(UserSchema)
-    .safeParse(data);
-  if (!parsed.success) throw new Error('Invalid /me response');
-  return (parsed.data as any).user ?? parsed.data;
-}
-
-export function useMe(options?: { enabled?: boolean }) {
-  // Allow caller to turn off automatically (e.g., on public routes)
-  const enabled = options?.enabled ?? true;
+export function useMe() {
   return useQuery<User>({
-    queryKey: ME_QK,
+    queryKey: ["me"], 
     queryFn: fetchMe,
-    enabled,
-    staleTime: 30_000,
-    retry: (count, err: any) => {
-      // Don't spam retries on 401
-      if (err?.response?.status === 401) return false;
-      return count < 2;
+    staleTime: 5 * 60 * 1000, 
+    retry: (failureCount, error: any) => {
+      // Don't retry on Unauthorized
+      if (error?.response?.status === 401) return false;
+      return failureCount < 2; 
     },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,   
   });
 }
 
@@ -54,7 +36,7 @@ export function useLogin() {
       // Token is already persisted & header set in api.ts
       // Now refresh "me" so UI updates immediately
       await qc.invalidateQueries({ queryKey: ME_QK });
-    },
+    }
   });
 }
 
@@ -64,13 +46,13 @@ export function useRegister() {
     mutationFn: apiRegister,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ME_QK });
-    },
+    }
   });
 }
 
 export function useChangePassword() {
   return useMutation({
-    mutationFn: apiChangePassword,
+    mutationFn: apiChangePassword
   });
 }
 
@@ -82,7 +64,7 @@ export function useLogout() {
       // Clear user cache after token is removed
       await qc.invalidateQueries({ queryKey: ME_QK });
       await qc.removeQueries({ queryKey: ME_QK });
-    },
+    }
   });
 }
 
@@ -94,18 +76,6 @@ export function useDeleteAccount() {
       // Same cache cleanup as logout
       await qc.invalidateQueries({ queryKey: ME_QK });
       await qc.removeQueries({ queryKey: ME_QK });
-    },
+    }
   });
-}
-
-export function useAuthState() {
-  const me = useMe();
-  return useMemo(() => {
-    return {
-      user: me.data ?? null,
-      loading: me.isLoading,
-      authenticated: !!me.data && !me.isError,
-      error: me.isError ? (me.error as unknown as Error) : null,
-    };
-  }, [me.data, me.isLoading, me.isError, me.error]);
 }

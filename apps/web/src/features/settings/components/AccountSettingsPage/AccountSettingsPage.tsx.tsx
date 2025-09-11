@@ -1,38 +1,37 @@
 "use client";
-
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./AccountSettingsPage.module.css";
 import { useAppContext } from "@/src/shared/context/AppContext";
-
-type Plan = "Free" | "Pro";
+import { PlanKey } from "@/src/features/billing/types";
+import { useMe } from "@/src/features/auth/hooks";
+import { useRouter } from "next/navigation";
+import { Routes } from "@/app/constants";
 
 export default function AccountSettingsPage() {
-  // ---- mock state (replace with your data fetch) ----
-  const [workspaceName, setWorkspaceName] = useState("Nerdeep Labs");
-  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
-  const [ownerName] = useState("Deepansh Maurya");
-  const [ownerEmail] = useState("deepansh@example.com");
-  const [billingEmail, setBillingEmail] = useState("billing@nerdeep.in");
-  const [plan, setPlan] = useState<Plan>("Free");
+  const { setUser, setWorkspace } = useAppContext();
+  const { data, isSuccess } = useMe();
+  const [workspaceName, setWorkspaceName] = useState<string>();
+  const [ownerName, setOwnerName] = useState<string>();
+  const [billingEmail, setBillingEmail] = useState<string>();
+  const [plan, setPlan] = useState<PlanKey>();
   const [globalApiKey, setGlobalApiKey] = useState("adm_live_9qRa…R7xK");
-  const [toast, setToast] = useState("");
+  useEffect(() => {
+    if (isSuccess && data) {
+      //@ts-ignore
+      setUser((prev) => prev ?? data.user);
+      //@ts-ignore
+      setWorkspace((prev) => prev ?? data.workspace);
+      setWorkspaceName(data.workspace?.name);
+      setOwnerName(data.user?.name);
+      setBillingEmail(data.user?.email);
+      setPlan(data.workspace?.planKey as PlanKey);
+    }
+  }, [isSuccess, data, setUser, setWorkspace]);
 
+  const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(""), 1500);
-  }
-
-  // danger zone modal
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const { user, workspace } = useAppContext();
-
-  console.log(user, workspace);
-
-  // helpers
-  const maskedKey = globalApiKey; // already masked in demo
   return (
     <div className={styles.wrapper}>
       <div className={styles.headerRow}>
@@ -41,8 +40,6 @@ export default function AccountSettingsPage() {
           <div className={styles.subTitle}>Workspace, billing, security</div>
         </div>
       </div>
-
-      {toast && <div className={styles.toast}>{toast}</div>}
 
       <div className={styles.grid}>
         {/* LEFT COLUMN */}
@@ -60,13 +57,7 @@ export default function AccountSettingsPage() {
           <label className={styles.label}>Logo</label>
           <div className={styles.logoRow}>
             <div className={styles.logoPreview}>
-              {logoDataUrl ? (
-                <img src={logoDataUrl} alt="logo" />
-              ) : (
-                <div className={styles.logoFallback}>
-                  {workspaceName[0] || "W"}
-                </div>
-              )}
+              <div className={styles.logoFallback}>{workspaceName || "W"}</div>
             </div>
             <div className={styles.logoActions}>
               <button
@@ -75,14 +66,6 @@ export default function AccountSettingsPage() {
               >
                 Upload
               </button>
-              {logoDataUrl && (
-                <button
-                  className={styles.smallDanger}
-                  onClick={() => setLogoDataUrl(null)}
-                >
-                  Remove
-                </button>
-              )}
               <input ref={fileRef} type="file" accept="image/*" hidden />
             </div>
           </div>
@@ -95,67 +78,38 @@ export default function AccountSettingsPage() {
         {/* RIGHT COLUMN */}
         <div className={styles.stack}>
           <div className={styles.card}>
-            <div className={styles.cardTitle}>Owner & Billing</div>
+            <div className={styles.cardTitle}>Owner</div>
 
             <div className={styles.row}>
               <div className={styles.kv}>
-                <div className={styles.kLabel}>Owner</div>
                 <div className={styles.kValue}>{ownerName}</div>
-                <div className={styles.kSub}>{ownerEmail}</div>
               </div>
             </div>
-
-            <label className={styles.label}>Billing email</label>
             <input
               className={styles.input}
               value={billingEmail}
               onChange={(e) => setBillingEmail(e.target.value)}
               placeholder="billing@company.com"
             />
+          </div>
 
-            <div className={styles.actionsRow}>
+          <div className={styles.card}>
+            <div className={styles.planRow}>
+              <div className={styles.planBadge}>{plan}</div>
               <button
+                onClick={() => {
+                  router.push(Routes.Billing());
+                }}
                 className={styles.secondaryBtn}
-                onClick={() => showToast("Billing email saved")}
               >
-                Save billing
+                Manage plan
               </button>
             </div>
           </div>
 
           <div className={styles.card}>
-            <div className={styles.cardTitle}>Plan</div>
-            <div className={styles.planRow}>
-              <div className={styles.planBadge}>{plan}</div>
-              {plan === "Free" ? (
-                <button className={styles.primaryBtn}>Upgrade to Pro</button>
-              ) : (
-                <button
-                  className={styles.secondaryBtn}
-                  onClick={() => showToast("Manage plan (demo)")}
-                >
-                  Manage plan
-                </button>
-              )}
-            </div>
-            <ul className={styles.planList}>
-              <li>Feature flags & rollouts</li>
-              <li>Team management</li>
-              <li>
-                {plan === "Pro" ? "Priority support" : "Community support"}
-              </li>
-            </ul>
-          </div>
-
-          <div className={styles.card}>
-            <div className={styles.cardTitle}>Security</div>
-
-            <div className={styles.row}>
-              <div className={styles.kLabel}>Password</div>
-              <div className={styles.kValue}>********</div>
-              <div className={styles.actionsRow}>
-                <button className={styles.secondaryBtn}>Change password</button>
-              </div>
+            <div className={styles.actionsRow}>
+              <button className={styles.secondaryBtn}>Change password</button>
             </div>
 
             <div className={styles.hr} />
@@ -168,7 +122,7 @@ export default function AccountSettingsPage() {
                 </div>
               </div>
               <div className={styles.keyBox}>
-                <code className={styles.code}>{maskedKey}</code>
+                <code className={styles.code}>{globalApiKey}</code>
                 <div className={styles.keyActions}>
                   <button className={styles.smallBtn}>Copy</button>
                   <button className={styles.smallDanger}>Regenerate</button>
