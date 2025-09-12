@@ -7,11 +7,14 @@ import {
   Delete,
   Patch,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { BillingmoduleService } from '../application/use-cases/billingmodule.service';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
 import { BillingCycle, PlanKey } from '@prisma/client';
 import { ResumeDto } from '../application/ports/billingmodule.repo';
+import { Request } from 'express';
+import { JwtPayload } from 'jsonwebtoken';
 
 @UseGuards(JwtAuthGuard)
 @Controller('billing')
@@ -53,9 +56,17 @@ export class BillingmoduleController {
 
   @Post('resume')
   async resumeSubscription(@Param('workspaceId') ResumeDto: ResumeDto) {
-    return this.svc.resumeSubscription(ResumeDto);
+    return await this.svc.resumeSubscription(ResumeDto);
+  }
+
+  @Get('subscription')
+  async currentPlan(@Req() req: Request & JwtPayload) {
+    const { workspaceId } = req.user as any;
+    console.log("reached");
+    
+
+    const result = await this.svc.currentPlan(workspaceId);
+    console.log(result, 67);
+    return result;
   }
 }
-
-
-

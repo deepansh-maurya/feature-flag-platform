@@ -73,8 +73,7 @@ export default function EnvironmentsPage() {
               </tr>
             ) : (
               <tr className="">
-                {" "}
-                <td className="text-center">No Envs</td>{" "}
+                <td className="text-center">No Envs</td>
               </tr>
             )}
           </thead>

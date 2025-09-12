@@ -7,6 +7,7 @@ import { useOpenCheckout } from "../../hooks";
 import { useAppContext } from "@/src/shared/context/AppContext";
 import { PlanKey } from "../../types";
 import { useMe } from "@/src/features/auth/hooks";
+import { http } from "@/src/shared/lib/http";
 
 type Primitive = number | string;
 type PlanLimits = {
@@ -150,7 +151,7 @@ export default function Pricing({
 
   const goToRegisterPage = (plankey: PlanKey) => {
     if (path?.includes("dashboard")) {
-      console.log(plankey,workspace?.id);
+      console.log(plankey, workspace?.id);
 
       openCheckout.mutate(
         {
@@ -172,8 +173,15 @@ export default function Pricing({
               currency: data.currency,
               name: "Flagly Inc.",
               description: `${data.planKey} subscription`,
-              handler: function (response: any) {
+              handler: async function (response: any) {
                 console.log("Frontend success:", response);
+
+                const result = await http.post(
+                  "http://localhost:8000/webhook/rzp",
+                  response
+                );
+
+                console.log(result);
               },
               prefill: {
                 name: user?.name,

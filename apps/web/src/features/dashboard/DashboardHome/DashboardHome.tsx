@@ -13,6 +13,7 @@ import CreateProjectModal from "../../../shared/components/CreateProjectModal/Cr
 import Observer from "../../../../app/observer";
 import { useRouter } from "next/navigation";
 import { Routes } from "@/app/constants";
+import { useSubscription } from "../../billing/hooks";
 
 // ---- Types ----
 export type ActivityItem = {
@@ -41,7 +42,10 @@ export default function DashboardHome({
   activity = [],
   onCreateFlag
 }: DashboardHomeProps) {
-  const hasProjects = (stats?.projects ?? 0) > 0;
+  const { data } = useSubscription();
+
+  console.log(data);
+
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const onCreateProject = () => {
@@ -65,7 +69,7 @@ export default function DashboardHome({
       </div>
 
       {/* Main content switches on whether any project exists */}
-      {hasProjects ? (
+      {data ? (
         <>
           {/* KPIs */}
           <div className={styles.kpiGrid} role="list" aria-label="Key metrics">

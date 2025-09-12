@@ -132,15 +132,7 @@ export default function CreateEnvModal({
             </div>
           </div>
 
-          <div className={styles.sectionTitleSm}>Clone flags (optional)</div>
-          <div className={styles.grid2}>
-            <Select
-              label="Copy linked flags from"
-              value={cloneFrom}
-              onChange={setCloneFrom}
-              options={[{ value: "", label: "— None —" }, ...cloneableEnvs.map((e) => ({ value: e.key || e.name, label: e.name }))]}
-            />
-          </div>
+    
         </div>
 
         <div className={styles.modalFooter}>

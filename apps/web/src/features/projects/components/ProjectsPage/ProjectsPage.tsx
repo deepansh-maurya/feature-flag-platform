@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import styles from "./ProjectsPage.module.css";
 import CreateProjectModal from "@/src/shared/components/CreateProjectModal/CreateProjectModal";
+import { useSubscription } from "@/src/features/billing/hooks";
 
-const projects = [
+const projects: any = [
   // {
   //   name: "MainApp",
   //   sdkKey: "abc123xyz",
@@ -27,12 +28,17 @@ const projects = [
 
 export default function ProjectsPage() {
   const [isOpen, setIsOpen] = useState(false);
+  const { data } = useSubscription();
+  console.log(data);
 
   return (
     <div className={styles.wrapper}>
       <div className={styles.headerRow}>
         <div className={styles.headerTitle}>Projects</div>
-        <button onClick={() => setIsOpen(true)} className={styles.createBtn}>
+        <button
+          onClick={() => setIsOpen(true)}
+          className={`${styles.createBtn} ${data ? styles.mutedBtn : ""}`}
+        >
           + Add Project
         </button>
       </div>
@@ -51,7 +57,7 @@ export default function ProjectsPage() {
           </thead>
           <tbody className="body">
             {projects.length > 0 ? (
-              projects.map((p, i) => (
+              projects.map((p:any) => (
                 <tr key={p.name}>
                   <td className={styles.projectName}>{p.name}</td>
                   <td className={styles.sdkKey}>
@@ -63,7 +69,7 @@ export default function ProjectsPage() {
                   <td>{p.createdOn}</td>
                   <td>
                     <div className={styles.memberList}>
-                      {p.members.map((m) => (
+                      {p.members.map((m:any) => (
                         <span className={styles.member} key={m}>
                           {m}
                         </span>

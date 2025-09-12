@@ -31,9 +31,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
    * If user is missing or an error occurred, throw 401.
    */
   handleRequest(err: any, user: any, _info: any, _context: any) {
-    console.log(err, user, 34);
-
-
     if (err || !user) {
       // _info can contain 'TokenExpiredError', 'No auth token', etc.
       throw err || new UnauthorizedException('Unauthorized user user');

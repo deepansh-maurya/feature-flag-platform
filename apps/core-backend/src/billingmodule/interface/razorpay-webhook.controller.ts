@@ -28,6 +28,9 @@ export class RazorpayWebhookController {
     const sig = req.headers['x-razorpay-signature'] as string | undefined;
     if (!sig) return res.status(400).send('Missing x-razorpay-signature');
 
+    console.log(sig, 31);
+
+    
     // Razorpay requires HMAC-SHA256 over the *raw* body using your WEBHOOK SECRET (not key_secret).
     const rawBody =
       (req as any).rawBody instanceof Buffer
@@ -38,10 +41,14 @@ export class RazorpayWebhookController {
               : JSON.stringify((req as any).body || {}),
           );
 
+    console.log(rawBody, 44);
+
     const expected = crypto
       .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
       .update(rawBody)
       .digest('hex');
+
+    console.log(expected, 52);
 
     // timing-safe comparison
     const isValid =
@@ -51,15 +58,20 @@ export class RazorpayWebhookController {
       return res.status(400).send('Webhook signature verification failed');
     }
 
+    console.log(isValid);
+
     // Razorpay doesn't include event.id; dedupe on a hash of the raw body
     const dedupeKey = crypto.createHash('sha256').update(rawBody).digest('hex');
     if (await this.repo.isWebhookEventProcessed(dedupeKey)) {
       return res.send(); // already handled
     }
 
+    console.log(dedupeKey, 68);
+
     try {
       const body: any = JSON.parse(rawBody.toString('utf8'));
       const event = body?.event as string | undefined;
+      console.log(body, event);
 
       switch (event) {
         // -------- SUBSCRIPTION LIFE CYCLE --------
@@ -74,8 +86,12 @@ export class RazorpayWebhookController {
           const sub = body?.payload?.subscription?.entity;
           if (!sub?.id) break;
 
+          console.log(sub, 88);
+
           const dto = await this.mapRazorpaySubscriptionToDto(sub);
           await this.repo.upsertFromRazorpaySubscription(dto);
+
+          console.log(dto, 94);
 
           // Extra guards for “canceled now”
           if (
@@ -96,6 +112,9 @@ export class RazorpayWebhookController {
           // If you can resolve a subscription id from this payload, mark active:
           const subId = this.tryGetSubIdFromPayment(body);
           if (subId) await this.repo.setStatusActiveByRazorpaySubId(subId);
+
+          console.log(subId);
+
           break;
         }
 

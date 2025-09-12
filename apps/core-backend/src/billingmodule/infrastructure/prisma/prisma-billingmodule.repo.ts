@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import Razorpay = require('razorpay');
 import * as crypto from 'crypto';
@@ -42,7 +42,7 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       prefillEmail,
       prefillContact,
     } = input;
-    console.log(input,45);
+    console.log(input, 45);
 
     const planId = await this.getRazorpayPlanId(planKey, cycle);
     console.log(planId, 47);
@@ -215,7 +215,10 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       where: { workspaceId },
       orderBy: { createdAt: 'desc' },
     });
-    return row as any;
+
+    if (!row) new NotFoundException('no plans found');
+
+    return row as any;  
   }
 
   async getEntitlements(workspaceId: string): Promise<EntitlementsDto> {

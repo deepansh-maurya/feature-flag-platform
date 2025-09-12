@@ -75,8 +75,6 @@ const USERS = [
 
 const SDK_PLATFORMS: { id: SdkPlatform; label: string }[] = [
   { id: "node", label: "Node.js (server)" },
-  { id: "browser", label: "Browser (JS)" },
-  { id: "react", label: "React" },
   { id: "ios", label: "iOS" },
   { id: "android", label: "Android" },
   { id: "go", label: "Go" },
@@ -296,25 +294,25 @@ export default function CreateProjectModal({
                 hint="Choose where your flag data & keys are hosted."
               />
 
-              <LabeledInput
+              {/* <LabeledInput
                 label="Default user identifier"
                 value={defaultIdentifier}
                 onChange={setDefaultIdentifier}
                 placeholder="userId"
                 hint="Used to make rollouts sticky per user (e.g., userId/accountId)."
-              />
+              /> */}
 
-              <LabeledInput
+              {/* <LabeledInput
                 label="Bucketing namespace/seed"
                 value={bucketingSeed}
                 onChange={setBucketingSeed}
                 placeholder="(defaults to project key)"
                 hint="Advanced: ensures consistent hashing across flags."
-              />
+              /> */}
             </div>
           </section>
 
-          {/* Environments */}
+          {/* Environments
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>Environments</h3>
             <div className={styles.envList}>
@@ -363,9 +361,9 @@ export default function CreateProjectModal({
               ))}
             </div>
             <button className={styles.addEnvBtn} onClick={addEnv}>+ Add environment</button>
-          </section>
+          </section> */}
 
-          {/* Ownership & Tags */}
+          {/* Ownership & Tags
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>Ownership</h3>
             <div className={styles.grid3}>
@@ -403,13 +401,13 @@ export default function CreateProjectModal({
                 </div>
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* Policies */}
           <section className={styles.section}>
-            <h3 className={styles.sectionTitle}>Policies</h3>
+            <h3 className={styles.sectionTitle}>Guardrails</h3>
             <div className={styles.grid3}>
-              <div className={styles.boxRow}>
+              {/* <div className={styles.boxRow}>
                 <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
@@ -427,10 +425,9 @@ export default function CreateProjectModal({
                     options={[1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: String(n) }))}
                   />
                 )}
-              </div>
+              </div> */}
 
               <div className={styles.boxCol}>
-                <label className={styles.label}>Guardrails</label>
                 <div className={styles.row}>
                   <LabeledSelect
                     small
@@ -461,7 +458,7 @@ export default function CreateProjectModal({
                 <div className={styles.hint}>Controls how fast you can increase exposure and the wait between steps.</div>
               </div>
 
-              <div className={styles.boxCol}>
+              {/* <div className={styles.boxCol}>
                 <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
@@ -478,11 +475,11 @@ export default function CreateProjectModal({
                     placeholder="https://..."
                   />
                 )}
-              </div>
+              </div> */}
             </div>
           </section>
 
-          {/* Conventions & Integrations */}
+          {/* Conventions & Integrations
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>Conventions & Integrations</h3>
             <div className={styles.grid3}>
@@ -524,7 +521,7 @@ export default function CreateProjectModal({
                 </div>
               </div>
             </div>
-          </section>
+          </section> */}
 
           {/* SDK Platforms */}
           <section className={styles.section}>

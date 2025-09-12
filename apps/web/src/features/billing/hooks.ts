@@ -34,11 +34,11 @@ function invalidateBilling(qc: ReturnType<typeof useQueryClient>, wsId: string) 
 }
 
 // -------------------- Queries -----------------------
-export function useSubscription(workspaceId?: string) {
+export function useSubscription() {
   return useQuery<Subscription | null>({
-    queryKey: QK.sub(workspaceId ?? 'nil'),
-    enabled: !!workspaceId,
-    queryFn: () => getCurrentSubscription(workspaceId as string),
+    queryKey: QK.sub('nil'),
+    enabled: true,
+    queryFn: () => getCurrentSubscription(),
     staleTime: 30_000,
   });
 }
