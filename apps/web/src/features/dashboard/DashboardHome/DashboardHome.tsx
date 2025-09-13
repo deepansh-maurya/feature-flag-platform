@@ -69,7 +69,7 @@ export default function DashboardHome({
       </div>
 
       {/* Main content switches on whether any project exists */}
-      {data ? (
+      {data && data.status == "trialing" ? (
         <>
           {/* KPIs */}
           <div className={styles.kpiGrid} role="list" aria-label="Key metrics">
@@ -105,25 +105,7 @@ export default function DashboardHome({
               ))
             )}
           </div>
-
-          {/* Actions */}
-          <div className={styles.actions}>
-            <button
-              className={styles.createBtn}
-              onClick={onCreateProject}
-              aria-label="Create a new project"
-            >
-              + Create Project
-            </button>
-            <button
-              className={styles.createBtn}
-              onClick={onCreateFlag}
-              aria-label="Create a new feature flag"
-            >
-              + Create Feature Flag
-            </button>
-          </div>
-        </>
+          </>
       ) : (
         // ------- EMPTY STATE (no projects yet) -------
         <div

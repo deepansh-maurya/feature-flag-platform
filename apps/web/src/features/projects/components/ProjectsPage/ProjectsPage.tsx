@@ -37,7 +37,7 @@ export default function ProjectsPage() {
         <div className={styles.headerTitle}>Projects</div>
         <button
           onClick={() => setIsOpen(true)}
-          className={`${styles.createBtn} ${data ? styles.mutedBtn : ""}`}
+          className={`${styles.createBtn} ${data && data.status != "trialing"  ? styles.mutedBtn : ""}`}
         >
           + Add Project
         </button>

@@ -21,9 +21,10 @@ import { JwtPayload } from 'jsonwebtoken';
 export class BillingmoduleController {
   constructor(private readonly svc: BillingmoduleService) {}
 
-  @Get(':workspaceId')
-  async getSubscription(@Param('workspaceId') workspaceId: string) {
-    return this.svc.getSubscription(workspaceId);
+  @Get()
+  async getSubscription(@Req() req: Request & JwtPayload) {
+    const { workspaceId } = req.user as any;
+    return await this.svc.getSubscription(workspaceId);
   }
 
   @Post('start-checkout')
@@ -62,11 +63,8 @@ export class BillingmoduleController {
   @Get('subscription')
   async currentPlan(@Req() req: Request & JwtPayload) {
     const { workspaceId } = req.user as any;
-    console.log("reached");
-    
+    console.log('reached');
 
-    const result = await this.svc.currentPlan(workspaceId);
-    console.log(result, 67);
-    return result;
+    return await this.svc.currentPlan(workspaceId);
   }
 }

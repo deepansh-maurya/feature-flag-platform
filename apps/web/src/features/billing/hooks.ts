@@ -1,8 +1,7 @@
-// src/features/billing/hooks.ts
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Cancel,
   ChangePlan,
@@ -10,8 +9,8 @@ import type {
   Portal,
   Resume,
   StartCheckout,
-  Subscription,
-} from './types';
+  Subscription
+} from "./types";
 import {
   startCheckout,
   changePlan,
@@ -19,16 +18,19 @@ import {
   resume as resumeSub,
   createPortalSession,
   getCurrentSubscription,
-  getEntitlements,
-} from './api';
+  getEntitlements
+} from "./api";
 
 // -------------------- Query Keys --------------------
 const QK = {
-  sub: (wsId: string) => ['billing', 'subscription', wsId] as const,
-  ent: (wsId: string) => ['billing', 'entitlements', wsId] as const,
+  sub: (wsId: string) => ["billing", "subscription", wsId] as const,
+  ent: (wsId: string) => ["billing", "entitlements", wsId] as const
 };
 
-function invalidateBilling(qc: ReturnType<typeof useQueryClient>, wsId: string) {
+function invalidateBilling(
+  qc: ReturnType<typeof useQueryClient>,
+  wsId: string
+) {
   qc.invalidateQueries({ queryKey: QK.sub(wsId) });
   qc.invalidateQueries({ queryKey: QK.ent(wsId) });
 }
@@ -36,19 +38,19 @@ function invalidateBilling(qc: ReturnType<typeof useQueryClient>, wsId: string) 
 // -------------------- Queries -----------------------
 export function useSubscription() {
   return useQuery<Subscription | null>({
-    queryKey: QK.sub('nil'),
+    queryKey: QK.sub("nil"),
     enabled: true,
     queryFn: () => getCurrentSubscription(),
-    staleTime: 30_000,
+    staleTime: 30_000
   });
 }
 
 export function useEntitlements(workspaceId?: string) {
   return useQuery<Entitlements>({
-    queryKey: QK.ent(workspaceId ?? 'nil'),
+    queryKey: QK.ent(workspaceId ?? "nil"),
     enabled: !!workspaceId,
     queryFn: () => getEntitlements(workspaceId as string),
-    staleTime: 30_000,
+    staleTime: 30_000
   });
 }
 
@@ -57,8 +59,14 @@ export function usePrefetchBilling(workspaceId?: string) {
   const qc = useQueryClient();
   useEffect(() => {
     if (!workspaceId) return;
-    qc.prefetchQuery({ queryKey: QK.sub(workspaceId), queryFn: () => getCurrentSubscription(workspaceId) });
-    qc.prefetchQuery({ queryKey: QK.ent(workspaceId), queryFn: () => getEntitlements(workspaceId) });
+    qc.prefetchQuery({
+      queryKey: QK.sub(workspaceId),
+      queryFn: () => getCurrentSubscription(workspaceId)
+    });
+    qc.prefetchQuery({
+      queryKey: QK.ent(workspaceId),
+      queryFn: () => getEntitlements(workspaceId)
+    });
   }, [qc, workspaceId]);
 }
 
@@ -69,8 +77,8 @@ export function useOpenCheckout() {
   return useMutation({
     mutationFn: (dto: StartCheckout) => startCheckout(dto),
     onSuccess: (data) => {
-     return data
-    },
+      return data;
+    }
   });
 }
 
@@ -80,7 +88,7 @@ export function useOpenBillingPortal() {
     mutationFn: (dto: Portal) => createPortalSession(dto),
     onSuccess: ({ url }) => {
       window.location.assign(url);
-    },
+    }
   });
 }
 
@@ -89,7 +97,7 @@ export function useChangePlan(workspaceId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: ChangePlan) => changePlan(dto),
-    onSuccess: () => invalidateBilling(qc, workspaceId),
+    onSuccess: () => invalidateBilling(qc, workspaceId)
   });
 }
 
@@ -98,7 +106,7 @@ export function useCancelSubscription(workspaceId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: Cancel) => cancelSub(dto),
-    onSuccess: () => invalidateBilling(qc, workspaceId),
+    onSuccess: () => invalidateBilling(qc, workspaceId)
   });
 }
 
@@ -107,6 +115,6 @@ export function useResumeSubscription(workspaceId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: Resume) => resumeSub(dto),
-    onSuccess: () => invalidateBilling(qc, workspaceId),
+    onSuccess: () => invalidateBilling(qc, workspaceId)
   });
 }

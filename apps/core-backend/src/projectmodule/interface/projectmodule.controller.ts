@@ -30,7 +30,6 @@ interface CRequest extends Request {
 export class ProjectmoduleController {
   constructor(private readonly svc: ProjectmoduleService) { }
 
-  /* -------------------- Projects -------------------- */
   @Post()
   createProject(@Body() dto: CreateProjectDto) {
     return this.svc.createProject(dto);

@@ -17,13 +17,13 @@ const user = {
 };
 
 const tabs = [
-  { tab: "Environments", route: Routes.Environment },
+  { tab: "Projects", route: Routes.Projects },
   { tab: "Flags", route: Routes.Featureflag },
   { tab: "Rules", route: Routes.Rules },
-  { tab: "SDK Keys", route: Routes.SdkKeys },
+  { tab: "Keys", route: Routes.SdkKeys },
+  { tab: "Environments", route: Routes.Environment },
   { tab: "Analytics", route: Routes.Analytics },
   { tab: "Logs", route: Routes.AuditLogs },
-  { tab: "Projects", route: Routes.Projects }
 ];
 
 export default function TopNavBar() {
@@ -50,46 +50,46 @@ export default function TopNavBar() {
           }}
           className="h-8 w-8 rounded-lg mr-5 bg-gradient-to-br from-indigo-400 to-fuchsia-500 shadow-inner"
         />
-        <div
-          className={styles.projectDropdown}
-          onClick={() => setProjectMenuOpen((v) => !v)}
-          tabIndex={0}
-        >
-          <span className={styles.projectName}>
-            {selectedProject ? selectedProject.name : "Select Project"}
-          </span>
-          <span className={styles.dropdownArrow}>▼</span>
-        </div>
-        <button
-          onClick={() => Observer.seData({ openCreateProjectModel: true })}
-          className={styles.addProjectBtn}
-        >
-          +
-        </button>
-        {projectMenuOpen && (
-          <div className={styles.projectMenu}>
-            {projects?.items?.map((p) => (
-              <div
-                key={p.name}
-                className={styles.projectMenuItem}
-                onClick={() => {
-                  setSelectedProject(p);
-                  setProjectMenuOpen(false);
-                  setActiveTab(tabs[0]);
-                  router.push("/dashboard");
-                }}
-              >
-                {p.name}
-              </div>
-            ))}
-            <div
-              onClick={() => Observer.seData({ openCreateProjectModel: true })}
-              className={styles.projectMenuAdd}
-            >
-              + Add Project
-            </div>
+
+        <div className="flex">
+          <div
+            className={styles.projectDropdown}
+            onClick={() => setProjectMenuOpen((v) => !v)}
+            tabIndex={0}
+          >
+            <span className={styles.projectName}>
+              {selectedProject ? selectedProject.name : "Select Project"}
+            </span>
+            <span className={styles.dropdownArrow}>▼</span>
           </div>
-        )}
+
+          {projectMenuOpen && (
+            <div className={styles.projectMenu}>
+              {projects?.items?.map((p) => (
+                <div
+                  key={p.name}
+                  className={styles.projectMenuItem}
+                  onClick={() => {
+                    setSelectedProject(p);
+                    setProjectMenuOpen(false);
+                    setActiveTab(tabs[0]);
+                    router.push("/dashboard");
+                  }}
+                >
+                  {p.name}
+                </div>
+              ))}
+              <div
+                onClick={() =>
+                  Observer.seData({ openCreateProjectModel: true })
+                }
+                className={styles.projectMenuAdd}
+              >
+                + Add Project
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* MIDDLE: Horizontal tabs */}
@@ -124,12 +124,7 @@ export default function TopNavBar() {
             >
               Account Settings
             </div>
-            <div
-              onClick={() => router.push(Routes.Team())}
-              className={styles.userMenuItem}
-            >
-              Team Management
-            </div>
+
             <div
               onClick={() => router.push(Routes.Billing())}
               className={styles.userMenuItem}

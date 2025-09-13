@@ -41,13 +41,8 @@ export async function createPortalSession(
   return data as { url: string };
 }
 
-// ---------- Queries (fast reads from your DB) ----------
 export async function getCurrentSubscription(): Promise<Subscription | null> {
   const { data } = await http.get(BASE_ROUTE + "/subscription");
-
-  console.log(data);
-  
-
   return (data ?? null) as Subscription | null;
 }
 

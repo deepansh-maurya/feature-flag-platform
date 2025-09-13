@@ -26,6 +26,8 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
+  
+
   /**
    * Customize what happens after Passport runs the strategy.
    * If user is missing or an error occurred, throw 401.
