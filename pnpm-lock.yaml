@@ -243,15 +243,6 @@ importers:
         specifier: ^5
         version: 5.8.3
 
-  packages/contracts:
-    dependencies:
-      class-transformer:
-        specifier: ^0.5.1
-        version: 0.5.1
-      class-validator:
-        specifier: ^0.14.2
-        version: 0.14.2
-
   packages/eslint-config:
     devDependencies:
       '@eslint/js':

@@ -1,4 +1,4 @@
-import { SdkKeyType } from '@prisma/client'
+import { SdkKeyType } from 'generated/prisma'
 import {
   ProjectSummaryDto,
   EnvironmentDto,

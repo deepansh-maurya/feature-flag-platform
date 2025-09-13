@@ -1,6 +1,7 @@
 // infrastructure/prisma/prisma-workspacesmodule.repo.ts
 import { Injectable, BadRequestException, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { BillingStatus, PlanKey, RoleKey } from '@prisma/client';
+import { BillingStatus, PlanKey, RoleKey } from 'generated/prisma';
+//import { billingStatus, planKey, roleKey } from 'generated/prisma';
 import PrismaService, { PrismaTx } from 'src/infra/prisma/prisma.service';
 import { InviteSummary, MemberSummary, PlanLimits, UsageCounts, WorkspacesmoduleRepo, WorkspaceSummary } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
 import { WorkspaceEntity } from 'src/workspacesmodule/domain/workspacesmodule.entity';

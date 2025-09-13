@@ -1,5 +1,5 @@
 import { IsUUID, IsString, IsOptional, IsInt, Min, IsEnum } from 'class-validator';
-import { ChangeRequestStatus } from '@prisma/client'
+import { ChangeRequestStatus } from 'generated/prisma'
 
 /* ---------- Inputs ---------- */
 

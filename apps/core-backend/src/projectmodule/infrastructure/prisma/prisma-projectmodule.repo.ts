@@ -13,7 +13,7 @@ import {
   SdkKeyDto,
   UpdateProjectDto,
 } from '../../interface/dto/create-projectmodule.dto';
-import { KeyStatus, SdkKeyType } from '@prisma/client';
+import { KeyStatus, SdkKeyType } from 'generated/prisma';
 
 @Injectable()
 export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
@@ -31,6 +31,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
         name,
         //@ts-ignore
         rolloutPollicies: guardrails,
+        //@ts-ignore
         langSupport: langSupport,
         timeZone: timeZone,
       },

@@ -1,5 +1,6 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
-import { UserStatus } from '@prisma/client'
+import { UserStatus } from 'generated/prisma';
+//import { UserStatus } from 'generated/prisma'
 
 /* ---------- Inputs ---------- */
 export class CreateUserDto {

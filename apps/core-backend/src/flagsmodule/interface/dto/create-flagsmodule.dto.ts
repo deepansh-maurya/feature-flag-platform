@@ -16,7 +16,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { EnvKey, FlagType } from '@prisma/client'
+import { EnvKey, FlagType } from 'generated/prisma'
 
 export class CreateFlagEnvConfigDto {
   @IsEnum(EnvKey)

@@ -7,7 +7,7 @@ import {
   ListResult,
 } from '../../application/ports/auditmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { AuditActionType } from '@prisma/client'
+import { AuditActionType } from 'generated/prisma'
 
 @Injectable()
 export class PrismaAuditModuleRepo implements AuditModuleRepo {
