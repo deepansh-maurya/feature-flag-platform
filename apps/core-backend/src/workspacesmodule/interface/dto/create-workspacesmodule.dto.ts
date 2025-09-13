@@ -1,7 +1,8 @@
 import { IsString, IsOptional, IsUUID, IsEmail, IsEnum, IsNumber, IsBoolean, IsDateString } from "class-validator";
 import { Type } from "class-transformer";
 import { LimitKind } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
-import { BillingStatus, RoleKey } from "@prisma/client";
+import { BillingStatus, RoleKey } from "generated/prisma";
+//import { BillingStatus, RoleKey } from "generated/prisma";
 
 // ---------- Generic DTOs ----------
 export class PaginationDto {

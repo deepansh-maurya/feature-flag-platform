@@ -1,7 +1,7 @@
 import {  Injectable } from '@nestjs/common';
 import { FlagsRepository, FlagMetaDTO } from '../../application/ports/flagsmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { EnvKey } from '@prisma/client'
+import { EnvKey } from 'generated/prisma'
 import { CreateFlagDto, CreateVersionDto } from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';
 
 @Injectable()

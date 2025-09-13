@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { BillingmoduleService } from '../application/use-cases/billingmodule.service';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
-import { BillingCycle, PlanKey } from '@prisma/client';
+import { BillingCycle, PlanKey } from 'generated/prisma';
 import { ResumeDto } from '../application/ports/billingmodule.repo';
 import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
