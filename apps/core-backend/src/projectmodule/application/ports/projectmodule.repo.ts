@@ -18,7 +18,6 @@ export interface ProjectmoduleRepo {
   // Projects
   createProject(input: CreateProjectDto): Promise<ProjectSummaryDto>;
   findProjectById(id: string): Promise<ProjectSummaryDto | null>;
-  findProjectByKey(workspaceId: string, key: string): Promise<ProjectSummaryDto | null>;
   listProjects(
     workspaceId: string,
     limit: number,

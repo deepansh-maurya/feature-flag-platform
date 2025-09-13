@@ -216,9 +216,11 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       orderBy: { createdAt: 'desc' },
     });
 
+    console.log(row, 219);
+
     if (!row) new NotFoundException('no plans found');
 
-    return row as any;  
+    return row as any;
   }
 
   async getEntitlements(workspaceId: string): Promise<EntitlementsDto> {

@@ -1,11 +1,11 @@
 export enum SdkKeyType {
   client = "client",
-  server = "server",
+  server = "server"
 }
 
 export enum KeyStatus {
   active = "active",
-  revoked = "revoked",
+  revoked = "revoked"
 }
 
 type ID = string;
@@ -69,11 +69,10 @@ export interface CreateProjectKeyDto {
 }
 
 export interface CreateProjectDto {
-  workspaceId: ID;
   name: string;
-  key: string; // slug
-  environments: CreateProjectEnvDto[];
-  initialKeys?: CreateProjectKeyDto[];
+  timeZone: string;
+  guardrails: JSON;
+  langSupport: string[];
 }
 
 export interface UpdateProjectDto {

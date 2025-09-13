@@ -2,6 +2,7 @@ import {
   IsArray,
   IsBoolean,
   IsEnum,
+  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -9,20 +10,18 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { KeyStatus, SdkKeyType } from '@prisma/client'
+import { KeyStatus, SdkKeyType } from '@prisma/client';
+import { SdkPlatform } from '../../../../../web/src/shared/types/types';
 
 /* =========================
-* Response DTOs (reads)
-* ========================= */
+ * Response DTOs (reads)
+ * ========================= */
 
 export class ProjectSummaryDto {
   @IsUUID() id: string;
   @IsUUID() workspaceId: string;
 
   @IsString() @IsNotEmpty() name: string;
-  @IsString() @IsNotEmpty() key: string;
-
-  // timestamps are included for serialization; no validation needed
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,8 +67,8 @@ export class ListProjectsResultDto {
 }
 
 /* =========================
-* Input DTOs (writes)
-* ========================= */
+ * Input DTOs (writes)
+ * ========================= */
 
 export class CreateProjectEnvDto {
   @IsString() @IsNotEmpty() key: string;
@@ -87,18 +86,15 @@ export class CreateProjectDto {
   @IsUUID() workspaceId: string;
 
   @IsString() @IsNotEmpty() name: string;
-  @IsString() @IsNotEmpty() key: string; // slug
+
+  @IsString()
+  timeZone: string;
+
+  @IsJSON()
+  guardrails: JSON;
 
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProjectEnvDto)
-  environments: CreateProjectEnvDto[];
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateProjectKeyDto)
-  initialKeys?: CreateProjectKeyDto[];
+  langSupport: SdkPlatform[];
 }
 
 export class UpdateProjectDto {

@@ -28,10 +28,6 @@ export class ProjectmoduleService {
     return this.repo.findProjectById(id);
   }
 
-  getProjectByKey(workspaceId: string, key: string) {
-    return this.repo.findProjectByKey(workspaceId, key);
-  }
-
   listProjects(workspaceId: string, limit: number, cursor?: string) {
     return this.repo.listProjects(workspaceId, limit, cursor);
   }

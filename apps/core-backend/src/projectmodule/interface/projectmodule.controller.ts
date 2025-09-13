@@ -40,13 +40,6 @@ export class ProjectmoduleController {
     return this.svc.getProjectById(id);
   }
 
-  @Get('by-key/:workspaceId/:key')
-  getProjectByKey(
-    @Param('workspaceId') workspaceId: string,
-    @Param('key') key: string,
-  ) {
-    return this.svc.getProjectByKey(workspaceId, key);
-  }
 
   @Get()
   listProjects(

@@ -166,7 +166,7 @@ export function usePrefetchProject(projectId?: string) {
 export function useCreateProject(workspaceIdForInvalidate?: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (dto: CreateProjectDto) => createProject(dto),
+    mutationFn: (dto: CreateProjectDto  ) => createProject(dto),
     onSuccess: () => {
       if (workspaceIdForInvalidate) {
         qc.invalidateQueries({

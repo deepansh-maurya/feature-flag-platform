@@ -61,7 +61,7 @@ export function usePrefetchBilling(workspaceId?: string) {
     if (!workspaceId) return;
     qc.prefetchQuery({
       queryKey: QK.sub(workspaceId),
-      queryFn: () => getCurrentSubscription(workspaceId)
+      queryFn: () => getCurrentSubscription()
     });
     qc.prefetchQuery({
       queryKey: QK.ent(workspaceId),

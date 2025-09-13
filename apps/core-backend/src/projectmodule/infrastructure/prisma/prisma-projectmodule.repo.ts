@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import {
-  ProjectmoduleRepo,
-} from '../../application/ports/projectmodule.repo';
+import { ProjectmoduleRepo } from '../../application/ports/projectmodule.repo';
 import {
   AddEnvironmentDto,
   CreateProjectDto,
@@ -15,7 +13,7 @@ import {
   SdkKeyDto,
   UpdateProjectDto,
 } from '../../interface/dto/create-projectmodule.dto';
-import { KeyStatus, SdkKeyType } from '@prisma/client'
+import { KeyStatus, SdkKeyType } from '@prisma/client';
 
 @Injectable()
 export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
@@ -24,54 +22,25 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   /* ========================= Projects ========================= */
 
   async createProject(input: CreateProjectDto): Promise<ProjectSummaryDto> {
-    const { workspaceId, name, key, environments, initialKeys = [] } = input;
+    const { workspaceId, name, guardrails, langSupport, timeZone } = input;
 
-    const project = await this.prisma.$transaction(async (tx) => {
-      const p = await tx.project.create({
-        data: { workspaceId, name, key },
-      });
 
-      if (environments?.length) {
-        await tx.environment.createMany({
-          data: environments.map((e) => ({
-            projectId: p.id,
-            workspaceId,
-            key: e.key,
-            displayName: e.displayName,
-          })),
-          skipDuplicates: true,
-        });
-      }
-
-      if (initialKeys?.length) {
-        await tx.sdkKey.createMany({
-          data: initialKeys.map((k) => ({
-            projectId: p.id,
-            workspaceId,
-            envKey: k.envKey,
-            type: k.type,
-            keyHash: k.keyHash,
-            createdBy: k.createdBy,
-            status: KeyStatus.active,
-          })),
-        });
-      }
-
-      return p;
+    const p = await this.prisma.project.create({
+      data: {
+        workspaceId,
+        name,
+        //@ts-ignore
+        rolloutPollicies: guardrails,
+        langSupport: langSupport,
+        timeZone: timeZone,
+      },
     });
 
-    return this.toProjectSummaryDto(project);
+    return this.toProjectSummaryDto(p);
   }
 
   async findProjectById(id: string): Promise<ProjectSummaryDto | null> {
     const p = await this.prisma.project.findUnique({ where: { id } });
-    return p ? this.toProjectSummaryDto(p) : null;
-  }
-
-  async findProjectByKey(workspaceId: string, key: string): Promise<ProjectSummaryDto | null> {
-    const p = await this.prisma.project.findUnique({
-      where: { workspaceId_key: { workspaceId, key } },
-    });
     return p ? this.toProjectSummaryDto(p) : null;
   }
 
@@ -85,11 +54,12 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       orderBy: { createdAt: 'asc' },
       take: limit + 1,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      select: { id: true, workspaceId: true, name: true, key: true, createdAt: true, updatedAt: true },
     });
 
     const hasMore = rows.length > limit;
-    const items = (hasMore ? rows.slice(0, -1) : rows).map(this.toProjectSummaryDto);
+    const items = (hasMore ? rows.slice(0, -1) : rows).map(
+      this.toProjectSummaryDto,
+    );
     return { items, nextCursor: hasMore ? rows[limit].id : null };
   }
 
@@ -125,7 +95,10 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     return envs.map(this.toEnvironmentDto);
   }
 
-  async findEnvironment(projectId: string, envKey: string): Promise<EnvironmentDto | null> {
+  async findEnvironment(
+    projectId: string,
+    envKey: string,
+  ): Promise<EnvironmentDto | null> {
     const env = await this.prisma.environment.findFirst({
       where: { projectId, key: envKey },
     });
@@ -163,11 +136,25 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   async rotateSdkKey(
     input: RotateSdkKeyDto,
   ): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }> {
-    const { projectId, workspaceId, envKey, type, newKeyHash, createdBy, keepOldActive } = input;
+    const {
+      projectId,
+      workspaceId,
+      envKey,
+      type,
+      newKeyHash,
+      createdBy,
+      keepOldActive,
+    } = input;
 
     const res = await this.prisma.$transaction(async (tx) => {
       const old = await tx.sdkKey.findFirst({
-        where: { projectId, workspaceId, envKey, type, status: KeyStatus.active },
+        where: {
+          projectId,
+          workspaceId,
+          envKey,
+          type,
+          status: KeyStatus.active,
+        },
         orderBy: { createdAt: 'desc' },
       });
 
@@ -223,7 +210,6 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     id: p.id,
     workspaceId: p.workspaceId,
     name: p.name,
-    key: p.key,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   });

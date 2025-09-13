@@ -101,14 +101,7 @@ export default function ProjectsPage() {
       <CreateProjectModal
         open={isOpen}
         onClose={() => setIsOpen(false)}
-        onCreate={async (payload) => {
-          // POST to your API then close + refresh
-          // await api.createProject(payload)
-          console.log(payload);
-          setIsOpen(false);
-        }}
         defaultTimezone="Asia/Kolkata"
-        defaultRegion="US"
       />
     </div>
   );
