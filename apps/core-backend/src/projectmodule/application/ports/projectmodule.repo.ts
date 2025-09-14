@@ -24,6 +24,7 @@ export interface ProjectmoduleRepo {
     cursor?: string,
   ): Promise<ListProjectsResultDto>;
   updateProject(input: UpdateProjectDto): Promise<ProjectSummaryDto>;
+  deleteProject(id: string): Promise<void>;
 
   // Environments
   addEnvironment(input: AddEnvironmentDto): Promise<EnvironmentDto>;

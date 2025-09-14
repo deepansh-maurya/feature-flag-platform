@@ -153,3 +153,8 @@ export async function listSdkKeys(
   });
   return data as SdkKeyDto[];
 }
+
+/** Delete project by id */
+export async function deleteProject(id: string): Promise<void> {
+  await http.delete(`/projects/${id}`);
+}

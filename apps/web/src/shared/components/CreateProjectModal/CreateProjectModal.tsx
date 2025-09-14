@@ -42,12 +42,31 @@ export interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
   defaultTimezone?: string; // e.g., from user profile
+  // initial values when editing
+  initial?: {
+    id?: string;
+    name?: string;
+    timeZone?: string;
+    guardrails?: any; // object
+    langSupport?: string[]; // array
+  };
+  submitLabel?: string;
+  onSubmit?: (payload: {
+    id?: string;
+    name: string;
+    timeZone: string;
+    guardrails: any; // object
+    langSupport: string[]; // array
+  }) => void;
 }
 
 export default function CreateProjectModal({
   open,
   onClose,
-  defaultTimezone = "Asia/Kolkata"
+  defaultTimezone = "Asia/Kolkata",
+  initial,
+  submitLabel,
+  onSubmit,
 }: CreateProjectModalProps) {
   const [TIMEZONES, setTimezones] = useState<string[]>([]);
 
@@ -62,7 +81,7 @@ export default function CreateProjectModal({
   );
   const [sdkPlatforms, setSdkPlatforms] = useState<any[]>(["node", "react"]);
 
-  const [guardRails, setGuardRails] = useState({
+  const [guardRails, setGuardRails] = useState<any>({
     Safe: {
       key: "Safe",
       maxRampPercent: 10,
@@ -71,7 +90,7 @@ export default function CreateProjectModal({
     Normal: {
       key: "Normal",
       maxRampPercent: 20,
-      minHoldMinutes: 50
+      minHoldMinutes: 50        
     },
     Aggressive: {
       key: "Aggressive",
@@ -82,28 +101,31 @@ export default function CreateProjectModal({
 
   console.log(guardRails, guardMode);
 
+  // populate initial values when editing
+  useEffect(() => {
+    if (!initial) return;
+    if (initial.name) setName(initial.name);
+    if (initial.timeZone) setTimezone(initial.timeZone);
+    if (initial.guardrails) setGuardRails(initial.guardrails);
+    if (initial.langSupport) setSdkPlatforms(initial.langSupport as any[]);
+  }, [initial]);
+
   const canSubmit = useMemo(() => {
     const nameOk = name.trim().length >= 2 && name.trim().length <= 50;
     const tzOk = !!timezone;
     return nameOk && tzOk;
   }, [name, timezone]);
-
-  const project = useCreateProject();
-
-  const onSubmit = () => {
-    project.mutate(
-      {
-        guardrails: guardRails as any,
-        langSupport: sdkPlatforms,
-        name: name,
-        timeZone: timezone
-      },
-      {
-        onSuccess(data) {
-          console.log(data);
-        }
-      }
-    );
+  const internalOnSubmit = () => {
+    const payload = {
+      id: initial?.id,
+      name,
+      timeZone: timezone,
+      guardrails: guardRails,
+      langSupport: sdkPlatforms,
+    };
+    if (onSubmit) {
+      onSubmit(payload);
+    }
   };
 
   return (
@@ -183,7 +205,7 @@ export default function CreateProjectModal({
                       type="number"
                       value={String(guardRails[guardMode]?.maxRampPercent)}
                       onChange={(v) =>
-                        setGuardRails((prev) => ({
+                        setGuardRails((prev: any) => ({
                           ...prev,
                           [guardMode as string]: {
                             maxRampPercent: v,
@@ -198,7 +220,7 @@ export default function CreateProjectModal({
                       type="number"
                       value={String(guardRails[guardMode]?.minHoldMinutes)}
                       onChange={(v) =>
-                        setGuardRails((prev) => ({
+                        setGuardRails((prev: any) => ({
                           ...prev,
                           [guardMode as string]: {
                             minHoldMinutes: v,
@@ -252,11 +274,11 @@ export default function CreateProjectModal({
               Cancel
             </button>
             <button
-              onClick={onSubmit}
+              onClick={internalOnSubmit}
               className={styles.primaryBtn}
               disabled={!canSubmit}
             >
-              Create project
+              {submitLabel ?? (initial?.id ? 'Update project' : 'Create project')}
             </button>
           </div>
         </div>

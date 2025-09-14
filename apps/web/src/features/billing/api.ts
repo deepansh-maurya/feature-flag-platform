@@ -42,8 +42,14 @@ export async function createPortalSession(
 }
 
 export async function getCurrentSubscription(): Promise<Subscription | null> {
-  const { data } = await http.get(BASE_ROUTE + "/subscription");
-  return (data ?? null) as Subscription | null;
+  try {
+    const { data } = await http.get(BASE_ROUTE + "/subscription");
+    return (data ?? null) as Subscription | null;
+  } catch (err: any) {
+    // Treat 404 as "no subscription" (null) rather than throwing
+    if (err?.response?.status === 404) return null;
+    throw err;
+  }
 }
 
 export async function getEntitlements(

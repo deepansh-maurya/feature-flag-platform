@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -12,6 +13,7 @@ import {
 import { ProjectmoduleService } from '../application/use-cases/projectmodule.service';
 import {
   CreateProjectDto,
+  CreateProjectRequestDto,
   UpdateProjectDto,
   AddEnvironmentDto,
   IssueSdkKeyDto,
@@ -22,24 +24,38 @@ import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guar
 import { Request } from 'express';
 
 interface CRequest extends Request {
-  workspaceId: string
+  workspaceId: string;
 }
 
 @UseGuards(JwtAuthGuard)
 @Controller('projects')
 export class ProjectmoduleController {
-  constructor(private readonly svc: ProjectmoduleService) { }
+  constructor(private readonly svc: ProjectmoduleService) {}
 
   @Post()
-  createProject(@Body() dto: CreateProjectDto) {
-    return this.svc.createProject(dto);
+  createProject(@Body() dto: CreateProjectRequestDto, @Req() req: Request) {
+    const { workspaceId } = req.user as any;
+      const incoming = dto as any;
+      // normalize langSupport: allow clients to send JSON string, comma-separated, or array
+      if (incoming.langSupport && !Array.isArray(incoming.langSupport)) {
+        try {
+          incoming.langSupport = JSON.parse(incoming.langSupport as any);
+        } catch (e) {
+          // fallback: split comma-separated
+          if (typeof incoming.langSupport === 'string') {
+            incoming.langSupport = incoming.langSupport.split(',').map((s: string) => s.trim()).filter(Boolean);
+          }
+        }
+      }
+
+      const payload: CreateProjectDto = { ...(incoming as any), workspaceId: workspaceId as string };
+    return this.svc.createProject(payload);
   }
 
   @Get(':id')
   getProjectById(@Param('id') id: string) {
     return this.svc.getProjectById(id);
   }
-
 
   @Get()
   listProjects(
@@ -52,7 +68,24 @@ export class ProjectmoduleController {
 
   @Patch(':id')
   updateProject(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
-    return this.svc.updateProject({ ...dto, id });
+    const incoming = dto as any;
+    if (incoming.langSupport && !Array.isArray(incoming.langSupport)) {
+      try {
+        incoming.langSupport = JSON.parse(incoming.langSupport as any);
+      } catch (e) {
+        if (typeof incoming.langSupport === 'string') {
+          incoming.langSupport = incoming.langSupport.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+      }
+    }
+    return this.svc.updateProject({ ...incoming, id });
+  }
+
+  @Delete(':id')
+  async deleteProject(@Param('id') id: string) {
+    await this.svc.deleteProject(id);
+    // returning void -> Nest will respond with 200 by default; prefer 204 for delete but keep simple
+    return;
   }
 
   /* ------------------ Environments ------------------ */

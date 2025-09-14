@@ -28,6 +28,7 @@ const tabs = [
 
 export default function TopNavBar() {
   const { data: projects, isLoading } = useProjects(20);
+  
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSummaryDto>();
   const [userMenuOpen, setUserMenuOpen] = useState(false);

@@ -51,14 +51,6 @@ export default function DashboardHome({
   const onCreateProject = () => {
     setIsOpen(!isOpen);
   };
-  useEffect(() => {
-    Observer.add("model", (obj: any) => {
-      if (obj.openCreateProjectModel) {
-        setIsOpen(true);
-      }
-    });
-    return () => Observer.remove("model");
-  });
 
   return (
     <div className={styles.wrapper}>

@@ -41,7 +41,9 @@ export function useSubscription() {
     queryKey: QK.sub("nil"),
     enabled: true,
     queryFn: () => getCurrentSubscription(),
-    staleTime: 30_000
+    staleTime: 30_000,
+    retry: false, // do not retry on error (404 will be handled as null)
+    refetchOnWindowFocus: false // avoid refetching on focus which can cause repeat calls
   });
 }
 

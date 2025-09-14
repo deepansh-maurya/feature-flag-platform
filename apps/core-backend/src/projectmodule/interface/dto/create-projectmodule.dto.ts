@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { KeyStatus, SdkKeyType, SdkPlatform } from 'generated/prisma';
+import { KeyStatus, SdkKeyType } from 'generated/prisma';
 
 /* =========================
  * Response DTOs (reads)
@@ -21,6 +21,15 @@ export class ProjectSummaryDto {
   @IsUUID() workspaceId: string;
 
   @IsString() @IsNotEmpty() name: string;
+  @IsString()
+  timeZone: string;
+
+  // rollout policies stored as JSON in DB
+  rolloutPollicies: any;
+
+  // array of sdk platform keys
+  langSupport: string[];
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -82,26 +91,54 @@ export class CreateProjectKeyDto {
 }
 
 export class CreateProjectDto {
-  @IsUUID() workspaceId: string;
+  @IsString() workspaceId: string;
 
   @IsString() @IsNotEmpty() name: string;
 
   @IsString()
   timeZone: string;
 
-  @IsJSON()
-  guardrails: JSON;
+  // guardrails stored as JSON in DB; clients will send an object
+  guardrails: any;
 
-  @IsArray()
-  langSupport: SdkPlatform[];
+  // array of sdk platform ids
+  @IsNotEmpty()
+  langSupport: string[];
+}
+
+// DTO clients send when creating a project. workspaceId is injected server-side
+export class CreateProjectRequestDto {
+  @IsString() @IsNotEmpty() name: string;
+
+  @IsString()
+  timeZone: string;
+
+  @IsOptional()
+  guardrails: any;
+
+  @IsNotEmpty()
+  langSupport: string[];
 }
 
 export class UpdateProjectDto {
-  @IsUUID() id: string;
+  @IsOptional()
+  @IsUUID()
+  id?: string;
 
   @IsOptional()
   @IsString()
   name?: string;
+
+  @IsOptional()
+  @IsString()
+  timeZone?: string;
+
+  @IsOptional()
+  guardrails?: any;
+
+  @IsOptional()
+  @IsNotEmpty()
+  langSupport?: string[];
 }
 
 export class AddEnvironmentDto {

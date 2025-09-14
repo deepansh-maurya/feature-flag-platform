@@ -43,7 +43,8 @@
   border-radius: 15px;
   box-shadow: 0 2px 26px 0 rgba(30,60,120,0.09);
   overflow-x: auto;
-  padding: 20px 6px;
+  /* match wrapper horizontal padding so header/title and table align */
+  padding: 20px 18px;
 }
 
 .table {
@@ -154,7 +155,7 @@
     padding: 0 4px;
   }
   .tableWrapper {
-    padding: 7px 0;
+    padding: 7px 8px;
   }
   .table {
     min-width: 600px;

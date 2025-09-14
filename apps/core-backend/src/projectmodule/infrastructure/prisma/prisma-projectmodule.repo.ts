@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
 import { ProjectmoduleRepo } from '../../application/ports/projectmodule.repo';
 import {
@@ -29,13 +30,15 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       data: {
         workspaceId,
         name,
-        //@ts-ignore
-        rolloutPollicies: guardrails,
-        //@ts-ignore
-        langSupport: langSupport,
+        rolloutPollicies: guardrails as any,
+        // DB currently stores langSupport as TEXT (JSON string). stringify here so writes succeed.
+        langSupport: Array.isArray(langSupport) ? JSON.stringify(langSupport) : (langSupport as any),
         timeZone: timeZone,
       },
     });
+
+    console.log(p,"project created");
+    
 
     return this.toProjectSummaryDto(p);
   }
@@ -65,13 +68,34 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   }
 
   async updateProject(input: UpdateProjectDto): Promise<ProjectSummaryDto> {
+    const data: any = {};
+    if (input.name) data.name = input.name;
+    if (input.timeZone) data.timeZone = input.timeZone;
+    if (input.guardrails) data.rolloutPollicies = input.guardrails as any;
+    if (input.langSupport) {
+      // stringify array into JSON to match DB TEXT column
+      data.langSupport = Array.isArray(input.langSupport)
+        ? JSON.stringify(input.langSupport)
+        : input.langSupport as any;
+    }
+
     const p = await this.prisma.project.update({
       where: { id: input.id },
-      data: {
-        ...(input.name ? { name: input.name } : {}),
-      },
+      data,
     });
     return this.toProjectSummaryDto(p);
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    try {
+      await this.prisma.project.delete({ where: { id } });
+    } catch (e: any) {
+      // Prisma throws an error when record not found; normalize to NotFoundException
+      if (e && e.code === 'P2025') {
+        throw new NotFoundException('Project not found');
+      }
+      throw e;
+    }
   }
 
   /* ======================= Environments ======================= */
@@ -211,6 +235,23 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     id: p.id,
     workspaceId: p.workspaceId,
     name: p.name,
+    timeZone: p.timeZone,
+    rolloutPollicies: p.rolloutPollicies,
+    // DB may store langSupport as JSON string (TEXT) or as array (enum[]). Normalize to array for clients.
+    langSupport: ((): string[] => {
+      try {
+        if (Array.isArray(p.langSupport)) return p.langSupport as string[];
+        if (typeof p.langSupport === 'string') {
+          const parsed = JSON.parse(p.langSupport);
+          return Array.isArray(parsed) ? parsed : [String(parsed)];
+        }
+        return [];
+      } catch (e) {
+        // malformed JSON -> fallback to splitting by comma
+        if (typeof p.langSupport === 'string') return p.langSupport.split(',').map((s: string) => s.trim()).filter(Boolean);
+        return [];
+      }
+    })(),
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   });

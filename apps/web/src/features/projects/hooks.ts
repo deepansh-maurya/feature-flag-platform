@@ -222,3 +222,43 @@ export function useRotateSdkKey(projectId: string) {
     onSuccess: () => invalidateSdkKeys(qc, projectId),
   });
 }
+
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => {
+      return (async () => {
+        const { deleteProject } = await import('./api');
+        return deleteProject(id);
+      })();
+    },
+    // optimistic update: remove project from lists immediately
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ predicate: q => q.queryKey[0] === 'projects' });
+      const previous = qc.getQueriesData({ predicate: q => q.queryKey[0] === 'projects' });
+      // remove project from any cached lists
+      previous.forEach(([key, data]) => {
+        if (!data) return;
+        try {
+          const next = { ...data } as any;
+          if (Array.isArray(next.items)) {
+            next.items = next.items.filter((p: any) => p.id !== id);
+          }
+          qc.setQueryData(key as any, next);
+        } catch (e) {
+          // ignore
+        }
+      });
+      return { previous };
+    },
+    onError: (_err, _id, context: any) => {
+      // rollback
+      if (context?.previous) {
+        context.previous.forEach(([key, data]: any) => qc.setQueryData(key, data));
+      }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ predicate: q => q.queryKey[0] === 'projects' });
+    },
+  });
+}

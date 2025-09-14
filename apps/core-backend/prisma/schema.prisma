@@ -175,31 +175,7 @@ enum PlanStatus {
   archived
 }
 
-enum SdkPlatform {
-  node
-  python
-  java
-  kotlin
-  swift
-  objectivec
-  c
-  cpp
-  csharp
-  fsharp
-  go
-  rust
-  ruby
-  php
-  perl
-  scala
-  elixir
-  erlang
-  haskell
-  clojure
-  dart
-  r
-}
-
+//
 // ---------- Core ----------
 
 model Admin {
@@ -259,7 +235,7 @@ model Project {
   workspaceId      String
   name             String
   key              String?
-  langSupport      SdkPlatform[]
+  langSupport      String
   timeZone         String
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt

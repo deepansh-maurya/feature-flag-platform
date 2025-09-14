@@ -20,6 +20,9 @@ export interface ProjectSummaryDto {
   workspaceId: ID;
   name: string;
   key: string;
+  timeZone?: string;
+  rolloutPollicies?: any;
+  langSupport?: string[];
   createdAt: IsoDate;
   updatedAt: IsoDate;
 }
@@ -71,13 +74,16 @@ export interface CreateProjectKeyDto {
 export interface CreateProjectDto {
   name: string;
   timeZone: string;
-  guardrails: JSON;
-  langSupport: string[];
+  guardrails: any; // JSON serializable object
+  langSupport: string[]; // array of sdk platform ids
 }
 
 export interface UpdateProjectDto {
   id: ID;
   name?: string;
+  timeZone?: string;
+  guardrails?: any;
+  langSupport?: string[];
 }
 
 export interface AddEnvironmentDto {

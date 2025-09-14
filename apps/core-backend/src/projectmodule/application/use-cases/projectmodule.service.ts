@@ -36,6 +36,10 @@ export class ProjectmoduleService {
     return this.repo.updateProject(dto);
   }
 
+  deleteProject(id: string) {
+    return this.repo.deleteProject(id);
+  }
+
   /* ------------------ Environments ------------------ */
   addEnvironment(dto: AddEnvironmentDto) {
     return this.repo.addEnvironment(dto);
