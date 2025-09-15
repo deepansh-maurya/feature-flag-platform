@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import styles from "./TopNavBar.module.css";
-import { Routes } from "../../../../app/constants";
+import { AppConst, Routes } from "../../../../app/constants";
 import { useRouter } from "next/navigation";
 import Observer from "../../../../app/observer";
 import Link from "next/link";
@@ -23,12 +23,12 @@ const tabs = [
   { tab: "Keys", route: Routes.SdkKeys },
   { tab: "Environments", route: Routes.Environment },
   { tab: "Analytics", route: Routes.Analytics },
-  { tab: "Logs", route: Routes.AuditLogs },
+  { tab: "Logs", route: Routes.AuditLogs }
 ];
 
 export default function TopNavBar() {
   const { data: projects, isLoading } = useProjects(20);
-  
+
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectSummaryDto>();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -40,6 +40,10 @@ export default function TopNavBar() {
       setSelectedProject(projects.items[0]);
     }
   }, [projects]);
+
+  useEffect(() => {
+    sessionStorage.setItem(AppConst.curPro, selectedProject?.id ?? "0");
+  }, [selectedProject]);
 
   return (
     <header className={styles.navbar}>

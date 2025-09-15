@@ -15,7 +15,9 @@ import {
   createFlag,
   createVersion,
   upsertMeta,
+  updateFlag,
   archive,
+  deleteFlag,
 } from "./api";
 import { CreateFlagDto, CreateVersionDto, FlagMetaDTO, UpsertFlagMetaDto } from "./types";
 /* -------------------- Query Keys -------------------- */
@@ -121,6 +123,29 @@ export function useUpsertMeta(projectIdForInvalidate?: string, flagIdForInvalida
     mutationFn: (dto) => upsertMeta(dto),
     onSuccess: () => {
       if (flagIdForInvalidate) invalidateFlag(qc, flagIdForInvalidate);
+      if (projectIdForInvalidate) invalidateProjectFlags(qc, projectIdForInvalidate);
+    },
+  });
+}
+
+export function useUpdateFlag(projectIdForInvalidate?: string) {
+  const qc = useQueryClient();
+  type Payload = { flagId: string; body: { name?: string; description?: string | null; tags?: string[]; archived?: boolean } };
+  return useMutation<void, Error, Payload>({
+    mutationFn: (p: Payload) => updateFlag(p.flagId, p.body),
+    onSuccess: (_data, vars) => {
+      if (vars?.flagId) invalidateFlag(qc, vars.flagId);
+      if (projectIdForInvalidate) invalidateProjectFlags(qc, projectIdForInvalidate);
+    },
+  });
+}
+
+export function useDeleteFlag(projectIdForInvalidate?: string) {
+  const qc = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: (flagId: string) => deleteFlag(flagId),
+    onSuccess: (_data, flagId) => {
+      if (flagId) invalidateFlag(qc, flagId);
       if (projectIdForInvalidate) invalidateProjectFlags(qc, projectIdForInvalidate);
     },
   });

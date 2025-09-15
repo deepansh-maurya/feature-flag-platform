@@ -1,4 +1,3 @@
-// apps/web/src/projects/components/hooks.ts
 'use client';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useEffect } from 'react';

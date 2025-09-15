@@ -95,6 +95,39 @@ export class CreateFlagDto {
   comment?: string | null;
 }
 
+// Client-friendly request: workspaceId and createdBy are injected server-side from the authenticated user.
+export class CreateFlagRequestDto {
+  @IsString()
+  @IsNotEmpty()
+  projectId!: string;
+
+  @IsString()
+  @Matches(/^[a-z0-9_-]+$/)
+  @Length(1, 100)
+  key!: string;
+
+
+  @IsOptional()
+  @IsString()
+  @Length(0, 500)
+  description?: string | null;
+
+  // Display name in FlagMeta
+  @IsString()
+  @Length(1, 140)
+  name!: string;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  tags?: string[];
+
+
+  
+
+}
+
 export class CreateVersionEnvConfigDto {
   @IsEnum(EnvKey)
   envKey!: EnvKey;

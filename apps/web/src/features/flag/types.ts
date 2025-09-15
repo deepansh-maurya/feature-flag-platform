@@ -1,59 +1,54 @@
-type EnvKey = "dev" | "prod" | "stage"
-type FlagType = "boolean" | "multivariate" | "json"
+type EnvKey = "dev" | "prod" | "stage";
+type FlagType = "boolean" | "multivariate" | "json";
 export interface CreateFlagEnvConfigDto {
-    envKey: EnvKey;
-    enabled: boolean;
+  envKey: EnvKey;
+  enabled: boolean;
 
-    // For multivariate flags
-    variantKey?: string | null;
+  // For multivariate flags
+  variantKey?: string | null;
 
-    // For json flags (and general payload)
-    jsonValue?: unknown | null;
+  // For json flags (and general payload)
+  jsonValue?: unknown | null;
 
-    rollout?: number | null;
+  rollout?: number | null;
 
-    // Serialized rule AST
-    rules?: unknown | null;
+  // Serialized rule AST
+  rules?: unknown | null;
 }
 
 export interface CreateFlagDto {
-    workspaceId: string;
-    projectId: string;
-    key: string;
-    type: FlagType;
-    description?: string | null;
-    createdBy: string;
-    name: string;
-    tags?: string[];
-    envs: CreateFlagEnvConfigDto[];
-    comment?: string | null;
+  projectId: string;
+  key: string;
+  description?: string | null;
+  name: string;
+  tags?: string[];
 }
 
 export interface CreateVersionEnvConfigDto {
-    envKey: EnvKey;
-    enabled: boolean;
-    variantKey?: string | null;
-    jsonValue?: unknown | null;
-    rollout?: number | null;
-    rules?: unknown | null;
+  envKey: EnvKey;
+  enabled: boolean;
+  variantKey?: string | null;
+  jsonValue?: unknown | null;
+  rollout?: number | null;
+  rules?: unknown | null;
 }
 
 export interface CreateVersionDto {
-    flagId: string;
-    createdBy: string;
-    comment?: string | null;
-    envs: CreateVersionEnvConfigDto[];
+  flagId: string;
+  createdBy: string;
+  comment?: string | null;
+  envs: CreateVersionEnvConfigDto[];
 }
 
 export interface UpsertFlagMetaDto {
-    flagId: string;
-    name: string;
-    tags?: string[];
+  flagId: string;
+  name: string;
+  tags?: string[];
 }
 
 export interface IsKeyTakenDto {
-    projectId: string;
-    key: string;
+  projectId: string;
+  key: string;
 }
 
 export type FlagMetaDTO = {
@@ -66,6 +61,20 @@ export type FlagMetaDTO = {
   updatedAt: Date;
   workspaceId: string;
   projectId: string;
-  displayName?: string;
+  name?: string;
   tags?: string[];
+};
+
+export type FlagStatus = "on" | "off" | "gradual";
+
+export type Flag = {
+  name: string; // key/slug style (e.g., dark_mode_v2)
+  status: FlagStatus; // aggregate status (quick glance)
+  lastModified: string;
+  tags?: string[];
+  description?: string;
+  key?: string;
+  id?: string;
+  // whether the flag is archived (server source-of-truth)
+  archived?: boolean;
 };

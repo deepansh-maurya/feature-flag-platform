@@ -175,7 +175,6 @@ enum PlanStatus {
   archived
 }
 
-//
 // ---------- Core ----------
 
 model Admin {
@@ -368,10 +367,11 @@ model Role {
 
 model Flag {
   id          String   @id @default(uuid())
+  name        String   @unique()
   projectId   String
   workspaceId String
   key         String
-  type        FlagType
+  tags        String[]
   description String?
   archived    Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -380,39 +380,11 @@ model Flag {
 
   workspace Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
   project   Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
-  versions  FlagVersion[]   @relation("FlagVersions")
   changes   ChangeRequest[] @relation("FlagChangeRequests")
 
-  // 1-1 metadata (display name + tags)
-  flagMeta FlagMeta?
-
-  @@unique([projectId, key])
+  @@unique([projectId, name])
   @@index([workspaceId])
   @@index([projectId])
-}
-
-model FlagMeta {
-  flagId String   @id
-  name   String
-  tags   String[]
-
-  flag Flag @relation(fields: [flagId], references: [id], onDelete: Cascade)
-}
-
-model FlagVersion {
-  id        String            @id @default(uuid())
-  flagId    String
-  version   Int
-  comment   String?
-  status    FlagVersionStatus @default(draft)
-  createdBy String
-  createdAt DateTime          @default(now())
-
-  flag       Flag            @relation("FlagVersions", fields: [flagId], references: [id], onDelete: Cascade)
-  envConfigs FlagEnvConfig[]
-
-  @@unique([flagId, version])
-  @@index([flagId])
 }
 
 model FlagEnvConfig {
@@ -424,8 +396,6 @@ model FlagEnvConfig {
   jsonValue     Json?
   rollout       Int? // 0..100
   rules         Json?
-
-  flagVersion FlagVersion @relation(fields: [flagVersionId], references: [id], onDelete: Cascade)
 
   @@unique([flagVersionId, envKey])
   @@index([envKey])

@@ -8,16 +8,17 @@ export async function isKeyTaken(params: {
   projectId: string;
   key: string;
 }): Promise<boolean> {
-  const { data } = await http.get("/api/v1/flags/is-key-taken", {
+  const { data } = await http.get("/flagsmodule/key-available", {
     params,
   });
-  // server may return { taken: boolean } or boolean
-  return typeof data === "boolean" ? data : Boolean(data?.taken);
+  // server returns { available: boolean }
+  if (typeof data === 'boolean') return !data;
+  return !Boolean(data?.available);
 }
 
 // /api/v1/flags/:id
 export async function getFlagById(id: string): Promise<FlagMetaDTO | null> {
-  const { data } = await http.get(`/api/v1/flags/${id}`);
+  const { data } = await http.get(`/flagsmodule/${id}`);
   return (data ?? null) as FlagMetaDTO | null;
 }
 
@@ -26,10 +27,7 @@ export async function getFlagByKey(
   projectId: string,
   key: string
 ): Promise<FlagMetaDTO | null> {
-  const { data } = await http.get(
-    `/api/v1/projects/${projectId}/flags/by-key`,
-    { params: { key } }
-  );
+  const { data } = await http.get(`/flagsmodule/by-key/${projectId}/${encodeURIComponent(key)}`);
   return (data ?? null) as FlagMetaDTO | null;
 }
 
@@ -37,7 +35,7 @@ export async function getFlagByKey(
 export async function listFlagsByProject(
   projectId: string
 ): Promise<FlagMetaDTO[]> {
-  const { data } = await http.get(`/api/v1/projects/${projectId}/flags`);
+  const { data } = await http.get(`/flagsmodule/project/${projectId}`);
   return data as FlagMetaDTO[];
 }
 
@@ -47,11 +45,7 @@ export async function listFlagsByProject(
 export async function createFlag(
   input: CreateFlagDto
 ): Promise<{ flagId: string; versionId: string }> {
-  const { projectId, ...body } = input as any;
-  const { data } = await http.post(
-    `/api/v1/projects/${projectId}/flags`,
-    body
-  );
+  const { data } = await http.post(`/flagsmodule`, input);
   return data as { flagId: string; versionId: string };
 }
 
@@ -60,20 +54,28 @@ export async function createVersion(
   input: CreateVersionDto
 ): Promise<{ versionId: string }> {
   const { flagId, ...body } = input as any;
-  const { data } = await http.post(
-    `/api/v1/flags/${flagId}/versions`,
-    body
-  );
+  const { data } = await http.post(`/flagsmodule/${flagId}/versions`, body);
   return data as { versionId: string };
 }
 
 // PUT /api/v1/flags/:flagId/meta
 export async function upsertMeta(params: UpsertFlagMetaDto): Promise<void> {
   const { flagId, ...body } = params as any;
-  await http.put(`/api/v1/flags/${flagId}/meta`, body);
+  // new: patch the flag resource directly (no /meta suffix)
+  await http.patch(`/flagsmodule/${flagId}`, body);
+}
+
+// PATCH /api/v1/flags/:flagId
+export async function updateFlag(flagId: string, body: { name?: string; description?: string | null; tags?: string[]; archived?: boolean }): Promise<void> {
+  await http.patch(`/flagsmodule/${flagId}`, body as any);
+}
+
+// DELETE /api/v1/flags/:flagId
+export async function deleteFlag(flagId: string): Promise<void> {
+  await http.delete(`/flagsmodule/${flagId}`);
 }
 
 // POST /api/v1/flags/:flagId/archive
 export async function archive(flagId: string): Promise<void> {
-  await http.post(`/api/v1/flags/${flagId}/archive`);
+  await http.patch(`/flagsmodule/${flagId}/archive`);
 }

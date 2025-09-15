@@ -4,17 +4,21 @@ export enum AppConst {
     curPro = "currentProject"
 }
 export const getPrefix = () => {
-    if (typeof window === "undefined") return "projects/0"; // fallback for SSR
+
+    console.log(typeof window === "undefined");
+    
+
+    if (typeof window === "undefined") return "projects/0"; 
     return `projects/${sessionStorage.getItem(AppConst.curPro) ?? 0}`;
 };
 
 export const Routes = {
-    Analytics: () => `/dashboard/${getPrefix()}/analytics`,
-    Environment: () => `/dashboard/${getPrefix()}/env`,
-    Featureflag: () => `/dashboard/${getPrefix()}/feature-flag`,
-    Rules: () => `/dashboard/${getPrefix()}/rules`,
-    SdkKeys: () => `/dashboard/${getPrefix()}/sdk-keys`,
-    AuditLogs: () => `/dashboard/${getPrefix()}/audit-logs`,
+    Analytics: () => `/dashboard/analytics`,
+    Environment: () => `/dashboard/env`,
+    Featureflag: () => `/dashboard/feature-flag`,
+    Rules: () => `/dashboard/rules`,
+    SdkKeys: () => `/dashboard/sdk-keys`,
+    AuditLogs: () => `/dashboard/audit-logs`,
     Projects: () => "/dashboard/projects",
     Team: () => "/dashboard/team",
     Account: () => "/dashboard/account",

@@ -8,7 +8,6 @@ import { ReactNode, useEffect, useState } from "react";
 
 export default function Providers({ children }: { children: ReactNode }) {
   const [qc] = useState(() => new QueryClient());
-
   useEffect(() => {
     const unsubscribe = installAuthStorageSync();
     loadAccessTokenFromStorage();
