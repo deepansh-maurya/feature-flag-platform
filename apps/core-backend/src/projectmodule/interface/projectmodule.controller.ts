@@ -35,20 +35,26 @@ export class ProjectmoduleController {
   @Post()
   createProject(@Body() dto: CreateProjectRequestDto, @Req() req: Request) {
     const { workspaceId } = req.user as any;
-      const incoming = dto as any;
-      // normalize langSupport: allow clients to send JSON string, comma-separated, or array
-      if (incoming.langSupport && !Array.isArray(incoming.langSupport)) {
-        try {
-          incoming.langSupport = JSON.parse(incoming.langSupport as any);
-        } catch (e) {
-          // fallback: split comma-separated
-          if (typeof incoming.langSupport === 'string') {
-            incoming.langSupport = incoming.langSupport.split(',').map((s: string) => s.trim()).filter(Boolean);
-          }
+    const incoming = dto as any;
+    // normalize langSupport: allow clients to send JSON string, comma-separated, or array
+    if (incoming.langSupport && !Array.isArray(incoming.langSupport)) {
+      try {
+        incoming.langSupport = JSON.parse(incoming.langSupport as any);
+      } catch (e) {
+        // fallback: split comma-separated
+        if (typeof incoming.langSupport === 'string') {
+          incoming.langSupport = incoming.langSupport
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
         }
       }
+    }
 
-      const payload: CreateProjectDto = { ...(incoming as any), workspaceId: workspaceId as string };
+    const payload: CreateProjectDto = {
+      ...(incoming as any),
+      workspaceId: workspaceId as string,
+    };
     return this.svc.createProject(payload);
   }
 
@@ -74,7 +80,10 @@ export class ProjectmoduleController {
         incoming.langSupport = JSON.parse(incoming.langSupport as any);
       } catch (e) {
         if (typeof incoming.langSupport === 'string') {
-          incoming.langSupport = incoming.langSupport.split(',').map((s: string) => s.trim()).filter(Boolean);
+          incoming.langSupport = incoming.langSupport
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
         }
       }
     }
@@ -94,14 +103,31 @@ export class ProjectmoduleController {
     @Param('projectId') projectId: string,
     @Body() dto: AddEnvironmentDto,
   ) {
-    console.log(projectId," ");
-    
+    console.log(projectId, ' ', dto, 97);
+
     return this.svc.addEnvironment({ ...dto, projectId });
   }
 
   @Get(':projectId/environments')
   listEnvironments(@Param('projectId') projectId: string) {
     return this.svc.listEnvironments(projectId);
+  }
+
+  @Patch(':projectId/environments/:envId')
+  updateEnvironment(
+    @Param('projectId') projectId: string,
+    @Param('envId') envId: string,
+    @Body() dto: any,
+  ) {
+    return this.svc.updateEnvironment(projectId, envId, dto);
+  }
+
+  @Delete(':projectId/environments/:envId')
+  deleteEnvironment(
+    @Param('projectId') projectId: string,
+    @Param('envId') envId: string,
+  ) {
+    return this.svc.deleteEnvironment(projectId, envId);
   }
 
   /* -------------------- SDK Keys -------------------- */

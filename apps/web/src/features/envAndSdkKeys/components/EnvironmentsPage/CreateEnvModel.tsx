@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import styles from "./CreateEnvModal.module.css";
 import { Env } from "./EnvironmentsPage";
 
@@ -6,48 +6,81 @@ export default function CreateEnvModal({
   open,
   onClose,
   onCreate,
+  onUpdate,
+  initial,
   existingNames,
   existingKeys,
   cloneableEnvs,
 }: {
   open: boolean;
   onClose: () => void;
-  onCreate: (env: Env) => void;
+  onCreate?: (env: Env) => void;
+  onUpdate?: (env: Env) => void;
+  initial?: Env | null;
   existingNames: string[];
   existingKeys: string[];
   cloneableEnvs: Env[];
 }) {
-  const [name, setName] = useState ("");
-  const [key, setKey] = useState("");
-  const [isProd, setIsProd] = useState(false);
-  const [isDefault, setIsDefault] = useState(false);
+  const [name, setName] = useState (initial?.name ?? "");
+  const [key, setKey] = useState(initial?.key ?? "");
+  const [isProd, setIsProd] = useState(initial?.isProd ?? false);
+  const [isDefault, setIsDefault] = useState(initial?.isDefault ?? false);
+
+  useEffect(() => {
+    if (!open) return;
+    setName(initial?.name ?? "");
+    setKey(initial?.key ?? "");
+    setIsProd(initial?.isProd ?? false);
+    setIsDefault(initial?.isDefault ?? false);
+  }, [initial, open]);
 
   const slug = useMemo(() => (key || slugify(name)), [key, name]);
+  // When editing, exclude the current env's own name/key from the uniqueness checks
+  const filteredExistingNames = useMemo(() =>
+    initial ? existingNames.filter((n) => n !== initial.name.toLowerCase()) : existingNames,
+    [existingNames, initial]
+  );
+
+  const filteredExistingKeys = useMemo(() =>
+    initial ? existingKeys.filter((k) => k !== (initial.key ?? '').toLowerCase()) : existingKeys,
+    [existingKeys, initial]
+  );
 
   const nameErr = useMemo(() => {
     const n = name.trim().toLowerCase();
     if (n.length < 2) return "Name too short";
-    if (existingNames.includes(n)) return "Name already exists";
+    if (filteredExistingNames.includes(n)) return "Name already exists";
     return "";
-  }, [name, existingNames]);
+  }, [name, filteredExistingNames]);
 
   const keyErr = useMemo(() => {
     const k = slug.toLowerCase();
     if (!/^[a-z0-9-]{2,30}$/.test(k)) return "Use a-z 0-9 - (2-30)";
-    if (existingKeys.includes(k)) return "Key already exists";
+    if (filteredExistingKeys.includes(k)) return "Key already exists";
     return "";
-  }, [slug, existingKeys]);
+  }, [slug, filteredExistingKeys]);
 
-  const canSubmit = !nameErr && !keyErr 
+  const isDirty = useMemo(() => {
+    if (!initial) return true; // create mode -> treat as dirty when fields valid
+    const nameChanged = name.trim() !== (initial.name ?? "");
+    const keyChanged = slug !== (initial.key ?? "");
+    const prodChanged = isProd !== !!initial.isProd;
+    const defChanged = isDefault !== !!initial.isDefault;
+    return nameChanged || keyChanged || prodChanged || defChanged;
+  }, [initial, name, slug, isProd, isDefault]);
+
+  const canSubmit = !nameErr && !keyErr && (initial ? isDirty : true);
 
 
+  // if open becomes true after initial changes, ensure local state is synced
+  // (simple approach: re-init when initial changes)
   if (!open) return null;
 
   return (
     <div className={styles.backdrop} role="dialog" aria-modal="true" aria-label="Create environment">
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>Create environment</h3>
+          <h3 className={styles.modalTitle}>{initial ? 'Update environment' : 'Create environment'}</h3>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">✕</button>
         </div>
 
@@ -97,11 +130,16 @@ export default function CreateEnvModal({
                 linkedFlags: [],
               };
               console.log(env);
-              
-              onCreate(env);
+              if (initial && onUpdate) {
+                onUpdate(env);
+                return;
+              }
+              if (!initial && onCreate) {
+                onCreate(env);
+              }
             }}
           >
-            Create environment
+            {initial ? 'Update environment' : 'Create environment'}
           </button>
         </div>
       </div>
@@ -127,8 +165,9 @@ function Field({ label, value, onChange, placeholder, error, autoFocus, small }:
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
+        disabled={label.includes("key") && value != ""}
       />
-      {error ? <div className={styles.error}>{error}</div> : null}
+      {error && label.includes("key") && value == "" ? <div className={styles.error}>{error}</div> : null}
     </div>
   );
 }

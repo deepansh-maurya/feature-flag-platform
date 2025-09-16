@@ -4,6 +4,8 @@ export interface AddEnvironmentDto {
     projectId: string;
     workspaceId: string;
     key: string;
+    isDefault:boolean   
+    isProd:boolean
     displayName: string;
 }
 

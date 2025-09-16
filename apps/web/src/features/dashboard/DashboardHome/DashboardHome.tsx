@@ -44,7 +44,7 @@ export default function DashboardHome({
 }: DashboardHomeProps) {
   const { data } = useSubscription();
 
-  console.log(data);
+  console.log(data);    
 
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();

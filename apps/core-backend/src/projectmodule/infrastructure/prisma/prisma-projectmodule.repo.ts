@@ -25,20 +25,20 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   async createProject(input: CreateProjectDto): Promise<ProjectSummaryDto> {
     const { workspaceId, name, guardrails, langSupport, timeZone } = input;
 
-
     const p = await this.prisma.project.create({
       data: {
         workspaceId,
         name,
         rolloutPollicies: guardrails as any,
         // DB currently stores langSupport as TEXT (JSON string). stringify here so writes succeed.
-        langSupport: Array.isArray(langSupport) ? JSON.stringify(langSupport) : (langSupport as any),
+        langSupport: Array.isArray(langSupport)
+          ? JSON.stringify(langSupport)
+          : (langSupport as any),
         timeZone: timeZone,
       },
     });
 
-    console.log(p,"project created");
-    
+    console.log(p, 'project created');
 
     return this.toProjectSummaryDto(p);
   }
@@ -76,7 +76,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       // stringify array into JSON to match DB TEXT column
       data.langSupport = Array.isArray(input.langSupport)
         ? JSON.stringify(input.langSupport)
-        : input.langSupport as any;
+        : (input.langSupport as any);
     }
 
     const p = await this.prisma.project.update({
@@ -101,11 +101,14 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   /* ======================= Environments ======================= */
 
   async addEnvironment(input: AddEnvironmentDto): Promise<EnvironmentDto> {
+    console.log(input, 105);
+
     const env = await this.prisma.environment.create({
       data: {
         projectId: input.projectId,
         workspaceId: input.workspaceId,
-        
+        isDefault: input.isDefault,
+        isProd: input.isProd,
         key: input.key,
         displayName: input.displayName,
       },
@@ -118,6 +121,8 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       where: { projectId },
       orderBy: { createdAt: 'asc' },
     });
+    console.log(envs, 122);
+
     return envs.map(this.toEnvironmentDto);
   }
 
@@ -129,6 +134,59 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       where: { projectId, key: envKey },
     });
     return env ? this.toEnvironmentDto(env) : null;
+  }
+
+  async updateEnvironment(projectId: string, envId: string, patch: any): Promise<EnvironmentDto> {
+    // normalize booleans
+    const doSetDefault = patch.isDefault === true;
+    const doSetProd = patch.isProd === true;
+
+    const res = await this.prisma.$transaction(async (tx) => {
+      // if isDefault requested, clear others
+      if (doSetDefault) {
+        await tx.environment.updateMany({
+          where: { projectId, NOT: { id: envId } },
+          data: { isDefault: false },
+        });
+      }
+
+      if (doSetProd) {
+        await tx.environment.updateMany({
+          where: { projectId, NOT: { id: envId } },
+          data: { isProd: false },
+        });
+      }
+
+      const data: any = {};
+      if (typeof patch.displayName === 'string') data.displayName = patch.displayName;
+      if (typeof patch.isDefault === 'boolean') data.isDefault = patch.isDefault;
+      if (typeof patch.isProd === 'boolean') data.isProd = patch.isProd;
+
+      const updated = await tx.environment.update({
+        where: { id: envId },
+        data,
+      });
+
+      return updated;
+    });
+
+    return this.toEnvironmentDto(res as any);
+  }
+
+  async deleteEnvironment(projectId: string, envId: string): Promise<void> {
+    try {
+      // ensure env belongs to project (optional safety)
+      const existing = await this.prisma.environment.findUnique({ where: { id: envId } });
+      if (!existing || existing.projectId !== projectId) {
+        throw new NotFoundException('Environment not found');
+      }
+      await this.prisma.environment.delete({ where: { id: envId } });
+    } catch (e: any) {
+      if (e && e.code === 'P2025') {
+        throw new NotFoundException('Environment not found');
+      }
+      throw e;
+    }
   }
 
   /* ========================= SDK Keys ========================= */
@@ -249,7 +307,11 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
         return [];
       } catch (e) {
         // malformed JSON -> fallback to splitting by comma
-        if (typeof p.langSupport === 'string') return p.langSupport.split(',').map((s: string) => s.trim()).filter(Boolean);
+        if (typeof p.langSupport === 'string')
+          return p.langSupport
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean);
         return [];
       }
     })(),
@@ -261,6 +323,8 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     id: e.id,
     projectId: e.projectId,
     key: e.key,
+    isDefault: e.isDefault,
+    isProd: e.isProd,
     displayName: e.displayName,
     createdAt: e.createdAt,
     updatedAt: e.updatedAt,

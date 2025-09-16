@@ -21,13 +21,15 @@ export async function addEnvironment(
   );
   return data as EnvironmentDto;
 }
-    
+
 export async function listEnvironments(
   projectId: string
 ): Promise<EnvironmentDto[]> {
   const { data } = await http.get(
     `/projects/${projectId}/environments`
   );
+  console.log(data);
+  
   return data as EnvironmentDto[];
 }
 
@@ -39,6 +41,22 @@ export async function findEnvironment(
     `/projects/${projectId}/environments/${encodeURIComponent(envKey)}`
   );
   return (data ?? null) as EnvironmentDto | null;
+}
+
+export async function updateEnvironment(
+  projectId: string,
+  envId: string,
+  body: Partial<{ displayName: string; isDefault: boolean; isProd: boolean }> 
+): Promise<EnvironmentDto> {
+  const { data } = await http.patch(
+    `/projects/${projectId}/environments/${envId}`,
+    body
+  );
+  return data as EnvironmentDto;
+}
+
+export async function deleteEnvironment(projectId: string, envId: string): Promise<void> {
+  await http.delete(`/projects/${projectId}/environments/${envId}`);
 }
 
 /* -------------------- SDK Keys -------------------- */

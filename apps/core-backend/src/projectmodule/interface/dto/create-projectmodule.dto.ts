@@ -41,6 +41,9 @@ export class EnvironmentDto {
   @IsString() @IsNotEmpty() key: string;
   @IsString() @IsNotEmpty() displayName: string;
 
+  isDefault:boolean
+  isProd:boolean
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -144,10 +147,24 @@ export class UpdateProjectDto {
 export class AddEnvironmentDto {
   @IsNotEmpty() projectId: string;
   @IsNotEmpty() workspaceId: string;
-  @IsBoolean() isDefault?: boolean;
-  @IsBoolean() isProd?: boolean;
+  @IsOptional() isDefault?: any;
+  @IsOptional() isProd?: any;
   @IsString() @IsNotEmpty() key: string;
   @IsString() @IsNotEmpty() displayName: string;
+}
+
+export class UpdateEnvironmentDto {
+  @IsOptional()
+  @IsString()
+  displayName?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isDefault?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isProd?: boolean;
 }
 
 export class IssueSdkKeyDto {

@@ -10,10 +10,12 @@ import {
   useEnvironments,
   useAddEnvironment
 } from "@/src/features/envAndSdkKeys/hook";
+import { useUpdateEnvironment, useDeleteEnvironment } from "@/src/features/envAndSdkKeys/hook";
 import { useAppContext } from "@/src/shared/context/AppContext";
 import { log } from "node:console";
 
 export type Env = {
+  id?: string;
   name: string;
   key?: string;
   isDefault: boolean;
@@ -29,10 +31,10 @@ export default function EnvironmentsPage() {
   const [openCreate, setOpenCreate] = useState(false);
 
   // which row's “…” flags popover is open (null = none)
-  const [openFlagsFor, setOpenFlagsFor] = useState<number | null>(null);
+  const [openFlagsFor, setOpenFlagsFor] = useState<string | null>(null);
 
-  // which row's Link Flags modal is open
-  const [openLinkModalFor, setOpenLinkModalFor] = useState<number | null>(null);
+  // which env's Link Flags modal is open (by env id)
+  const [openLinkModalFor, setOpenLinkModalFor] = useState<string | null>(null);
 
   const projectIdFromStorage = sessionStorage.getItem(AppConst.curPro)!;
 
@@ -41,6 +43,9 @@ export default function EnvironmentsPage() {
   const { workspace } = useAppContext();
   const { data: serverEnvs } = useEnvironments(projectIdFromStorage);
   const addEnvMutation = useAddEnvironment(projectIdFromStorage ?? "");
+  const updateEnvMutation = useUpdateEnvironment(projectIdFromStorage ?? "");
+  const deleteEnvMutation = useDeleteEnvironment(projectIdFromStorage ?? "");
+  const [editingEnvId, setEditingEnvId] = useState<string | null>(null);
 
   // close the flags popover when clicking anywhere else
   useEffect(() => {
@@ -61,22 +66,60 @@ export default function EnvironmentsPage() {
     [envs]
   );
 
-  function setDefault(idx: number) {
+  function setDefault(envId: string) {
+    const idx = envs.findIndex((e) => e.id === envId);
+    if (idx === -1) return;
+    // If this environment is backed by the server, call update to set isDefault=true
+    const target = envs[idx];
+    if (target?.id && projectIdFromStorage) {
+      // optimistic UI update
+      const prev = envs;
+      setEnvs((curr) => curr.map((e, i) => ({ ...e, isDefault: i === idx })));
+      updateEnvMutation.mutate(
+        { envId: target.id, body: { isDefault: true } },
+        {
+          onError: () => {
+            // rollback
+            setEnvs(prev);
+          },
+        }
+      );
+      return;
+    }
+
+    // fallback for local-only envs
     setEnvs((curr) => curr.map((e, i) => ({ ...e, isDefault: i === idx })));
   }
 
-  function deleteEnv(idx: number) {
+  function deleteEnv(envId: string) {
+    const idx = envs.findIndex((e) => e.id === envId);
+    if (idx === -1) return;
     if (envs[idx].isDefault) return;
-    setEnvs((curr) => curr.filter((_, i) => i !== idx));
+
+    // optimistic remove
+    const prev = envs;
+    setEnvs((curr) => curr.filter((e) => e.id !== envId));
+
+    if (projectIdFromStorage && envId) {
+      deleteEnvMutation.mutate(
+        { envId },
+        {
+          onError: () => setEnvs(prev),
+        }
+      );
+      return;
+    }
   }
 
   function addEnvFromModal(newEnv: Env) {
     console.log(projectIdFromStorage);
-    
+
     if (projectIdFromStorage && workspace?.id) {
       addEnvMutation.mutate({
         projectId: projectIdFromStorage,
         workspaceId: workspace.id,
+        isDefault: newEnv.isDefault,
+        isProd: newEnv.isProd!,
         key: newEnv.key ?? newEnv.name.toLowerCase(),
         displayName: newEnv.name
       });
@@ -95,10 +138,11 @@ export default function EnvironmentsPage() {
   useEffect(() => {
     if (!serverEnvs) return;
     const mapped: Env[] = serverEnvs.map((s) => ({
+      id: s.id,
       name: s.displayName,
       key: s.key,
-      isDefault: false,
-      isProd: false,
+      isDefault: s.isDefault,
+      isProd: s.isProd,
       linkedFlags: []
     }));
     setEnvs(mapped);
@@ -132,13 +176,21 @@ export default function EnvironmentsPage() {
           </thead>
 
           <tbody className={styles.body}>
-            {envs.map((env, idx) => {
+            {(() => {
+              // render production env first
+              const prod = envs.find((e) => e.isProd);
+              const rest = envs.filter((e) => !e.isProd);
+              const display = prod ? [prod, ...rest] : envs;
+              return display.map((env, idx) => {
               const moreThanTwo = env.linkedFlags.length > 2;
               const firstTwo = env.linkedFlags.slice(0, 2);
 
               return (
-                <tr key={(env.key || env.name) + String(idx)}>
-                  <td className={styles.envName}>{env.name}</td>
+                <tr key={env.id ?? (env.key || env.name) + String(idx)} className={env.isProd ? styles.prodRow : ""}>
+                  <td className={styles.envName}>
+                    {env.name}
+                    {env.isProd ? <span className={styles.prodBadge}>prod</span> : null}
+                  </td>
                   <td className={styles.envName}>{env.key}</td>
 
                   <td>
@@ -147,7 +199,7 @@ export default function EnvironmentsPage() {
                     ) : (
                       <button
                         className={styles.setDefaultBtn}
-                        onClick={() => setDefault(idx)}
+                        onClick={() => setDefault(env.id ?? "")}
                         title="Set as default"
                       >
                         Set Default
@@ -171,21 +223,21 @@ export default function EnvironmentsPage() {
                     {/* always show the ellipsis manage button */}
                     <button
                       className={styles.moreBtn}
-                      data-flags-btn={idx}
+                      data-flags-btn={env.id}
                       onClick={() =>
-                        setOpenFlagsFor((open) => (open === idx ? null : idx))
+                        setOpenFlagsFor((open) => (open === env.id ? null : env.id ?? null))
                       }
                       aria-haspopup="dialog"
-                      aria-expanded={openFlagsFor === idx}
+                      aria-expanded={openFlagsFor === env.id}
                       aria-label="Manage flags"
                       title="Manage flags"
                     >
                       …
                     </button>
 
-                    {openFlagsFor === idx && (
+                    {openFlagsFor === env.id && (
                       <div
-                        id={`flags-popover-${idx}`}
+                        id={`flags-popover-${env.id}`}
                         className={styles.popover}
                         role="dialog"
                       >
@@ -195,7 +247,7 @@ export default function EnvironmentsPage() {
                               className={styles.popoverAction}
                               onClick={() => {
                                 setOpenFlagsFor(null);
-                                setOpenLinkModalFor(idx);
+                                setOpenLinkModalFor(env.id ?? null);
                               }}
                             >
                               Link flags
@@ -215,7 +267,7 @@ export default function EnvironmentsPage() {
                                 className={styles.popoverAction}
                                 onClick={() => {
                                   setOpenFlagsFor(null);
-                                  setOpenLinkModalFor(idx);
+                                  setOpenLinkModalFor(env.id ?? null);
                                 }}
                               >
                                 Manage linked flags
@@ -231,7 +283,7 @@ export default function EnvironmentsPage() {
                     <button
                       className={styles.deleteBtn}
                       style={{ display: "flex" }}
-                      onClick={() => deleteEnv(idx)}
+                      onClick={() => deleteEnv(env.id ?? "")}
                       title={env.isDefault ? "Can't delete default" : "Delete"}
                       disabled={env.isDefault}
                     >
@@ -239,16 +291,20 @@ export default function EnvironmentsPage() {
                     </button>
                     <button
                       className={styles.deleteBtn}
-                      style={{ display: "flex" }}
-                      onClick={() => deleteEnv(idx)}
-                      title={env.isDefault ? "Can't delete default" : "Delete"}
+                      style={{ display: "flex", marginLeft: 8 }}
+                      onClick={() => {
+                        setEditingEnvId(env.id ?? null);
+                        setOpenCreate(true);
+                      }}
+                      title="Edit"
                     >
                       ✏️
                     </button>
                   </td>
                 </tr>
               );
-            })}
+              });
+            })()}
           </tbody>
         </table>
       </div>
@@ -256,10 +312,19 @@ export default function EnvironmentsPage() {
       {openCreate && (
         <CreateEnvModal
           open={openCreate}
-          onClose={() => setOpenCreate(false)}
+          onClose={() => { setOpenCreate(false); setEditingEnvId(null); }}
+          initial={editingEnvId !== null ? envs.find((e) => e.id === editingEnvId) : undefined}
           onCreate={(env) => {
             addEnvFromModal(env);
             setOpenCreate(false);
+          }}
+          onUpdate={(env) => {
+            if (!projectIdFromStorage) return;
+            const target = envs.find((e) => e.id === editingEnvId);
+            if (!target || !target.id) return;
+            updateEnvMutation.mutate({ envId: target.id, body: { displayName: env.name, isDefault: env.isDefault, isProd: env.isProd } });
+            setOpenCreate(false);
+            setEditingEnvId(null);
           }}
           existingNames={envNames}
           existingKeys={envKeys}
@@ -270,14 +335,10 @@ export default function EnvironmentsPage() {
       {openLinkModalFor !== null && (
         <LinkFlagsModal
           open={openLinkModalFor !== null}
-          env={envs[openLinkModalFor!]}
+          env={envs.find((e) => e.id === openLinkModalFor!)!}
           onClose={() => setOpenLinkModalFor(null)}
           onSave={(linked: string[]) => {
-            setEnvs((curr) =>
-              curr.map((e, i) =>
-                i === openLinkModalFor ? { ...e, linkedFlags: linked } : e
-              )
-            );
+            setEnvs((curr) => curr.map((e) => (e.id === openLinkModalFor ? { ...e, linkedFlags: linked } : e)));
             setOpenLinkModalFor(null);
           }}
         />

@@ -75,6 +75,20 @@
   text-transform: lowercase;
 }
 
+/* Production row highlight */
+.prodRow { background: linear-gradient(90deg, rgba(88, 100, 220, 0.08), rgba(20, 30, 60, 0.02)); }
+.prodBadge {
+  display: inline-block;
+  background: linear-gradient(90deg, #ff7a00 0, #ff3d00 100%);
+  color: #08121a;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 800;
+  margin-left: 8px;
+  font-size: 0.76rem;
+  vertical-align: middle;
+}
+
 /* Default / Set Default */
 .defaultTag {
   background: linear-gradient(90deg, #20e7d1 0, #5c8efc 100%);

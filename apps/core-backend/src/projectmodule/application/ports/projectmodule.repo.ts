@@ -30,6 +30,8 @@ export interface ProjectmoduleRepo {
   addEnvironment(input: AddEnvironmentDto): Promise<EnvironmentDto>;
   listEnvironments(projectId: string): Promise<EnvironmentDto[]>;
   findEnvironment(projectId: string, envKey: string): Promise<EnvironmentDto | null>;
+  updateEnvironment(projectId: string, envId: string, patch: any): Promise<EnvironmentDto>;
+  deleteEnvironment(projectId: string, envId: string): Promise<void>;
 
   // SDK Keys
   issueSdkKey(input: IssueSdkKeyDto): Promise<SdkKeyDto>;

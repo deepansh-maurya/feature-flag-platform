@@ -254,8 +254,8 @@ model Environment {
   projectId   String
   key         String
   displayName String
-  isProd      Boolean
-  isDefault   Boolean
+  isProd      Boolean  @default(false)
+  isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   workspaceId String

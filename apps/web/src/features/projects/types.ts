@@ -31,6 +31,8 @@ export interface EnvironmentDto {
   id: ID;
   projectId: ID;
   key: string;
+  isDefault: boolean;
+  isProd: boolean;
   displayName: string;
   createdAt: IsoDate;
   updatedAt: IsoDate;

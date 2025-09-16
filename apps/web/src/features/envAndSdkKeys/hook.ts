@@ -20,6 +20,8 @@ import {
   addEnvironment,
   listEnvironments,
   findEnvironment,
+  updateEnvironment,
+  deleteEnvironment,
   // keys
   issueSdkKey,
   revokeSdkKey,
@@ -105,6 +107,28 @@ export function useAddEnvironment(projectId: string) {
     mutationFn: (dto) => addEnvironment(dto),
     onSuccess: () => invalidateEnvs(qc, projectId),
   });
+}
+
+export function useUpdateEnvironment(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation<EnvironmentDto, Error, { envId: string; body: Partial<{ displayName?: string; isDefault?: boolean; isProd?: boolean }> }>(
+    {
+      mutationFn: ({ envId, body }) => updateEnvironment(projectId, envId, body as any),
+      onSuccess: () => invalidateEnvs(qc, projectId),
+    }
+  );
+}
+
+export function useDeleteEnvironment(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation<void, Error, { envId: string }>(
+    {
+      mutationFn: ({ envId }: { envId: string }) => deleteEnvironment(projectId, envId),
+      onSuccess: () => {
+        invalidateEnvs(qc, projectId);
+      },
+    }
+  );
 }
 
 export function useIssueSdkKey(projectId: string) {

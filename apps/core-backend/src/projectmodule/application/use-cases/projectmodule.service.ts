@@ -45,12 +45,20 @@ export class ProjectmoduleService {
     return this.repo.addEnvironment(dto);
   }
 
-  listEnvironments(projectId: string) {
+    listEnvironments(projectId: string) {
     return this.repo.listEnvironments(projectId);
   }
 
   findEnvironment(projectId: string, envKey: string) {
     return this.repo.findEnvironment(projectId, envKey);
+  }
+
+  updateEnvironment(projectId: string, envId: string, patch: any) {
+    return this.repo.updateEnvironment(projectId, envId, patch);
+  }
+
+  deleteEnvironment(projectId: string, envId: string) {
+    return this.repo.deleteEnvironment(projectId, envId);
   }
 
   /* -------------------- SDK Keys -------------------- */
