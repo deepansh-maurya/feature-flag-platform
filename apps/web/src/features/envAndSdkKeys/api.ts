@@ -16,17 +16,17 @@ export async function addEnvironment(
 ): Promise<EnvironmentDto> {
   const { projectId, ...body } = input as any;
   const { data } = await http.post(
-    `/api/v1/projects/${projectId}/environments`,
-    body
+    `/projects/${projectId}/environments`,
+    {...body,projectId}
   );
   return data as EnvironmentDto;
 }
-
+    
 export async function listEnvironments(
   projectId: string
 ): Promise<EnvironmentDto[]> {
   const { data } = await http.get(
-    `/api/v1/projects/${projectId}/environments`
+    `/projects/${projectId}/environments`
   );
   return data as EnvironmentDto[];
 }
@@ -36,7 +36,7 @@ export async function findEnvironment(
   envKey: string
 ): Promise<EnvironmentDto | null> {
   const { data } = await http.get(
-    `/api/v1/projects/${projectId}/environments/${encodeURIComponent(envKey)}`
+    `/projects/${projectId}/environments/${encodeURIComponent(envKey)}`
   );
   return (data ?? null) as EnvironmentDto | null;
 }
@@ -49,7 +49,7 @@ export async function issueSdkKey(
 ): Promise<SdkKeyDto> {
   const { projectId, envKey, ...body } = input as any;
   const { data } = await http.post(
-    `/api/v1/projects/${projectId}/environments/${encodeURIComponent(
+    `/projects/${projectId}/environments/${encodeURIComponent(
       envKey
     )}/sdk-keys`,
     body
@@ -62,7 +62,7 @@ export async function revokeSdkKey(
   input: RevokeSdkKeyDto
 ): Promise<void> {
   const { sdkKeyId, reason } = input as any;
-  await http.post(`/api/v1/sdk-keys/${sdkKeyId}/revoke`, { reason });
+  await http.post(`/sdk-keys/${sdkKeyId}/revoke`, { reason });
 }
 
 /**
@@ -74,7 +74,7 @@ export async function rotateSdkKey(
 ): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }> {
   const { projectId, envKey, type, ...body } = input as any;
   const { data } = await http.post(
-    `/api/v1/projects/${projectId}/environments/${encodeURIComponent(
+    `/projects/${projectId}/environments/${encodeURIComponent(
       envKey
     )}/sdk-keys/rotate`,
     { type, ...body }
@@ -88,7 +88,7 @@ export async function listSdkKeys(
   envKey?: string,
   type?: SdkKeyType
 ): Promise<SdkKeyDto[]> {
-  const { data } = await http.get(`/api/v1/projects/${projectId}/sdk-keys`, {
+  const { data } = await http.get(`/projects/${projectId}/sdk-keys`, {
     params: { envKey, type },
   });
   return data as SdkKeyDto[];

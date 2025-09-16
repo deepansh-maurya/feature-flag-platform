@@ -24,7 +24,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <html lang="en">
       <head>
@@ -37,9 +36,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AppProvider>
-          <Providers>{children}</Providers>
-        </AppProvider>
+        <Providers>
+          <AppProvider>{children}</AppProvider>
+        </Providers>
       </body>
     </html>
   );

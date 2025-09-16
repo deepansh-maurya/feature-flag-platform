@@ -1,12 +1,7 @@
-
-// -----------------------------------------------------------------------------
-// CreateEnvModal — simple UI, valuable fields (name, key, prod, default, keys)
-
 import { useMemo, useState } from "react";
-import styles from "./EnvironmentsPage.module.css";
+import styles from "./CreateEnvModal.module.css";
 import { Env } from "./EnvironmentsPage";
 
-// -----------------------------------------------------------------------------
 export default function CreateEnvModal({
   open,
   onClose,
@@ -26,10 +21,6 @@ export default function CreateEnvModal({
   const [key, setKey] = useState("");
   const [isProd, setIsProd] = useState(false);
   const [isDefault, setIsDefault] = useState(false);
-  const [allowClient, setAllowClient] = useState(true);
-  const [serverKey, setServerKey] = useState(genKey(32));
-  const [clientKey, setClientKey] = useState(genKey(28));
-  const [cloneFrom, setCloneFrom] = useState<string>("");
 
   const slug = useMemo(() => (key || slugify(name)), [key, name]);
 
@@ -47,26 +38,8 @@ export default function CreateEnvModal({
     return "";
   }, [slug, existingKeys]);
 
-  const canSubmit = !nameErr && !keyErr && (!!serverKey && (!allowClient || !!clientKey));
+  const canSubmit = !nameErr && !keyErr 
 
-  function submit() {
-    if (!canSubmit) return;
-
-    const base: Env = {
-      name: name.trim(),
-      key: slug,
-      isDefault,
-      isProd,
-      sdkKeys: { server: serverKey, client: allowClient ? clientKey : undefined },
-      linkedFlags: [],
-    };
-
-    // Clone linked flags from another env if selected
-    const source = cloneableEnvs.find((e) => (e.key || e.name) === cloneFrom);
-    const withFlags = source ? { ...base, linkedFlags: [...(source.linkedFlags || [])] } : base;
-
-    onCreate(withFlags);
-  }
 
   if (!open) return null;
 
@@ -107,37 +80,27 @@ export default function CreateEnvModal({
               Make default
             </label>
           </div>
-          <div className={styles.hint}>Prod envs may enforce approvals/guardrails (set at project level).</div>
-
-          <div className={styles.sectionTitleSm}>SDK keys</div>
-          <div className={styles.grid2}>
-            <Field label="Server SDK key" value={serverKey} onChange={setServerKey} />
-            <div className={styles.rowSplit}>
-              <label className={styles.checkboxLabel}>
-                <input type="checkbox" checked={allowClient} onChange={(e) => setAllowClient(e.target.checked)} />
-                Allow client-side SDK
-              </label>
-              {allowClient && (
-                <div className={styles.clientKeyRow}>
-                  <Field small label="Client SDK key" value={clientKey} onChange={setClientKey} />
-                  <button className={styles.keyGenBtn} onClick={() => setClientKey(genKey(28))} title="Regenerate">↻</button>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className={styles.rowSplit}>
-            <div className={styles.keyRowLeft}>
-              <button className={styles.keyGenBtn} onClick={() => setServerKey(genKey(32))} title="Regenerate">↻</button>
-              <span className={styles.hint}>Keep server keys secret (backend only).</span>
-            </div>
-          </div>
-
-    
         </div>
 
         <div className={styles.modalFooter}>
           <button className={styles.secondaryBtn} onClick={onClose}>Cancel</button>
-          <button className={styles.primaryBtn} disabled={!canSubmit} onClick={submit}>
+          <button
+            className={styles.primaryBtn}
+            disabled={!canSubmit}
+            onClick={() => {
+              if (!canSubmit) return;
+              const env: Env = {
+                name: name.trim(),
+                key: slug,
+                isDefault,
+                isProd,
+                linkedFlags: [],
+              };
+              console.log(env);
+              
+              onCreate(env);
+            }}
+          >
             Create environment
           </button>
         </div>
@@ -146,9 +109,6 @@ export default function CreateEnvModal({
   );
 }
 
-// -----------------------------------------------------------------------------
-// Small primitives
-// -----------------------------------------------------------------------------
 function Field({ label, value, onChange, placeholder, error, autoFocus, small }: {
   label: string;
   value: string;
@@ -173,29 +133,6 @@ function Field({ label, value, onChange, placeholder, error, autoFocus, small }:
   );
 }
 
-function Select({ label, value, onChange, options }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <div className={styles.inputCol}>
-      <label className={styles.label}>{label}</label>
-      <select className={styles.input} value={value} onChange={(e) => onChange(e.target.value)}>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-// -----------------------------------------------------------------------------
-// Utils
-// -----------------------------------------------------------------------------
 function slugify(s: string) {
   return s
     .toLowerCase()
@@ -204,13 +141,4 @@ function slugify(s: string) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")
     .slice(0, 30);
-}
-
-function genKey(len = 24) {
-  if (typeof crypto === "undefined" || !crypto.getRandomValues) {
-    return Array.from({ length: len }, () => Math.floor(Math.random() * 36).toString(36)).join("");
-  }
-  return Array.from(crypto.getRandomValues(new Uint8Array(len)))
-    .map((b) => (b % 36).toString(36))
-    .join("");
 }

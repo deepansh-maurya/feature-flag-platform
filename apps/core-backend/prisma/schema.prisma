@@ -252,11 +252,14 @@ model Project {
 model Environment {
   id          String   @id @default(uuid())
   projectId   String
-  key         String // e.g. dev|stage|prod|canary...
+  key         String
   displayName String
+  isProd      Boolean
+  isDefault   Boolean
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   workspaceId String
+  linkedFlags Flag[]
 
   workspace Workspace @relation("WorkspaceEnvironments", fields: [workspaceId], references: [id], onDelete: Cascade)
   project   Project   @relation("ProjectEnvironments", fields: [projectId], references: [id], onDelete: Cascade)
@@ -353,18 +356,6 @@ model Role {
 
 /////////////////////////////////////
 
-// =======================================
-// Enums
-// =======================================
-
-// =======================================
-// Core
-// =======================================
-
-// =======================================
-// Feature Flags / Versions / Segments
-// =======================================
-
 model Flag {
   id          String   @id @default(uuid())
   name        String   @unique()
@@ -378,9 +369,11 @@ model Flag {
   updatedAt   DateTime @updatedAt
   createdBy   String?
 
-  workspace Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
-  project   Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
-  changes   ChangeRequest[] @relation("FlagChangeRequests")
+  workspace     Workspace       @relation("WorkspaceFlags", fields: [workspaceId], references: [id], onDelete: Cascade)
+  project       Project         @relation("ProjectFlags", fields: [projectId], references: [id], onDelete: Cascade)
+  changes       ChangeRequest[] @relation("FlagChangeRequests")
+  Environment   Environment?    @relation(fields: [environmentId], references: [id])
+  environmentId String?
 
   @@unique([projectId, name])
   @@index([workspaceId])

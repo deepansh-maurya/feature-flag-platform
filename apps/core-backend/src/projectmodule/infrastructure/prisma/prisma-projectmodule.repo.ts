@@ -105,6 +105,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       data: {
         projectId: input.projectId,
         workspaceId: input.workspaceId,
+        
         key: input.key,
         displayName: input.displayName,
       },

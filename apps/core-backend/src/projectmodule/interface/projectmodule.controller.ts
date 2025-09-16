@@ -94,6 +94,8 @@ export class ProjectmoduleController {
     @Param('projectId') projectId: string,
     @Body() dto: AddEnvironmentDto,
   ) {
+    console.log(projectId," ");
+    
     return this.svc.addEnvironment({ ...dto, projectId });
   }
 

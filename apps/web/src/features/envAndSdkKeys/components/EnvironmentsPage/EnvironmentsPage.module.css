@@ -1,365 +1,225 @@
 .wrapper {
-    max-width: 700px;
-    margin: 40px auto 0 auto;
-    padding: 0 18px 60px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 34px;
+  max-width: 950px;
+  margin: 40px auto 0 auto;
+  padding: 0 18px 60px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
 }
 
 .headerRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .headerTitle {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #f1f6ff;
-    letter-spacing: 0.03em;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #f1f6ff;
+  letter-spacing: 0.03em;
 }
 
 .addBtn {
-    background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.06rem;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 35px;
-    box-shadow: 0 2px 16px 0 rgba(44, 125, 237, 0.08);
-    cursor: pointer;
-    transition: background 0.14s, transform 0.10s;
+  background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.06rem;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 35px;
+  box-shadow: 0 2px 16px 0 rgba(44, 125, 237, 0.08);
+  cursor: pointer;
+  transition: background 0.14s, transform 0.10s;
 }
-
-.addBtn:hover {
-    background: linear-gradient(90deg, #2affef 13%, #6286fd 94%);
-    transform: scale(1.04);
-}
+.addBtn:hover { background: linear-gradient(90deg, #2affef 13%, #6286fd 94%); transform: scale(1.04); }
 
 .tableWrapper {
-    background: rgba(28, 34, 66, 0.87);
-    border-radius: 15px;
-    box-shadow: 0 2px 26px 0 rgba(30, 60, 120, 0.09);
-    overflow-x: auto;
-    padding: 20px 6px;
+  background: rgba(28, 34, 66, 0.87);
+  border-radius: 15px;
+  box-shadow: 0 2px 26px 0 rgba(30, 60, 120, 0.09);
+  overflow-x: auto;
+  padding: 20px 6px;
 }
 
 .table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    min-width: 400px;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 400px;
 }
 
+/* ✅ these must be referenced from JSX as styles.head / styles.body */
 .head th,
 .body td {
-    padding: 17px 18px;
-    text-align: left;
+  padding: 17px 18px;
+  text-align: left;
 }
 
 .head th {
-    color: #8cc6fa;
-    font-size: 1.08rem;
-    letter-spacing: 0.04em;
-    font-weight: 700;
-    background: rgba(50, 70, 140, 0.07);
-    border-bottom: 1.5px solid #34457a;
+  color: #8cc6fa;
+  font-size: 1.08rem;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  background: rgba(50, 70, 140, 0.07);
+  border-bottom: 1.5px solid #34457a;
 }
 
-.body tr:hover {
-    background: rgba(44, 125, 237, 0.13);
-}
+.body tr:hover { background: rgba(44, 125, 237, 0.13); }
 
 .envName {
-    font-weight: 700;
-    color: #25ffe7;
-    font-size: 1.08rem;
-    text-transform: lowercase;
+  font-weight: 700;
+  color: #25ffe7;
+  font-size: 1.08rem;
+  text-transform: lowercase;
 }
 
+/* Default / Set Default */
 .defaultTag {
-    background: linear-gradient(90deg, #20e7d1 0, #5c8efc 100%);
-    color: #252436;
-    padding: 6px 18px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.98em;
-    box-shadow: 0 2px 14px 0 rgba(40, 245, 220, 0.07);
-    letter-spacing: 0.03em;
+  background: linear-gradient(90deg, #20e7d1 0, #5c8efc 100%);
+  color: #252436;
+  padding: 6px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.98em;
+  box-shadow: 0 2px 14px 0 rgba(40, 245, 220, 0.07);
+  letter-spacing: 0.03em;
 }
-
 .setDefaultBtn {
-    background: none;
-    border: 1.2px solid #28ffe1;
-    color: #23ffe0;
-    font-weight: 700;
-    border-radius: 9px;
-    padding: 6px 20px;
-    cursor: pointer;
-    font-size: 0.99em;
-    transition: background 0.13s, color 0.13s;
+  background: none;
+  border: 1.2px solid #28ffe1;
+  color: #23ffe0;
+  font-weight: 700;
+  border-radius: 9px;
+  padding: 6px 20px;
+  cursor: pointer;
+  font-size: 0.99em;
+  transition: background 0.13s, color 0.13s;
 }
+.setDefaultBtn:hover { background: #22ffe133; color: #1a222f; }
 
-.setDefaultBtn:hover {
-    background: #22ffe133;
-    color: #1a222f;
-}
-
+/* Flags (inline) */
+.flagsCell { position: relative; white-space: nowrap; }
 .flagTag {
-    background: linear-gradient(90deg, #4154b7 0, #0cd8a7 100%);
-    color: #fff;
-    padding: 4px 14px;
-    border-radius: 10px;
-    font-size: 0.96em;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-    margin-right: 4px;
+  display: inline-block;
+  background: linear-gradient(90deg, #4154b7 0, #0cd8a7 100%);
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 10px;
+  font-size: 0.96em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin-right: 6px;
+}
+.noFlags { color: #4a5467; font-size: 1.09em; }
+
+/* “…” button to show all flags */
+.moreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid #3b4d8a;
+  background: rgba(44, 58, 104, 0.4);
+  color: #cfe3ff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.moreBtn:hover { background: rgba(44, 58, 104, 0.6); }
+
+/* Popover with remaining flags */
+.popover {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  z-index: 10;
+  background: #12182b;
+  border: 1px solid #32457a;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  border-radius: 12px;
+  padding: 10px;
+  max-height: 220px;
+  min-width: 260px;
+  overflow: auto;
+}
+.popoverList { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.popoverBadge {
+  display: inline-block;
+  background: linear-gradient(90deg, #4154b7 0, #0cd8a7 100%);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: 0.94em;
 }
 
-.noFlags {
-    color: #4a5467;
-    font-size: 1.09em;
+.popoverAction {
+  display: inline-block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid rgba(100,120,200,0.12);
+  color: #cfe3ff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
 }
+.popoverAction:hover { background: rgba(60,80,140,0.06); }
 
-.actionCol {
-    text-align: center;
-}
-
+/* Actions column */
+.actionCol { text-align: center; width: 100px; }
 .deleteBtn {
-    border: none;
-    background: rgba(244, 67, 54, 0.10);
-    font-size: 1.22rem;
-    border-radius: 7px;
-    padding: 7px 11px;
-    cursor: pointer;
-    transition: background 0.13s, color 0.13s;
-    color: #ff5b5b;
+  border: none;
+  background: rgba(244, 67, 54, 0.10);
+  font-size: 1.22rem;
+  border-radius: 7px;
+  padding: 7px 11px;
+  cursor: pointer;
+  transition: background 0.13s, color 0.13s;
+  color: #ff5b5b;
 }
+.deleteBtn[disabled] { opacity: 0.36; cursor: not-allowed; }
+.deleteBtn:hover:not([disabled]) { background: rgba(244, 67, 54, 0.20); color: #fff; }
 
-.deleteBtn[disabled] {
-    opacity: 0.36;
-    cursor: not-allowed;
+/* Modal (Link Flags) */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 8, 20, 0.6);
+  z-index: 1000;
 }
-
-.deleteBtn:hover:not([disabled]) {
-    background: rgba(244, 67, 54, 0.20);
-    color: #fff;
+.modal {
+  width: 680px;
+  max-width: 92%;
+  background: #0f1530;
+  border-radius: 12px;
+  box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+  overflow: hidden;
 }
+.modalHeader { display:flex; align-items:center; justify-content:space-between; padding: 16px 18px; border-bottom:1px solid rgba(60,80,140,0.06); }
+.modalTitle { font-weight:800; color:#eaf4ff; }
+.modalClose { background:none; border:none; color:#cfe3ff; font-size:1.1rem; cursor:pointer; }
+.modalBody { max-height: 56vh; overflow:auto; padding: 14px 18px; }
+.flagsList { display:flex; flex-direction:column; gap:8px; }
+.flagRow { display:flex; gap:12px; align-items:flex-start; padding:8px; border-radius:8px; }
+.flagRow input { margin-top:6px; width:16px; height:16px; }
+.flagMeta { display:flex; flex-direction:column; }
+.flagName { font-weight:700; color:#e6f7ff; }
+.flagDesc { color:#9fb3dc; font-size:0.92rem; }
+.modalFooter { display:flex; gap:10px; padding:12px 18px; justify-content:flex-end; border-top:1px solid rgba(60,80,140,0.06); }
+.ghostBtn { background:transparent; border:1px solid rgba(180,200,255,0.06); color:#cfe3ff; padding:8px 14px; border-radius:8px; cursor:pointer; }
+.primaryBtn { background: linear-gradient(90deg,#20e7d1 0,#5c8efc 100%); color:#001127; padding:8px 14px; border-radius:8px; border:none; font-weight:800; cursor:pointer; }
 
 @media (max-width: 700px) {
-    .wrapper {
-        padding: 0 4px;
-    }
-
-    .tableWrapper {
-        padding: 7px 0;
-    }
-
-    .table {
-        min-width: 300px;
-    }
-
-    .head th,
-    .body td {
-        padding: 10px 8px;
-        font-size: 0.97rem;
-    }
-}
-
-
-
-/* ---------------------------------------------------------------------------
-   EnvironmentsPage.module.css — append these modal styles to your file
---------------------------------------------------------------------------- */
-
-/* Backdrop & modal */
-.backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(8, 12, 20, .6);
-    display: grid;
-    place-items: center;
-    z-index: 50;
-}
-
-.modal {
-    width: min(720px, 94vw);
-    background: linear-gradient(180deg, rgba(15, 20, 36, .98), rgba(22, 28, 52, .98));
-    border: 1px solid rgba(98, 134, 253, .18);
-    border-radius: 14px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, .35);
-}
-
-.modalHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 16px;
-    border-bottom: 1px solid rgba(98, 134, 253, .18);
-}
-
-.modalTitle {
-    font-weight: 800;
-    color: #e9f2ff;
-    font-size: 1.2rem;
-}
-
-.closeBtn {
-    background: transparent;
-    border: none;
-    color: #cfe3ff;
-    font-size: 1.1rem;
-    cursor: pointer;
-}
-
-.modalBody {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 16px;
-}
-
-.modalFooter {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px 14px 16px;
-    border-top: 1px solid rgba(98, 134, 253, .18);
-}
-
-/* Form layout */
-.grid2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.rowSplit {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
-
-.inputCol {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.inputColSmall {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 160px;
-}
-
-.label {
-    color: #cfe3ff;
-    font-weight: 600;
-    font-size: .95rem;
-}
-
-.input {
-    width: 100%;
-    background: rgba(18, 24, 44, 0.8);
-    color: #e4eaff;
-    border: 1px solid rgba(120, 160, 255, 0.22);
-    border-radius: 10px;
-    padding: 10px 12px;
-    outline: none;
-}
-
-.input:focus {
-    border-color: #5c8efc;
-    box-shadow: 0 0 0 3px rgba(92, 142, 252, .18);
-}
-
-.inputErr {
-    border-color: #ff6f80;
-}
-
-.hint {
-    color: #9dc7ff;
-    font-size: .88rem;
-}
-
-.error {
-    color: #ff90a2;
-    font-size: .86rem;
-}
-
-/* Keys */
-.sectionTitleSm {
-    font-weight: 800;
-    color: #d9e6ff;
-    margin-top: 4px;
-}
-
-.keyGenBtn {
-    background: rgba(92, 142, 252, .15);
-    border: 1px solid rgba(92, 142, 252, .32);
-    color: #cfe3ff;
-    border-radius: 8px;
-    padding: 7px 10px;
-    cursor: pointer;
-}
-
-.clientKeyRow {
-    display: flex;
-    gap: 8px;
-    align-items: end;
-}
-
-.keyRowLeft {
-    display: inline-flex;
-    gap: 10px;
-    align-items: center;
-}
-
-/* Buttons */
-.primaryBtn {
-    background: linear-gradient(90deg, #20e7d1 18%, #5c8efc 100%);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-weight: 800;
-    cursor: pointer;
-}
-
-.primaryBtn:disabled {
-    opacity: .6;
-    cursor: not-allowed;
-}
-
-.secondaryBtn {
-    background: rgba(92, 142, 252, .15);
-    border: 1px solid rgba(92, 142, 252, .32);
-    color: #cfe3ff;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-}
-
-.checkboxLabel {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #d1def8;
-}
-
-/* Responsive */
-@media (max-width: 720px) {
-    .grid2 {
-        grid-template-columns: 1fr;
-    }
-
-    .rowSplit {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+  .wrapper { padding: 0 4px; }
+  .tableWrapper { padding: 7px 0; }
+  .table { min-width: 300px; }
+  .head th, .body td { padding: 10px 8px; font-size: 0.97rem; }
 }

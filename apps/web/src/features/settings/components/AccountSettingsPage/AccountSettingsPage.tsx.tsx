@@ -15,6 +15,7 @@ export default function AccountSettingsPage() {
   const [billingEmail, setBillingEmail] = useState<string>();
   const [plan, setPlan] = useState<PlanKey>();
   const [globalApiKey, setGlobalApiKey] = useState("adm_live_9qRa…R7xK");
+  
   useEffect(() => {
     if (isSuccess && data) {
       //@ts-ignore

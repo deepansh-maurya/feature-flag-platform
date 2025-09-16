@@ -142,9 +142,10 @@ export class UpdateProjectDto {
 }
 
 export class AddEnvironmentDto {
-  @IsUUID() projectId: string;
-  @IsUUID() workspaceId: string;
-
+  @IsNotEmpty() projectId: string;
+  @IsNotEmpty() workspaceId: string;
+  @IsBoolean() isDefault?: boolean;
+  @IsBoolean() isProd?: boolean;
   @IsString() @IsNotEmpty() key: string;
   @IsString() @IsNotEmpty() displayName: string;
 }
