@@ -100,7 +100,6 @@ export async function rotateSdkKey(
   return data as { newKey: SdkKeyDto; oldKey?: SdkKeyDto };
 }
 
-/** List keys for a project (optional filters). */
 export async function listSdkKeys(
   projectId: string,
   envKey?: string,

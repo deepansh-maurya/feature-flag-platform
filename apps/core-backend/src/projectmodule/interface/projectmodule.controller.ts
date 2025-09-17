@@ -109,8 +109,8 @@ export class ProjectmoduleController {
   }
 
   @Get(':projectId/environments')
-  listEnvironments(@Param('projectId') projectId: string) {
-    return this.svc.listEnvironments(projectId);
+  async listEnvironments(@Param('projectId') projectId: string) {
+    return await this.svc.listEnvironments(projectId);
   }
 
   @Patch(':projectId/environments/:envId')
@@ -137,6 +137,16 @@ export class ProjectmoduleController {
     @Body() dto: IssueSdkKeyDto,
   ) {
     return this.svc.issueSdkKey({ ...dto, projectId });
+  }
+
+  @Get(':projectId/sdk-keys')
+  listSdkKeys(
+    @Param('projectId') projectId: string,
+    @Query('envKey') envKey?: string,
+    @Query('type') type?: string,
+  ) {
+    // type may be 'server' | 'client' — forward to service; service will handle undefineds
+    return this.svc.listSdkKeys(projectId, envKey, type);
   }
 
   @Post('sdk-keys/revoke')

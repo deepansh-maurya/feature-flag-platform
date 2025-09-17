@@ -53,7 +53,7 @@ export class SdkKeyDto {
   @IsUUID() projectId: string;
   @IsUUID() workspaceId: string;
 
-  @IsString() @IsNotEmpty() envKey: string;
+  @IsString() @IsNotEmpty() envId: string;
   @IsEnum(SdkKeyType) type: SdkKeyType;
   @IsEnum(KeyStatus) status: KeyStatus;
 
@@ -190,7 +190,7 @@ export class RotateSdkKeyDto {
   @IsUUID() projectId: string;
   @IsUUID() workspaceId: string;
 
-  @IsString() @IsNotEmpty() envKey: string;
+  @IsString() @IsNotEmpty() envId: string;
   @IsEnum(SdkKeyType) type: SdkKeyType;
 
   @IsString() @IsNotEmpty() newKeyHash: string;

@@ -128,10 +128,10 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
 
   async findEnvironment(
     projectId: string,
-    envKey: string,
+    envId: string,
   ): Promise<EnvironmentDto | null> {
     const env = await this.prisma.environment.findFirst({
-      where: { projectId, key: envKey },
+      where: { projectId, key: envId },
     });
     return env ? this.toEnvironmentDto(env) : null;
   }
@@ -196,10 +196,8 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       data: {
         projectId: input.projectId,
         workspaceId: input.workspaceId,
-        envKey: input.envKey,
+        envId: input.envId,
         type: input.type,
-        keyHash: input.keyHash,
-        createdBy: input.createdBy,
         status: KeyStatus.active,
       },
     });
@@ -215,7 +213,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
 
   /**
    * Insert a new active key. If keepOldActive is false (default),
-   * immediately disable the previously active key for the same (projectId, envKey, type).
+   * immediately disable the previously active key for the same (projectId, envId, type).
    */
   async rotateSdkKey(
     input: RotateSdkKeyDto,
@@ -223,10 +221,8 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     const {
       projectId,
       workspaceId,
-      envKey,
+      envId,
       type,
-      newKeyHash,
-      createdBy,
       keepOldActive,
     } = input;
 
@@ -235,7 +231,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
         where: {
           projectId,
           workspaceId,
-          envKey,
+          envId,
           type,
           status: KeyStatus.active,
         },
@@ -246,10 +242,9 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
         data: {
           projectId,
           workspaceId,
-          envKey,
+          envId,
+          revoked,
           type,
-          keyHash: newKeyHash,
-          createdBy,
           status: KeyStatus.active,
           rotatedAt: new Date(),
         },
@@ -274,16 +269,16 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
 
   async listSdkKeys(
     projectId: string,
-    envKey?: string,
+    envId?: string,
     type?: SdkKeyType,
   ): Promise<SdkKeyDto[]> {
     const rows = await this.prisma.sdkKey.findMany({
       where: {
         projectId,
-        ...(envKey ? { envKey } : {}),
+        ...(envId ? { envId } : {}),
         ...(type ? { type } : {}),
       },
-      orderBy: [{ envKey: 'asc' }, { type: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ envId: 'asc' }, { type: 'asc' }, { createdAt: 'asc' }],
     });
     return rows.map(this.toSdkKeyDto);
   }
@@ -334,7 +329,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     id: k.id,
     projectId: k.projectId,
     workspaceId: k.workspaceId,
-    envKey: k.envKey,
+    envId: k.envId,
     type: k.type,
     status: k.status,
     lastUsedAt: k.lastUsedAt ?? null,

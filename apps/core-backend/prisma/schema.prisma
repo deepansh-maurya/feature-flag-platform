@@ -263,6 +263,7 @@ model Environment {
 
   workspace Workspace @relation("WorkspaceEnvironments", fields: [workspaceId], references: [id], onDelete: Cascade)
   project   Project   @relation("ProjectEnvironments", fields: [projectId], references: [id], onDelete: Cascade)
+  SdkKey    SdkKey[]
 
   @@unique([projectId, key]) // (project_id, key) unique
   @@index([projectId])
@@ -516,32 +517,25 @@ model FlagEvaluation {
 
 //////////////////////////////
 
-// =============================
-// Enums
-// =============================
-
-// =============================
-// SDK Keys (for SDKs)
-// =============================
 model SdkKey {
   id          String     @id @default(uuid())
   projectId   String
   workspaceId String
-  envKey      String
+  envId       String
   type        SdkKeyType
-  keyHash     String
+  revoked     Boolean
   status      KeyStatus  @default(active)
   lastUsedAt  DateTime?
   rotatedAt   DateTime?
-  createdBy   String
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [envId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId])
-  @@index([projectId, envKey, type, status])
+  @@index([projectId, type, status])
 }
 
 // =============================
