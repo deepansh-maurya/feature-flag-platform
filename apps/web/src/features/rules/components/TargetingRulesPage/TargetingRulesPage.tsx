@@ -1,51 +1,13 @@
-// TargetingRulesPage.tsx
 "use client";
 
 import React, { useState } from "react";
 import styles from "./TargetingRulesPage.module.css";
 import { rid } from "./utils";
 import FlagRulesBuilder from "./FlagRulesBuilder";
+import { Flag, Segment } from "../../types";
 
-// -----------------------------------------------------------------------------
-// Types
-// -----------------------------------------------------------------------------
-export type EnvKey = "dev" | "stage" | "prod";
 
-export type Rule = {
-  id: string;
-  name: string;
-  text?: string;
-  conditions: string[];
-  priority: number;
-  enabled: boolean;
-  source?:
-    | { kind: "local" }
-    | { kind: "segment"; key: string; linked: boolean };
-};
 
-export type Flag = {
-  key: string;
-  envRules: Record<EnvKey, Rule[]>;
-  updatedAt: string;
-};
-
-export type Segment = {
-  key: string;
-  name: string;
-  hint: string;
-  tokens: string[];
-};
-export type Version = {
-  id: string;
-  ts: string;
-  author: string;
-  note?: string;
-  snapshot: Flag;
-};
-
-// -----------------------------------------------------------------------------
-// Demo data
-// -----------------------------------------------------------------------------
 export const SEGMENTS: Segment[] = [
   {
     key: "beta_testers",
@@ -159,11 +121,12 @@ const initialFlag3: Flag = {
 
 const INITIAL_FLAGS: Flag[] = [initialFlag1, initialFlag2, initialFlag3];
 
-// -----------------------------------------------------------------------------
-// Page: renders ALL flags as an accordion
-// -----------------------------------------------------------------------------
 export default function TargetingRulesPage() {
-  const [flags, setFlags] = useState<Flag[]>([]);
+  const [flags, setFlags] = useState<Flag[]>([
+    initialFlag1,
+    initialFlag2,
+    initialFlag3
+  ]);
   const [openKeys, setOpenKeys] = useState<Record<string, boolean>>({
     [INITIAL_FLAGS[0].key]: true
   });

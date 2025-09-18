@@ -170,20 +170,15 @@ export class UpdateEnvironmentDto {
 export class IssueSdkKeyDto {
   @IsUUID() projectId: string;
   @IsUUID() workspaceId: string;
-
-  @IsString() @IsNotEmpty() envKey: string;
+  @IsString() key:string
+  @IsString() @IsNotEmpty() envId: string;
   @IsEnum(SdkKeyType) type: SdkKeyType;
 
-  @IsString() @IsNotEmpty() keyHash: string;
-  @IsString() createdBy: string;
 }
 
 export class RevokeSdkKeyDto {
-  @IsUUID() sdkKeyId: string;
+  @IsString() sdkKeyId: string;
 
-  @IsOptional()
-  @IsString()
-  reason?: string;
 }
 
 export class RotateSdkKeyDto {
@@ -194,7 +189,6 @@ export class RotateSdkKeyDto {
   @IsEnum(SdkKeyType) type: SdkKeyType;
 
   @IsString() @IsNotEmpty() newKeyHash: string;
-  @IsString() createdBy: string;
 
   @IsOptional()
   @IsBoolean()

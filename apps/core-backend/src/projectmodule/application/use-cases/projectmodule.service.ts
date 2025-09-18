@@ -66,8 +66,8 @@ export class ProjectmoduleService {
     return this.repo.issueSdkKey(dto);
   }
 
-  revokeSdkKey(dto: RevokeSdkKeyDto) {
-    return this.repo.revokeSdkKey(dto);
+ async revokeSdkKey(dto: RevokeSdkKeyDto) {
+    return await this.repo.revokeSdkKey(dto);
   }
 
   rotateSdkKey(dto: RotateSdkKeyDto) {

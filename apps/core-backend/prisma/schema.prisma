@@ -524,6 +524,7 @@ model SdkKey {
   envId       String
   type        SdkKeyType
   revoked     Boolean
+  key         String     @default("")
   status      KeyStatus  @default(active)
   lastUsedAt  DateTime?
   rotatedAt   DateTime?

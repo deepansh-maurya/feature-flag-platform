@@ -1,17 +1,5 @@
 import styles from "./TargetingRulesPage.module.css";
-
-// -----------------------------------------------------------------------------
-// Child: single-flag rule builder (what you had before, made reusable)
-
 import { useEffect, useRef, useState } from "react";
-import {
-  EnvKey,
-  Flag,
-  Rule,
-  Segment,
-  SEGMENTS,
-  Version
-} from "./TargetingRulesPage";
 import { humanize, parseTokens, renumber, rid } from "./utils";
 import CopyFromEnvPrompt from "./CopyFromEnvPrompt";
 import EmptyRules from "./EmptyRules";
@@ -25,6 +13,8 @@ import PrerequisitesPicker, {
 } from "../PrerequisitesPicker/PrerequisitesPicker";
 import RuleSetPreview from "../RuleSetPreview/RuleSetPreview";
 import { withModal } from "../../../../shared/components/WithModel/withModal";
+import { EnvKey, Flag, Rule, Segment, Version } from "../../types";
+import { SEGMENTS } from "./TargetingRulesPage";
 
 const RuleSetPreviewModal = withModal(RuleSetPreview);
 
@@ -427,13 +417,6 @@ export default function FlagRulesBuilder({
                         });
                       }}
                     />
-                    <div className={styles.tokensRow}>
-                      {(r.conditions || []).map((c, i) => (
-                        <span key={i} className={styles.condTag}>
-                          {c}
-                        </span>
-                      ))}
-                    </div>
                   </div>
                 </div>
               ))}

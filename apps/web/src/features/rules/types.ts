@@ -37,3 +37,36 @@ export interface PublishResult {
   version: number;
   configHash: string;
 }
+
+
+export type Rule = {
+  id: string;
+  name: string;
+  text?: string;
+  conditions: string[];
+  priority: number;
+  enabled: boolean;
+  source?:
+    | { kind: "local" }
+    | { kind: "segment"; key: string; linked: boolean };
+};
+
+export type Flag = {
+  key: string;
+  envRules: Record<EnvKey, Rule[]>;
+  updatedAt: string;
+};
+
+export type Segment = {
+  key: string;
+  name: string;
+  hint: string;
+  tokens: string[];
+};
+export type Version = {
+  id: string;
+  ts: string;
+  author: string;
+  note?: string;
+  snapshot: Flag;
+};

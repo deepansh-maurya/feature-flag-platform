@@ -140,22 +140,25 @@ export class ProjectmoduleController {
   }
 
   @Get(':projectId/sdk-keys')
-  listSdkKeys(
+  async listSdkKeys(
     @Param('projectId') projectId: string,
     @Query('envKey') envKey?: string,
     @Query('type') type?: string,
   ) {
     // type may be 'server' | 'client' — forward to service; service will handle undefineds
-    return this.svc.listSdkKeys(projectId, envKey, type);
+    return await this.svc.listSdkKeys(projectId, envKey, type);
   }
 
   @Post('sdk-keys/revoke')
-  revokeSdkKey(@Body() dto: RevokeSdkKeyDto) {
-    return this.svc.revokeSdkKey(dto);
+  async revokeSdkKey(@Body() dto: RevokeSdkKeyDto) {
+    console.log(dto,"revoke controller");
+    
+     await this.svc.revokeSdkKey(dto);
+     return "key revoked"
   }
 
   @Post('sdk-keys/rotate')
-  rotateSdkKey(@Body() dto: RotateSdkKeyDto) {
-    return this.svc.rotateSdkKey(dto);
+  async rotateSdkKey(@Body() dto: RotateSdkKeyDto) {
+    return await this.svc.rotateSdkKey(dto);
   }
 }

@@ -136,7 +136,11 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     return env ? this.toEnvironmentDto(env) : null;
   }
 
-  async updateEnvironment(projectId: string, envId: string, patch: any): Promise<EnvironmentDto> {
+  async updateEnvironment(
+    projectId: string,
+    envId: string,
+    patch: any,
+  ): Promise<EnvironmentDto> {
     // normalize booleans
     const doSetDefault = patch.isDefault === true;
     const doSetProd = patch.isProd === true;
@@ -158,8 +162,10 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       }
 
       const data: any = {};
-      if (typeof patch.displayName === 'string') data.displayName = patch.displayName;
-      if (typeof patch.isDefault === 'boolean') data.isDefault = patch.isDefault;
+      if (typeof patch.displayName === 'string')
+        data.displayName = patch.displayName;
+      if (typeof patch.isDefault === 'boolean')
+        data.isDefault = patch.isDefault;
       if (typeof patch.isProd === 'boolean') data.isProd = patch.isProd;
 
       const updated = await tx.environment.update({
@@ -176,7 +182,9 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   async deleteEnvironment(projectId: string, envId: string): Promise<void> {
     try {
       // ensure env belongs to project (optional safety)
-      const existing = await this.prisma.environment.findUnique({ where: { id: envId } });
+      const existing = await this.prisma.environment.findUnique({
+        where: { id: envId },
+      });
       if (!existing || existing.projectId !== projectId) {
         throw new NotFoundException('Environment not found');
       }
@@ -191,24 +199,29 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
 
   /* ========================= SDK Keys ========================= */
 
-  async issueSdkKey(input: IssueSdkKeyDto): Promise<SdkKeyDto> {
+  async issueSdkKey(input: IssueSdkKeyDto): Promise<any> {
     const key = await this.prisma.sdkKey.create({
       data: {
         projectId: input.projectId,
         workspaceId: input.workspaceId,
         envId: input.envId,
+        key: input.key,
         type: input.type,
         status: KeyStatus.active,
+        revoked: false,
       },
     });
-    return this.toSdkKeyDto(key);
+    console.log('issued', 214);
+
+    return key;
   }
 
   async revokeSdkKey(input: RevokeSdkKeyDto): Promise<void> {
-    await this.prisma.sdkKey.update({
+    const res = await this.prisma.sdkKey.update({
       where: { id: input.sdkKeyId },
-      data: { status: KeyStatus.disabled },
+      data: { status: KeyStatus.disabled, revoked: true },
     });
+    console.log(res, 'Revoked');
   }
 
   /**
@@ -218,13 +231,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
   async rotateSdkKey(
     input: RotateSdkKeyDto,
   ): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }> {
-    const {
-      projectId,
-      workspaceId,
-      envId,
-      type,
-      keepOldActive,
-    } = input;
+    const { projectId, workspaceId, envId, type, keepOldActive } = input;
 
     const res = await this.prisma.$transaction(async (tx) => {
       const old = await tx.sdkKey.findFirst({
@@ -243,7 +250,8 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
           projectId,
           workspaceId,
           envId,
-          revoked,
+          revoked: false,
+          key: input.newKeyHash,
           type,
           status: KeyStatus.active,
           rotatedAt: new Date(),
@@ -251,11 +259,15 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       });
 
       let updatedOld = old;
+      console.log(old, keepOldActive, 258);
+
       if (old && !keepOldActive) {
         updatedOld = await tx.sdkKey.update({
           where: { id: old.id },
           data: { status: KeyStatus.disabled, rotatedAt: new Date() },
         });
+
+        console.log(updatedOld, 266);
       }
 
       return { newKey, oldKey: updatedOld ?? null };
@@ -271,16 +283,17 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     projectId: string,
     envId?: string,
     type?: SdkKeyType,
-  ): Promise<SdkKeyDto[]> {
+  ): Promise<any[]> {
     const rows = await this.prisma.sdkKey.findMany({
       where: {
         projectId,
         ...(envId ? { envId } : {}),
         ...(type ? { type } : {}),
+        status:"active"
       },
       orderBy: [{ envId: 'asc' }, { type: 'asc' }, { createdAt: 'asc' }],
     });
-    return rows.map(this.toSdkKeyDto);
+    return rows;
   }
 
   /* ========================= Mappers ========================= */

@@ -65,13 +65,18 @@ export async function deleteEnvironment(projectId: string, envId: string): Promi
 export async function issueSdkKey(
   input: IssueSdkKeyDto
 ): Promise<SdkKeyDto> {
-  const { projectId, envKey, ...body } = input as any;
-  const { data } = await http.post(
-    `/projects/${projectId}/environments/${encodeURIComponent(
-      envKey
-    )}/sdk-keys`,
-    body
-  );
+  const anyInput = input as any;
+  // server expects envId in the body (DTO uses envId). Accept envKey or envId from client.
+  const envId = anyInput.envId ?? anyInput.envKey ?? anyInput.env;
+  const { projectId, workspaceId, type, key, createdBy } = anyInput;
+  const { data } = await http.post(`/projects/${projectId}/sdk-keys`, {
+    projectId,
+    workspaceId,
+    envId,
+    type,
+    key,
+    createdBy,
+  });
   return data as SdkKeyDto;
 }
 
@@ -79,8 +84,9 @@ export async function issueSdkKey(
 export async function revokeSdkKey(
   input: RevokeSdkKeyDto
 ): Promise<void> {
+  // server controller expects POST /projects/sdk-keys/revoke with { sdkKeyId }
   const { sdkKeyId, reason } = input as any;
-  await http.post(`/sdk-keys/${sdkKeyId}/revoke`, { reason });
+  await http.post(`/projects/sdk-keys/revoke`, { sdkKeyId, reason });
 }
 
 /**
@@ -90,13 +96,8 @@ export async function revokeSdkKey(
 export async function rotateSdkKey(
   input: RotateSdkKeyDto
 ): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }> {
-  const { projectId, envKey, type, ...body } = input as any;
-  const { data } = await http.post(
-    `/projects/${projectId}/environments/${encodeURIComponent(
-      envKey
-    )}/sdk-keys/rotate`,
-    { type, ...body }
-  );
+  const anyInput = input as any;
+  const { data } = await http.post(`/projects/sdk-keys/rotate`, anyInput);
   return data as { newKey: SdkKeyDto; oldKey?: SdkKeyDto };
 }
 

@@ -14,8 +14,7 @@ export interface IssueSdkKeyDto {
     workspaceId: string;
     envKey: string;
     type: SdkKeyType;
-    keyHash: string;   // plaintext never leaves client
-    createdBy: string;
+    key: string;   // plaintext never leaves client
 }
 
 export interface RevokeSdkKeyDto {
@@ -26,10 +25,9 @@ export interface RevokeSdkKeyDto {
 export interface RotateSdkKeyDto {
     projectId: string;
     workspaceId: string;
-    envKey: string;
+    envId: string;
     type: SdkKeyType;
     newKeyHash: string;
-    createdBy: string;
     keepOldActive?: boolean;
 }
 
@@ -38,6 +36,8 @@ export type KeyType = "server" | "client";
 export type KeyStatus = "active" | "revoked";
 
 export type SdkKey = {
+  // id from backend SDK key record (optional in mock data)
+  id?: string;
   type: KeyType;
   key: string;           // empty string means "not present"
   created: string;       // key created at
@@ -52,6 +52,7 @@ export type SdkKey = {
 };
 
 export type EnvRow = {
+  id:string,
   env: string;
   created: string; // environment created at
   keys: SdkKey[];  // 2: server + client

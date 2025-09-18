@@ -1,10 +1,9 @@
-import { Rule } from "./TargetingRulesPage";
+import { Rule } from "../../types";
 
 export function rid() { return Math.random().toString(36).slice(2, 10); }
 export function renumber(list: Rule[]) { return list.map((r, i) => ({ ...r, priority: i + 1 })); }
 export function humanize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 export function parseTokens(s: string): string[] {
-  // extremely naive tokenization for demo only
   const txt = s.toLowerCase();
   const tokens: string[] = [];
   if (/india|\bin\s*india\b|\bregion\s*=\s*in/.test(txt)) tokens.push("region=IN");
