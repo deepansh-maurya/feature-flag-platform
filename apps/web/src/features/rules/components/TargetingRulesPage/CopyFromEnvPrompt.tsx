@@ -1,4 +1,4 @@
-import { EnvKey } from "./TargetingRulesPage";
+import { EnvKey } from "../../types";
 import styles from "./TargetingRulesPage.module.css";
 
 export default function CopyFromEnvPrompt({ env, hasDev, hasStage, onCopy, onScratch, onClose }: {

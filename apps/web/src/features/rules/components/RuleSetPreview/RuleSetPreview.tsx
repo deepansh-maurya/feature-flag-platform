@@ -1,16 +1,5 @@
 import React, { useMemo, useState } from "react";
 import "./RuleSetPreview.css"
-/**
- * RuleSetPreview
- * -------------------------------------------------------------
- * Shows a pretty JSON preview of the saved RuleSet and derives
- * the required input traits to test the flag based on its rules.
- *
- * Business impact:
- * - Makes configs auditable & explainable for PMs and reviewers.
- * - Surfaces which user/app traits are actually used → fewer prod surprises.
- * - Encourages creating only the traits you truly need → simpler SDK payloads.
- */
 
 // ---------- Types (aligned with your earlier schema) ----------
 export type ConditionOp =

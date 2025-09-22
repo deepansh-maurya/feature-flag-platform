@@ -6,29 +6,6 @@ import { rid } from "./utils";
 import FlagRulesBuilder from "./FlagRulesBuilder";
 import { Flag, Segment } from "../../types";
 
-
-
-export const SEGMENTS: Segment[] = [
-  {
-    key: "beta_testers",
-    name: "Beta Testers",
-    hint: "email endsWith @company.com",
-    tokens: ["email*@company.com"]
-  },
-  {
-    key: "in_india",
-    name: "Users in India",
-    hint: "region = IN",
-    tokens: ["region=IN"]
-  },
-  {
-    key: "pro_plan",
-    name: "Pro plan",
-    hint: "plan = pro",
-    tokens: ["plan=pro"]
-  }
-];
-
 const initialFlag1: Flag = {
   key: "dark_mode_v2",
   envRules: {

@@ -1,10 +1,8 @@
-// RulesTestModal.tsx (updated with Rollout Tester)
 "use client";
 
 import React, { useMemo, useState } from "react";
 import styles from "./RulesTestModal.module.css";
-import type { Flag, EnvKey, Rule } from "./TargetingRulesPage"; // adjust path
-// import { evaluateFlag } from "../lib/evaluator";                 // adjust path
+import { EnvKey, Flag, Rule } from "../../types";
 
 type Props = { flag: Flag; env: EnvKey; onClose: () => void };
 

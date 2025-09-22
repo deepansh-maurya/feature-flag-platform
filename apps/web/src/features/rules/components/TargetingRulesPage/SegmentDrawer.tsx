@@ -1,4 +1,4 @@
-import { Segment } from "./TargetingRulesPage";
+import { Segment } from "../../types";
 import styles from "./TargetingRulesPage.module.css";
 
 export default function SegmentsDrawer({ segments, onClose, onDrop }: { segments: Segment[]; onClose: () => void; onDrop: (s: Segment) => void }) {

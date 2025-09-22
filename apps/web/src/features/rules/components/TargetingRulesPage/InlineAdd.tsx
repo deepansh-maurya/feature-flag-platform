@@ -20,7 +20,7 @@ export default function InlineAdd({ onAdd, autofocus }: { onAdd: (t: string) => 
           }
         }}
       />
-      <button className={styles.secondaryBtn} onClick={() => { const v = val.trim(); if (v) onAdd(v); setVal(""); }}>Add rule</button>
+      <button className={styles.secondaryBtn} onClick={() => { const v = val.trim(); if (v) onAdd(v); setVal(""); }}>+</button>
     </div>
   );
 }
