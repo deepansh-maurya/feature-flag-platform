@@ -1,0 +1,63 @@
+name: Publish SDKs
+
+on:
+  push:
+    tags:
+      - "sdk-v*"
+
+jobs:
+  publish-sdks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lang: [typescript, python, go]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        if: matrix.lang == 'typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - name: Set up Python
+        if: matrix.lang == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Publish TypeScript SDK
+        if: matrix.lang == 'typescript' && hashFiles('sdks/typescript/package.json') != ''
+        run: |
+          cd sdks/typescript
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view @yourorg/flags@$VERSION > /dev/null 2>&1; then
+            echo "TS SDK version $VERSION already published. Skipping."
+          else
+            npm publish --access public
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish Python SDK
+        if: matrix.lang == 'python' && hashFiles('sdks/python/setup.py') != ''
+        run: |
+          cd sdks/python
+          VERSION=$(python setup.py --version)
+          if pip index versions yourorg-flags | grep $VERSION; then
+            echo "Python SDK version $VERSION already published. Skipping."
+          else
+            python setup.py sdist bdist_wheel
+            twine upload dist/*
+          fi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Publish Go SDK
+        if: matrix.lang == 'go' && hashFiles('sdks/go/go.mod') != ''
+        run: |
+          echo "Go SDK publishing = via git tag. No registry like npm/PyPI."
+          echo "Ensure sdks/go is committed, tagged, and pushed."
