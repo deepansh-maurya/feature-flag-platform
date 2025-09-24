@@ -65,14 +65,14 @@ export class PrismaAnalyticsmoduleRepo implements AnalyticsmoduleRepo {
     // Unique users
     const uniqueUsers = new Set(evaluations.map((e) => e.userId)).size;
 
-    // Variant distribution
-    const variantDistribution: Record<string, number> = {};
-    evaluations.forEach((e) => {
-      if (e.variant) {
-        variantDistribution[e.variant] =
-          (variantDistribution[e.variant] ?? 0) + 1;
-      }
-    });
+    // // Variant distribution
+    // const variantDistribution: Record<string, number> = {};
+    // evaluations.forEach((e) => {
+    //   if (e.variant) {
+    //     variantDistribution[e.variant] =
+    //       (variantDistribution[e.variant] ?? 0) + 1;
+    //   }
+    // });
 
     // Top rules matched
     const topRules: Record<string, number> = {};
@@ -100,7 +100,7 @@ export class PrismaAnalyticsmoduleRepo implements AnalyticsmoduleRepo {
       enabledPercentage: total > 0 ? (enabled / total) * 100 : 0,
       apiRequests: total,
       uniqueUsers,
-      variantDistribution,
+      // variantDistribution,
       topRulesMatched: topRules,
       trend,
     };

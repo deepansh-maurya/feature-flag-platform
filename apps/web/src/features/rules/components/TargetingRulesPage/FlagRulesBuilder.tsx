@@ -16,7 +16,6 @@ import { EnvKey, Flag, Rule, Segment, Version } from "../../types";
 
 const RuleSetPreviewModal = withModal(RuleSetPreview);
 
-// -----------------------------------------------------------------------------
 export default function FlagRulesBuilder({
   flag,
   onChange
@@ -56,6 +55,8 @@ export default function FlagRulesBuilder({
   const [versions, setVersions] = useState<Version[]>([]);
   const [showCopyPrompt, setShowCopyPrompt] = useState(false);
   const [showTester, setShowTester] = useState(false);
+  const lastSavedRulesRef = useRef<Rule[] | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
   // first-time copy/scratch prompt per env (per-flag)
   const seenEnv = useRef<Record<EnvKey, boolean>>({
     dev: true,
@@ -72,6 +73,22 @@ export default function FlagRulesBuilder({
       seenEnv.current[activeEnv] = true;
     }
   }, [activeEnv, flag.envRules]);
+
+  // initialize lastSavedRulesRef when flag or environment changes
+  useEffect(() => {
+    const current = JSON.parse(
+      JSON.stringify(flag.envRules[activeEnv] || [])
+    ) as Rule[];
+    lastSavedRulesRef.current = current;
+    setIsDirty(false);
+  }, [flag.key, activeEnv]);
+
+  // recompute dirty when rules change
+  useEffect(() => {
+    const current = JSON.stringify(flag.envRules[activeEnv] || []);
+    const saved = JSON.stringify(lastSavedRulesRef.current || []);
+    setIsDirty(current !== saved);
+  }, [flag, activeEnv]);
 
   const rules: Rule[] = flag.envRules[activeEnv] || [];
   const setFlag = (updater: (f: Flag) => Flag) => onChange(updater(flag));
@@ -113,6 +130,11 @@ export default function FlagRulesBuilder({
       snapshot: JSON.parse(JSON.stringify(flag))
     };
     setVersions((p) => [v, ...p]);
+    // mark current rules as saved
+    lastSavedRulesRef.current = JSON.parse(
+      JSON.stringify(flag.envRules[activeEnv] || [])
+    );
+    setIsDirty(false);
   }
 
   function addLocalRule(text: string) {
@@ -173,23 +195,24 @@ export default function FlagRulesBuilder({
     <>
       {/* Header actions per flag */}
       <div className={styles.headerRow}>
-        <div className={styles.headerLeft}>
-          <span className={styles.updatedAt}>
-            Last updated {flag.updatedAt}
-          </span>
-        </div>
         <div className={styles.headerActions}>
+          <select
+            value={activeEnv}
+            onChange={(e) => setActiveEnv(e.target.value as EnvKey)}
+            className={styles.envSelect}
+          >
+            {(["dev", "stage", "prod"] as EnvKey[]).map((env) => (
+              <option key={env} value={env}>
+                {env.toUpperCase()}
+              </option>
+            ))}
+          </select>
+
           <button
             className={styles.secondaryBtn}
             onClick={() => setOpenModel(true)}
           >
             Preview
-          </button>
-          <button
-            className={styles.secondaryBtn}
-            onClick={() => setShowSegments(true)}
-          >
-            Global Segments
           </button>
           <button
             className={styles.secondaryBtn}
@@ -200,6 +223,8 @@ export default function FlagRulesBuilder({
           <button
             className={styles.primaryBtn}
             onClick={() => saveSnapshot("auto save")}
+            disabled={!isDirty}
+            title={!isDirty ? 'No changes to save' : 'Save changes'}
           >
             Save
           </button>
@@ -213,19 +238,7 @@ export default function FlagRulesBuilder({
       </div>
 
       {/* Environment selector */}
-      <div className={styles.envSelectWrapper}>
-        <select
-          value={activeEnv}
-          onChange={(e) => setActiveEnv(e.target.value as EnvKey)}
-          className={styles.envSelect}
-        >
-          {(["dev", "stage", "prod"] as EnvKey[]).map((env) => (
-            <option key={env} value={env}>
-              {env.toUpperCase()}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className={styles.envSelectWrapper}></div>
 
       {/* Copy-from prompt on first visit to an empty env */}
       {showCopyPrompt && (
@@ -253,10 +266,9 @@ export default function FlagRulesBuilder({
                 onDragOver={(e) => e.preventDefault()}
               >
                 <div className={styles.ruleHeader}>
-                  <div className={styles.ruleTitle} style={{width:"100%"}}>
+                  <div className={styles.ruleTitle} style={{ width: "100%" }}>
                     <span className={styles.priority}>#{r.priority}</span>
-                    {/* <div contentEditable={true} style={{ width: "100%" }}> */}
-                    <div className={styles.ruleBody} style={{width:"94%"}}>
+                    <div className={styles.ruleBody} style={{ width: "94%" }}>
                       <textarea
                         className={styles.textArea}
                         disabled={
@@ -283,8 +295,6 @@ export default function FlagRulesBuilder({
                         }}
                       />
                     </div>
-                    {/* {r.name} */}
-                    {/* </div> */}
                     {r.source?.kind === "segment" && (
                       <span className={styles.segmentBadge}>
                         {r.source.key}

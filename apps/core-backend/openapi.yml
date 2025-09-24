@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: Feature Flags API
+  version: 1.0.0
+servers:
+  - url: https://sdk.yourdomain.com
+paths:
+  /v1/evaluate:
+    post:
+      summary: Evaluate a feature flag
+      description: Check if a flag is enabled and get its evaluation result.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flagKey:
+                  type: string
+                  example: "new-ui"
+                envKey:
+                  type: string
+                  example: "prod"
+                context:
+                  type: object
+                  additionalProperties: true
+                  description: Arbitrary targeting attributes
+      responses:
+        "200":
+          description: Evaluation result (raw JSON for now)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /v1/config:
+    get:
+      summary: Fetch all flag configs for an environment
+      description: Returns the full config (raw JSON for now).
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: envKey
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Config response (raw JSON for now)
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization

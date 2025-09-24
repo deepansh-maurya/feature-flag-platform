@@ -18,7 +18,7 @@ export interface AnalyticsmoduleRepo {
     enabledPercentage: number;
     apiRequests: number;
     uniqueUsers: number;
-    variantDistribution: Record<string, number>; // { control: 50, treatment: 50 }
+    // variantDistribution: Record<string, number>; // { control: 50, treatment: 50 }
     topRulesMatched: Record<string, number>; // { "geo-IN": 1800, "plan-pro": 1500 }
     trend: { date: string; enabled: number; disabled: number }[];
   }>;

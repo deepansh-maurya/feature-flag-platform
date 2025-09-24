@@ -1,4 +1,4 @@
-import { Flag, Version } from "./TargetingRulesPage";
+import { Flag, Version } from "../../types";
 import styles from "./TargetingRulesPage.module.css";
 
 export default function VersionHistoryModal({ versions, current, onRestore, onClose }: { versions: Version []; current: Flag; onRestore: (f: Flag) => void; onClose: () => void }) {
@@ -19,9 +19,6 @@ export default function VersionHistoryModal({ versions, current, onRestore, onCl
                   <div>
                     <div className={styles.versionTitle}>{new Date(v.ts).toLocaleString()} · {v.author}</div>
                     <div className={styles.versionNote}>{v.note || ""}</div>
-                  </div>
-                  <div className={styles.versionActions}>
-                    <button className={styles.secondaryBtn} onClick={() => onRestore(structuredClone(v.snapshot))}>Restore</button>
                   </div>
                 </li>
               ))}

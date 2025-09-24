@@ -61,9 +61,12 @@ export function withModal<T extends object>(Component: React.ComponentType<T & W
 
     return (
       <>
-        <button className="wm-trigger" onClick={() => setOpen(true)}>
-          {trigger ?? "Open"}
-        </button>
+        {/* Only render trigger button if a trigger prop was provided */}
+        {typeof trigger !== 'undefined' && (
+          <button className="wm-trigger" onClick={() => setOpen(true)}>
+            {trigger ?? "Open"}
+          </button>
+        )}
 
         {open && (
           <div className="wm-backdrop" onMouseDown={onBackdrop}>
