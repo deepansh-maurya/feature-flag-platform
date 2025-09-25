@@ -7,7 +7,7 @@ export async function updateFlagRules(
   rules: object,
   version?: number
 ) {
-  const key = `user:${userId}:env:${envId}:flag:${flagId}`;
+  const key = `flag:${flagId}:rules`;
   const value = JSON.stringify({ rules, version: version || 1 });
   await redis.set(key, value);
 }
