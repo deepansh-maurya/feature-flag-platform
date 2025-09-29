@@ -1,5 +1,12 @@
-import { IsUUID, IsString, IsOptional, IsInt, Min, IsEnum } from 'class-validator';
-import { ChangeRequestStatus } from 'generated/prisma'
+import {
+  IsUUID,
+  IsString,
+  IsOptional,
+  IsInt,
+  Min,
+  IsEnum,
+} from 'class-validator';
+import { ChangeRequestStatus } from 'generated/prisma';
 
 /* ---------- Inputs ---------- */
 
@@ -9,30 +16,36 @@ export class CreateChangeRequestDto {
 
   @IsString() envKey: string;
 
-  @IsOptional() @IsInt() @Min(0)
+  @IsOptional()
+  @IsInt()
+  @Min(0)
   fromVersion?: number;
 
-  @IsInt() @Min(1)
+  @IsInt()
+  @Min(1)
   toVersion: number;
 
   @IsString()
   createdBy: string;
 
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   comment?: string;
 }
 
 export class ApproveChangeRequestDto {
   @IsUUID() id: string;
   @IsString() reviewerId: string;
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   comment?: string;
 }
 
 export class RejectChangeRequestDto {
   @IsUUID() id: string;
   @IsString() reviewerId: string;
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   comment?: string;
 }
 
@@ -44,7 +57,8 @@ export class GetByFlagEnvDto {
   @IsUUID() flagId: string;
   @IsString() envKey: string;
 
-  @IsOptional() @IsEnum(ChangeRequestStatus)
+  @IsOptional()
+  @IsEnum(ChangeRequestStatus)
   status?: ChangeRequestStatus;
 }
 

@@ -13,14 +13,29 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AdminmoduleService } from '../application/use-cases/adminmodule.service';
-import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from './dto/create-adminmodule.dto';
+import {
+  ArchivePlanDto,
+  CreatePlanDto,
+  DeleteFeatureDto,
+  DeleteLimitDto,
+  DeletePriceDto,
+  EnrollDto,
+  GetPlanByIdDto,
+  GetPlanByKeyDto,
+  ListPlansDto,
+  PublishPlanDto,
+  SetPriceActiveDto,
+  UpsertFeaturesDto,
+  UpsertLimitsDto,
+  UpsertPriceDto,
+} from './dto/create-adminmodule.dto';
 import { Request, Response } from 'express';
 import { AdminJwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
 
 @UseGuards(AdminJwtAuthGuard)
 @Controller('super-admin/plans')
 export class AdminmoduleController {
-  constructor(private readonly svc: AdminmoduleService) { }
+  constructor(private readonly svc: AdminmoduleService) {}
 
   // ---------- Commands ----------
   @Post()
@@ -90,7 +105,10 @@ export class AdminmoduleController {
   }
 
   @Put(':planId/features')
-  upsertFeatures(@Param('planId') planId: string, @Body() body: UpsertFeaturesDto) {
+  upsertFeatures(
+    @Param('planId') planId: string,
+    @Body() body: UpsertFeaturesDto,
+  ) {
     body.planId = planId;
     return this.svc.upsertFeatures(body);
   }
@@ -102,7 +120,10 @@ export class AdminmoduleController {
   }
 
   @Delete(':planId/prices/:priceId')
-  deletePrice(@Param('planId') planId: string, @Param('priceId') priceId: string) {
+  deletePrice(
+    @Param('planId') planId: string,
+    @Param('priceId') priceId: string,
+  ) {
     const dto = new DeletePriceDto();
     dto.planId = planId;
     dto.priceId = priceId;
@@ -118,16 +139,19 @@ export class AdminmoduleController {
   }
 
   @Delete(':planId/limits/:resource')
-  deleteLimit(@Param('planId') planId: string, @Param('resource') resource: string) {
+  deleteLimit(
+    @Param('planId') planId: string,
+    @Param('resource') resource: string,
+  ) {
     const dto = new DeleteLimitDto();
     (dto as any).planId = planId; // if your DTO includes planId; else adapt
     dto.resource = resource;
     return this.svc.deleteLimit(dto);
   }
 
-  @Post("enroll")
+  @Post('enroll')
   async enrollAdmin(@Body() body: EnrollDto, @Res() res: Response) {
-    const token = await this.svc.enrollAdmin(body)
+    const token = await this.svc.enrollAdmin(body);
     res.cookie('admin_td', token, {
       httpOnly: true,
       secure: true,
@@ -138,12 +162,12 @@ export class AdminmoduleController {
     return res.json({ ok: true });
   }
 
-  @Get("me")
+  @Get('me')
   async me(@Req() req: Request & { id: string }) {
     if (req.id) {
-      return true
+      return true;
     } else {
-      return false
+      return false;
     }
   }
 }

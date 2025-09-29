@@ -24,7 +24,7 @@ import {
 } from '../interface/dto/create-workspacesmodule.dto';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard)   
+@UseGuards(JwtAuthGuard)
 @Controller('workspaces')
 export class WorkspacesmoduleController {
   constructor(private readonly svc: WorkspacesmoduleService) {}
@@ -66,7 +66,16 @@ export class WorkspacesmoduleController {
 
   // List workspaces for a user (you can move userId from body to req.user later)
   @Get()
-  async mine(@Query() q: { userId: string; cursor?: string; take?: number; order?: 'asc' | 'desc'; includeArchived?: 'true' | 'false' }) {
+  async mine(
+    @Query()
+    q: {
+      userId: string;
+      cursor?: string;
+      take?: number;
+      order?: 'asc' | 'desc';
+      includeArchived?: 'true' | 'false';
+    },
+  ) {
     const dto: ListMyWorkspacesDto = {
       userId: q.userId,
       includeArchived: q.includeArchived === 'true',
@@ -122,7 +131,10 @@ export class WorkspacesmoduleController {
   // ------------------------
 
   @Post(':id/transfer-ownership')
-  async transferOwnership(@Param('id') id: string, @Body() dto: TransferOwnershipDto) {
+  async transferOwnership(
+    @Param('id') id: string,
+    @Body() dto: TransferOwnershipDto,
+  ) {
     return this.svc.transferOwnership({ ...dto, workspaceId: id });
   }
 
@@ -152,13 +164,19 @@ export class WorkspacesmoduleController {
 
   // Accept via token from email link
   @Post('invites/:token/accept')
-  async acceptInvite(@Param('token') token: string, @Body() body: { userId: string }) {
+  async acceptInvite(
+    @Param('token') token: string,
+    @Body() body: { userId: string },
+  ) {
     const dto: AcceptInviteDto = { tokenHash: token, userId: body.userId }; // hash in service if not pre-hashed
     return this.svc.acceptInvite(dto);
   }
 
   @Delete(':id/invites/:inviteId')
-  async revokeInvite(@Param('id') id: string, @Param('inviteId') inviteId: string) {
+  async revokeInvite(
+    @Param('id') id: string,
+    @Param('inviteId') inviteId: string,
+  ) {
     return this.svc.revokeInvite({ workspaceId: id, inviteId });
   }
 

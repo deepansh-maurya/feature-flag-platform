@@ -52,24 +52,22 @@ export class StartCheckoutDto {
   cycle!: BillingCycle;
 
   @IsNumber()
-  amountInINR: number
+  amountInINR: number;
 
   @IsString()
-  currency: string
-
-
-  @IsString()
-  receipt?: string
+  currency: string;
 
   @IsString()
-  notes?: string
+  receipt?: string;
 
   @IsString()
-  purpose?: string
+  notes?: string;
+
+  @IsString()
+  purpose?: string;
 
   @IsJSON()
-  metadata?: JSON
-
+  metadata?: JSON;
 }
 
 export class ChangePlanDto {
@@ -101,7 +99,7 @@ export class CancelDto {
   atPeriodEnd!: boolean;
 }
 
-export class  ResumeDto {
+export class ResumeDto {
   @ApiProperty()
   @IsString()
   workspaceId!: string;
@@ -202,7 +200,10 @@ export class EntitlementsDto {
   @IsEnum(SubscriptionStatus)
   status!: SubscriptionStatus;
 
-  @ApiProperty({ type: 'object', additionalProperties: { oneOf: [{ type: 'number' }, { type: 'boolean' }] } })
+  @ApiProperty({
+    type: 'object',
+    additionalProperties: { oneOf: [{ type: 'number' }, { type: 'boolean' }] },
+  })
   @IsObject()
   limits!: Record<string, number | boolean>;
 
@@ -210,9 +211,6 @@ export class EntitlementsDto {
   @IsObject()
   features!: Record<FeatureKey, boolean>;
 }
-
-
-
 
 /** Webhook → service payload */
 export class UpsertFromStripeSubscriptionDto {
@@ -274,23 +272,22 @@ export class ReconciliationSubscriptionItemDto {
 }
 
 export class VerifyHandlerDto {
-
   @IsString()
-  razorpay_payment_id: string
+  razorpay_payment_id: string;
   @IsString()
-
-  razorpay_order_id: string
+  razorpay_order_id: string;
   @IsString()
-
-  razorpay_signature: string
+  razorpay_signature: string;
   @IsString()
-
-  internalOrderId: string
+  internalOrderId: string;
   @IsJSON()
-  metadata: JSON
+  metadata: JSON;
 }
 
 export interface StartCheckout {
-  orderId: string, amount: number, currency: string,
-  keyId: string, internalOrderId: string
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  internalOrderId: string;
 }

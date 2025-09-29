@@ -30,7 +30,6 @@ export class RazorpayWebhookController {
 
     console.log(sig, 31);
 
-    
     // Razorpay requires HMAC-SHA256 over the *raw* body using your WEBHOOK SECRET (not key_secret).
     const rawBody =
       (req as any).rawBody instanceof Buffer
@@ -187,8 +186,8 @@ export class RazorpayWebhookController {
       razorpaySubId,
       razorpayCustomerId,
       workspaceId,
-      planKey: planKey as PlanKey,
-      billingCycle: cycle as BillingCycle,
+      planKey: planKey,
+      billingCycle: cycle,
       status,
       periodStart,
       periodEnd,

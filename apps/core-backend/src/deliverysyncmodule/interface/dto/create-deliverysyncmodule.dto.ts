@@ -8,4 +8,3 @@ export class CreateDeliverysyncmoduleDto {
   @IsString()
   description;
 }
-

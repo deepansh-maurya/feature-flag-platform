@@ -1,6 +1,10 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AnalyticsmoduleService } from '../application/use-cases/analyticsmodule.service';
-import { GetFlagMetricsDto, GetOverviewDto, RecordEvaluationDto } from './dto/create-analyticsmodule.dto';
+import {
+  GetFlagMetricsDto,
+  GetOverviewDto,
+  RecordEvaluationDto,
+} from './dto/create-analyticsmodule.dto';
 
 @Controller('analytics')
 export class AnalyticsmoduleController {

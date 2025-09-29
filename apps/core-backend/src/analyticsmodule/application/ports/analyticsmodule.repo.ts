@@ -1,4 +1,8 @@
-import { GetFlagMetricsDto, GetOverviewDto, RecordEvaluationDto } from "src/analyticsmodule/interface/dto/create-analyticsmodule.dto";
+import {
+  GetFlagMetricsDto,
+  GetOverviewDto,
+  RecordEvaluationDto,
+} from 'src/analyticsmodule/interface/dto/create-analyticsmodule.dto';
 
 export interface AnalyticsmoduleRepo {
   // Store one evaluation event (flag evaluation happened)

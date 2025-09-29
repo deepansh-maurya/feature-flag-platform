@@ -1,21 +1,17 @@
 // application/use-cases/rulesmodule.service.ts
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   EnvKey,
-  RuleSetRecord,
   RulesmoduleRepo,
   RulesmoduleRepoToken,
 } from '../ports/rulesmodule.repo';
-
+import { client } from 'src/main';
 
 @Injectable()
 export class RulesmoduleService {
-  constructor(@Inject(RulesmoduleRepoToken) private readonly repo: RulesmoduleRepo) { }
+  constructor(
+    @Inject(RulesmoduleRepoToken) private readonly repo: RulesmoduleRepo,
+  ) {}
 
   async createRules(input: {
     workspaceId: string;
@@ -36,7 +32,7 @@ export class RulesmoduleService {
     // For now, expect caller (controller) to have used RuleInterpreterService and pass in interpreted rules.
     // We'll persist the raw + interpreted rules as part of a draft.
 
-    const payload = input.interpretedRules ?? { rules: input.rawRules };
+    const payload = input.interpretedRules as unknown;
 
     const draft = await this.repo.saveDraft({
       workspaceId: input.workspaceId,
@@ -48,8 +44,16 @@ export class RulesmoduleService {
       previousRuleSetId: input.previousRuleSetId,
     });
 
+    client.UpdateFlagRules(
+      { flagId: input.flagId, rules: JSON.stringify(draft) },
+      (error, response) => {
+        if (error) {
+          console.log(error);
+        }
+        console.log(response);
+      },
+    );
+
     return draft;
   }
-
-
 }

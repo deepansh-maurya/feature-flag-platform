@@ -71,7 +71,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
 
       await this.workspace.addMember(
         {
-          workspaceId: dbWorkspace.id!,
+          workspaceId: dbWorkspace.id,
           role: RoleKey.admin,
           userId: dbuser.id,
         },
@@ -129,7 +129,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     }
 
     const dbWorkspace = await this.prisma.workspace.findFirst({
-      where: { ownerUserId: dbUser.id! },
+      where: { ownerUserId: dbUser.id },
     });
 
     console.log(dbWorkspace, 120);
@@ -303,7 +303,7 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     }
 
     const dbWorkspace = await this.prisma.workspace.findFirst({
-      where: { ownerUserId: dbUser.id! },
+      where: { ownerUserId: dbUser.id },
     });
 
     if (!dbWorkspace) {

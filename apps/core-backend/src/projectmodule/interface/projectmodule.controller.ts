@@ -39,7 +39,7 @@ export class ProjectmoduleController {
     // normalize langSupport: allow clients to send JSON string, comma-separated, or array
     if (incoming.langSupport && !Array.isArray(incoming.langSupport)) {
       try {
-        incoming.langSupport = JSON.parse(incoming.langSupport as any);
+        incoming.langSupport = JSON.parse(incoming.langSupport);
       } catch (e) {
         // fallback: split comma-separated
         if (typeof incoming.langSupport === 'string') {
@@ -52,7 +52,7 @@ export class ProjectmoduleController {
     }
 
     const payload: CreateProjectDto = {
-      ...(incoming as any),
+      ...incoming,
       workspaceId: workspaceId as string,
     };
     return this.svc.createProject(payload);
@@ -77,7 +77,7 @@ export class ProjectmoduleController {
     const incoming = dto as any;
     if (incoming.langSupport && !Array.isArray(incoming.langSupport)) {
       try {
-        incoming.langSupport = JSON.parse(incoming.langSupport as any);
+        incoming.langSupport = JSON.parse(incoming.langSupport);
       } catch (e) {
         if (typeof incoming.langSupport === 'string') {
           incoming.langSupport = incoming.langSupport
@@ -151,10 +151,10 @@ export class ProjectmoduleController {
 
   @Post('sdk-keys/revoke')
   async revokeSdkKey(@Body() dto: RevokeSdkKeyDto) {
-    console.log(dto,"revoke controller");
-    
-     await this.svc.revokeSdkKey(dto);
-     return "key revoked"
+    console.log(dto, 'revoke controller');
+
+    await this.svc.revokeSdkKey(dto);
+    return 'key revoked';
   }
 
   @Post('sdk-keys/rotate')

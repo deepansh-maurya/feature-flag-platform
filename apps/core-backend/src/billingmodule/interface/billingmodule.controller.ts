@@ -47,7 +47,6 @@ export class BillingmoduleController {
     return this.svc.changePlan(workspaceId, body.planKey, body.cycle);
   }
 
-
   @Delete(':cancelParam/cancel')
   async cancelSubscription(
     @Param('workspaceId') workspaceId: string,
@@ -56,7 +55,6 @@ export class BillingmoduleController {
     return this.svc.cancelSubscription(workspaceId, cancel);
   }
 
-  
   @Post('resume')
   async resumeSubscription(@Param('workspaceId') ResumeDto: ResumeDto) {
     return await this.svc.resumeSubscription(ResumeDto);
@@ -65,7 +63,7 @@ export class BillingmoduleController {
   @Get('subscription')
   async currentPlan(@Req() req: Request & JwtPayload) {
     const { workspaceId } = req.user as any;
-    console.log('reached',workspaceId);
+    console.log('reached', workspaceId);
 
     return await this.svc.currentPlan(workspaceId);
   }

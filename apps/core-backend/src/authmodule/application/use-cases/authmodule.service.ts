@@ -1,60 +1,74 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AuthmoduleRepo, AuthmoduleRepoToken } from '../ports/authmodule.repo';
 import { AuthEntity } from 'src/authmodule/domain/authmodule.entity';
-import * as jwt from "jsonwebtoken";
-import { LoginDto, RefreshDto, RegisterDto } from 'src/authmodule/interface/dto/create-authmodule.dto';
+import * as jwt from 'jsonwebtoken';
+import {
+  LoginDto,
+  RefreshDto,
+  RegisterDto,
+} from 'src/authmodule/interface/dto/create-authmodule.dto';
 import { CookieOptions } from 'express';
 @Injectable()
 export class AuthmoduleService {
-  constructor(@Inject(AuthmoduleRepoToken) private readonly repo: AuthmoduleRepo) { }
+  constructor(
+    @Inject(AuthmoduleRepoToken) private readonly repo: AuthmoduleRepo,
+  ) {}
 
   async register(data: RegisterDto) {
-    const user = AuthEntity.create(data)
-    const result = await this.repo.register(user)
-    return await this.issueTokens(result.id, result.wid)
+    const user = AuthEntity.create(data);
+    const result = await this.repo.register(user);
+    return await this.issueTokens(result.id, result.wid);
   }
 
   async login(data: LoginDto) {
-    const user = AuthEntity.create(data)
-    const result = await this.repo.login(user)
+    const user = AuthEntity.create(data);
+    const result = await this.repo.login(user);
     console.log(result, 20);
 
-    return { ...await this.issueTokens(result.id, result.wid), user: result.user, workspace: result.workspace }
+    return {
+      ...(await this.issueTokens(result.id, result.wid)),
+      user: result.user,
+      workspace: result.workspace,
+    };
   }
 
-  async getUser(id:string){
-    return await this.repo.get(id)
+  async getUser(id: string) {
+    return await this.repo.get(id);
   }
 
   async refreshToken(data: RefreshDto) {
-    return this.issueTokens(data.userId, data.workspaceId)
+    return this.issueTokens(data.userId, data.workspaceId);
   }
 
   async logout(data: string) {
-    await this.repo.logout(data)
+    await this.repo.logout(data);
   }
 
   async delete(data: string) {
-    await this.repo.delete(data)
+    await this.repo.delete(data);
   }
 
-  async changePassword(data: { userId: string, password: string, confirmPassword: string }) {
-    await this.repo.changePassword(data)
+  async changePassword(data: {
+    userId: string;
+    password: string;
+    confirmPassword: string;
+  }) {
+    await this.repo.changePassword(data);
   }
 
   private async issueTokens(userId: string, workspaceId: string) {
     // Access token
     const accessToken = jwt.sign(
-      { sub: userId, wid: workspaceId, },
+      { sub: userId, wid: workspaceId },
       process.env.JWT_SECRET!,
-      { expiresIn: "15m" },
+      { expiresIn: '15m' },
     );
 
     // Refresh token
     const refreshToken = jwt.sign(
-      { sub: userId, wid: workspaceId, },
+      { sub: userId, wid: workspaceId },
       process.env.JWT_REFRESH_SECRET!,
-      { expiresIn: "7d" },
+      { expiresIn: '7d' },
     );
 
     // Persist refresh token (hashed)
@@ -62,7 +76,7 @@ export class AuthmoduleService {
       userId,
       refreshToken,
       new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      workspaceId
+      workspaceId,
     );
 
     return { accessToken, refreshToken };
@@ -73,12 +87,9 @@ export class AuthmoduleService {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
-      path: '/',        // scope if you want; or '/'
+      path: '/', // scope if you want; or '/'
       maxAge: 15 * 24 * 60 * 60 * 1000, // align with refresh exp
       // domain: '.yourdomain.com' // set when using subdomains
     };
   }
-
-
 }
-

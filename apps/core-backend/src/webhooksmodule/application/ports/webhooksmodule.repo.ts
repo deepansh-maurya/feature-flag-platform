@@ -5,4 +5,3 @@ export interface WebhooksmoduleRepo {
   get(id: string): Promise<any | null>;
   create(dto: any): Promise<any>;
 }
-

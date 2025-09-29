@@ -42,7 +42,10 @@ async function run() {
 
     console.log('Saved (smoke):', saved);
   } catch (err) {
-    console.error('Smoke test error (expected if DB/OpenAI not configured):', err.message);
+    console.error(
+      'Smoke test error (expected if DB/OpenAI not configured):',
+      err.message,
+    );
   }
 }
 

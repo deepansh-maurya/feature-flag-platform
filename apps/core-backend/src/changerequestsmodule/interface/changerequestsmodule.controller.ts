@@ -17,7 +17,7 @@ import {
 } from './dto/create-changerequestsmodule.dto';
 import { JwtAuthGuard } from 'src/authmodule/infrastructure/guards/jwt-auth.guard';
 
-@UseGuards(JwtAuthGuard)  
+@UseGuards(JwtAuthGuard)
 @Controller('change-requests')
 export class ChangeRequestController {
   constructor(private readonly svc: ChangeRequestService) {}
@@ -38,18 +38,27 @@ export class ChangeRequestController {
   }
 
   @Get('open/:flagId/:envKey')
-  listOpenByEnv(@Param('flagId') flagId: string, @Param('envKey') envKey: string) {
+  listOpenByEnv(
+    @Param('flagId') flagId: string,
+    @Param('envKey') envKey: string,
+  ) {
     return this.svc.listOpenByEnv(flagId, envKey);
   }
 
   @Post(':id/approve')
-  approve(@Param('id') id: string, @Body() body: Omit<ApproveChangeRequestDto, 'id'>) {
+  approve(
+    @Param('id') id: string,
+    @Body() body: Omit<ApproveChangeRequestDto, 'id'>,
+  ) {
     const dto: ApproveChangeRequestDto = { id, ...body };
     return this.svc.approve(dto);
   }
 
   @Post(':id/reject')
-  reject(@Param('id') id: string, @Body() body: Omit<RejectChangeRequestDto, 'id'>) {
+  reject(
+    @Param('id') id: string,
+    @Body() body: Omit<RejectChangeRequestDto, 'id'>,
+  ) {
     const dto: RejectChangeRequestDto = { id, ...body };
     return this.svc.reject(dto);
   }

@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import {
-  ChangeRequestRepo,
-} from '../../application/ports/changerequestsmodule.repo';
+import { ChangeRequestRepo } from '../../application/ports/changerequestsmodule.repo';
 import {
   ApproveChangeRequestDto,
   ChangeRequestDto,
@@ -36,7 +34,10 @@ export class PrismaChangeRequestRepository implements ChangeRequestRepo {
     return rows.map(this.toDto);
   }
 
-  async listOpenByEnv(flagId: string, envKey: string): Promise<ChangeRequestDto[]> {
+  async listOpenByEnv(
+    flagId: string,
+    envKey: string,
+  ): Promise<ChangeRequestDto[]> {
     const rows = await this.prisma.changeRequest.findMany({
       where: { flagId, envKey, status: ChangeRequestStatus.open },
       orderBy: { createdAt: 'desc' },
@@ -90,7 +91,9 @@ export class PrismaChangeRequestRepository implements ChangeRequestRepo {
     return this.toDto(row);
   }
 
-  async markApplied(input: MarkAppliedChangeRequestDto): Promise<ChangeRequestDto> {
+  async markApplied(
+    input: MarkAppliedChangeRequestDto,
+  ): Promise<ChangeRequestDto> {
     const row = await this.prisma.changeRequest.update({
       where: { id: input.id },
       data: {

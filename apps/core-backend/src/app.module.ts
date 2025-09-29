@@ -23,8 +23,7 @@ import PrismaModule from './infra/prisma/prisma.module';
     ProjectmoduleModule,
     UserModule,
     WorkspacesmoduleModule,
-    PrismaModule
-  ]
+    PrismaModule,
+  ],
 })
 export class AppModule {}
-

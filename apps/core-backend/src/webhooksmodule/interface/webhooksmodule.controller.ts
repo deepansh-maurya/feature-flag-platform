@@ -20,4 +20,3 @@ export class WebhooksmoduleController {
     return this.svc.get(id);
   }
 }
-

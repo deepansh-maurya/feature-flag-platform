@@ -9,7 +9,9 @@ import { WorkspacesmoduleRepoToken } from 'src/workspacesmodule/application/port
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtAuthGuard } from './infrastructure/guards/jwt-auth.guard';
-import JwtStrategy, { RefreshJwtStrategy } from './infrastructure/strategy/jwt.strategy';
+import JwtStrategy, {
+  RefreshJwtStrategy,
+} from './infrastructure/strategy/jwt.strategy';
 import { USER_REPO } from 'src/usersmodule/application/ports/usersmodule.repo';
 import { PrismaUserRepository } from 'src/usersmodule/infrastructure/prisma/prisma-usersmodule.repo';
 
@@ -26,12 +28,15 @@ import { PrismaUserRepository } from 'src/usersmodule/infrastructure/prisma/pris
     PrismaService,
     AuthmoduleService,
     { provide: AuthmoduleRepoToken, useClass: PrismaAuthmoduleRepo },
-    { provide: WorkspacesmoduleRepoToken, useClass: PrismaWorkspacesmoduleRepo },
+    {
+      provide: WorkspacesmoduleRepoToken,
+      useClass: PrismaWorkspacesmoduleRepo,
+    },
     { provide: USER_REPO, useClass: PrismaUserRepository },
     JwtAuthGuard,
     JwtStrategy,
-    RefreshJwtStrategy
+    RefreshJwtStrategy,
   ],
   exports: [AuthmoduleService, JwtAuthGuard],
 })
-export class Authmodule { }
+export class Authmodule {}

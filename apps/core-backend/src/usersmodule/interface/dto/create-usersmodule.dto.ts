@@ -1,4 +1,11 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { UserStatus } from 'generated/prisma';
 //import { UserStatus } from 'generated/prisma'
 

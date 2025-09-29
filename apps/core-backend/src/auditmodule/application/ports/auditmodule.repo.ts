@@ -1,5 +1,4 @@
-
-import { AuditActionType } from "generated/prisma";
+import { AuditActionType } from 'generated/prisma';
 
 export interface CreateAuditLog {
   workspaceId: string;
@@ -32,10 +31,10 @@ export interface ListAuditLogsParams {
   actionType?: AuditActionType;
   entityType?: string;
   actorUserId?: string;
-  search?: string;              // search in title/description/entityKey
-  limit?: number;               // default 50
-  cursor?: string | null;       // createdAt ISO or opaque id
-  direction?: ListDirection;    // default 'backward' (newest first)
+  search?: string; // search in title/description/entityKey
+  limit?: number; // default 50
+  cursor?: string | null; // createdAt ISO or opaque id
+  direction?: ListDirection; // default 'backward' (newest first)
 }
 
 export interface AuditLogRecord {
@@ -68,7 +67,7 @@ export interface ListResult {
   nextCursor: string | null;
 }
 
-export const AuditmoduleRepoToken = Symbol("AuditmoduleRepoToken")
+export const AuditmoduleRepoToken = Symbol('AuditmoduleRepoToken');
 
 export interface AuditModuleRepo {
   append(dto: CreateAuditLog): Promise<void>;

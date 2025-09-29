@@ -2,7 +2,11 @@
 
 import { Inject, Injectable } from '@nestjs/common';
 import { AnalyticsmoduleRepo } from '../ports/analyticsmodule.repo';
-import { GetFlagMetricsDto, GetOverviewDto, RecordEvaluationDto } from 'src/analyticsmodule/interface/dto/create-analyticsmodule.dto';
+import {
+  GetFlagMetricsDto,
+  GetOverviewDto,
+  RecordEvaluationDto,
+} from 'src/analyticsmodule/interface/dto/create-analyticsmodule.dto';
 
 export const AnalyticsmoduleRepoToken = Symbol('AnalyticsmoduleRepo');
 

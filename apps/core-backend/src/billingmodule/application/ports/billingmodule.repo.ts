@@ -1,7 +1,13 @@
 // src/billingmodule/application/ports/billingmodule.repo.ts
 export type PlanKey = 'STARTER' | 'GROWTH' | 'ENTERPRISE';
 export type BillingCycle = 'monthly' | 'yearly';
-export type SubscriptionStatus = 'active' | 'trialing' | 'past_due' | 'grace' | 'frozen' | 'canceled';
+export type SubscriptionStatus =
+  | 'active'
+  | 'trialing'
+  | 'past_due'
+  | 'grace'
+  | 'frozen'
+  | 'canceled';
 
 export const BillingmoduleRepoToken = Symbol('BillingmoduleRepo');
 
@@ -90,7 +96,7 @@ export class CheckoutInitDto {
   subscriptionId!: string;
   planKey!: PlanKey;
   cycle!: BillingCycle;
-  amount!: number;     // paise
+  amount!: number; // paise
   currency!: 'INR';
   notes!: Record<string, string>;
   prefill?: { name?: string; email?: string; contact?: string };
@@ -109,22 +115,36 @@ export interface BillingmoduleRepo {
   getEntitlements(workspaceId: string): Promise<EntitlementsDto>;
 
   // Webhook sync (Razorpay → DB)
-  upsertFromRazorpaySubscription(payload: UpsertFromRazorpaySubscriptionDto): Promise<void>;
+  upsertFromRazorpaySubscription(
+    payload: UpsertFromRazorpaySubscriptionDto,
+  ): Promise<void>;
   setStatusActiveByRazorpaySubId(razorpaySubId: string): Promise<void>;
   setStatusPastDueByRazorpaySubId(razorpaySubId: string): Promise<void>;
-  setCanceledByRazorpaySubId(input: { razorpaySubId: string; periodEnd?: Date }): Promise<void>;
+  setCanceledByRazorpaySubId(input: {
+    razorpaySubId: string;
+    periodEnd?: Date;
+  }): Promise<void>;
 
   // Idempotency / Reconciliation
   isWebhookEventProcessed(dedupeKey: string): Promise<boolean>;
   markWebhookEventProcessed(dedupeKey: string): Promise<void>;
-  listSubscriptionsForReconciliation(): Promise<Array<ReconciliationSubscriptionItemDto>>;
-  patchSubscriptionByRazorpaySubId(patch: Partial<SubscriptionDto> & { razorpaySubId: string }): Promise<void>;
+  listSubscriptionsForReconciliation(): Promise<
+    Array<ReconciliationSubscriptionItemDto>
+  >;
+  patchSubscriptionByRazorpaySubId(
+    patch: Partial<SubscriptionDto> & { razorpaySubId: string },
+  ): Promise<void>;
 
   // Customer linkage
   getRazorpayCustomerId(workspaceId: string): Promise<string | null>;
-  setRazorpayCustomerId(workspaceId: string, razorpayCustomerId: string): Promise<void>;
+  setRazorpayCustomerId(
+    workspaceId: string,
+    razorpayCustomerId: string,
+  ): Promise<void>;
 
   // Mapping helpers
   getRazorpayPlanId(planKey: PlanKey, cycle: BillingCycle): Promise<string>;
-  mapRazorpayPlanId(planId: string): Promise<{ planKey: PlanKey; cycle: BillingCycle }>;
+  mapRazorpayPlanId(
+    planId: string,
+  ): Promise<{ planKey: PlanKey; cycle: BillingCycle }>;
 }

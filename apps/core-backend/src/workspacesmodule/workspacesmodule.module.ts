@@ -11,9 +11,11 @@ import PrismaService from 'src/infra/prisma/prisma.service';
     PrismaService,
     WorkspacesmoduleService,
     PrismaWorkspacesmoduleRepo,
-    { provide: WorkspacesmoduleRepoToken, useClass: PrismaWorkspacesmoduleRepo },
+    {
+      provide: WorkspacesmoduleRepoToken,
+      useClass: PrismaWorkspacesmoduleRepo,
+    },
   ],
   exports: [WorkspacesmoduleService, PrismaWorkspacesmoduleRepo],
 })
-export class WorkspacesmoduleModule { }
-
+export class WorkspacesmoduleModule {}

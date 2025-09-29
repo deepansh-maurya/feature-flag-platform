@@ -1,20 +1,50 @@
 // infrastructure/prisma/prisma-workspacesmodule.repo.ts
-import { Injectable, BadRequestException, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { BillingStatus, PlanKey, RoleKey } from 'generated/prisma';
 //import { billingStatus, planKey, roleKey } from 'generated/prisma';
 import PrismaService, { PrismaTx } from 'src/infra/prisma/prisma.service';
-import { InviteSummary, MemberSummary, PlanLimits, UsageCounts, WorkspacesmoduleRepo, WorkspaceSummary } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
+import {
+  InviteSummary,
+  MemberSummary,
+  PlanLimits,
+  UsageCounts,
+  WorkspacesmoduleRepo,
+  WorkspaceSummary,
+} from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
 import { WorkspaceEntity } from 'src/workspacesmodule/domain/workspacesmodule.entity';
-import { AcceptInviteDto, AddMemberDto, ArchiveWorkspaceDto, ChangeMemberRoleDto, CheckLimitDto, CreateWorkspaceDto, GetMemberRoleDto, GetWorkspaceDto, InviteMemberDto, ListMyWorkspacesDto, PaginationDto, RemoveMemberDto, RestoreWorkspaceDto, RevokeInviteDto, TransferOwnershipDto, UpdateWorkspaceDto } from 'src/workspacesmodule/interface/dto/create-workspacesmodule.dto';
+import {
+  AcceptInviteDto,
+  AddMemberDto,
+  ArchiveWorkspaceDto,
+  ChangeMemberRoleDto,
+  CheckLimitDto,
+  CreateWorkspaceDto,
+  GetMemberRoleDto,
+  GetWorkspaceDto,
+  InviteMemberDto,
+  ListMyWorkspacesDto,
+  PaginationDto,
+  RemoveMemberDto,
+  RestoreWorkspaceDto,
+  RevokeInviteDto,
+  TransferOwnershipDto,
+  UpdateWorkspaceDto,
+} from 'src/workspacesmodule/interface/dto/create-workspacesmodule.dto';
 
-//TODO add plan key where the any is written 
+//TODO add plan key where the any is written
 //Todo move the plans in db
 
 export const PLAN_LIMITS: Record<any, PlanLimits> = {
   starter: {
     workspaces: 1,
     projects: 3,
-    environmentsPerWorkspace: 2,   // dev/stage/prod = 3? Your table shows "2/env": interpret as 2 per WS; adjust if needed
+    environmentsPerWorkspace: 2, // dev/stage/prod = 3? Your table shows "2/env": interpret as 2 per WS; adjust if needed
     seats: 5,
     flags: 50,
     segments: 0, // "Basic rules" → no segments
@@ -23,8 +53,8 @@ export const PLAN_LIMITS: Record<any, PlanLimits> = {
     auditRetentionDays: 7,
     features: {
       experiments: false,
-      advancedRules: false,          // only basic rules
-      integrations: false,           // limited → false for now
+      advancedRules: false, // only basic rules
+      integrations: false, // limited → false for now
       rbac: false,
       sso: false,
     },
@@ -35,42 +65,41 @@ export const PLAN_LIMITS: Record<any, PlanLimits> = {
     environmentsPerWorkspace: 5,
     seats: 20,
     flags: 500,
-    segments: 100,                   // “Advanced (segments, % rollout)”
+    segments: 100, // “Advanced (segments, % rollout)”
     apiRequestsPerMonth: 10_000_000,
     webhooks: 5,
     auditRetentionDays: 90,
     features: {
       experiments: true,
-      advancedRules: true,           // segments + % rollout
-      integrations: true,            // Slack/Jira etc.
+      advancedRules: true, // segments + % rollout
+      integrations: true, // Slack/Jira etc.
       rbac: false,
       sso: false,
     },
   },
   enterprise: {
-    workspaces: "unlimited",
-    projects: "unlimited",
-    environmentsPerWorkspace: "unlimited",
-    seats: "unlimited",
-    flags: "unlimited",
-    segments: "unlimited",
-    apiRequestsPerMonth: "custom",   // negotiated in contract
-    webhooks: "unlimited",
-    auditRetentionDays: "unlimited",
+    workspaces: 'unlimited',
+    projects: 'unlimited',
+    environmentsPerWorkspace: 'unlimited',
+    seats: 'unlimited',
+    flags: 'unlimited',
+    segments: 'unlimited',
+    apiRequestsPerMonth: 'custom', // negotiated in contract
+    webhooks: 'unlimited',
+    auditRetentionDays: 'unlimited',
     features: {
-      experiments: "advanced",       // advanced reporting
-      advancedRules: true,           // nested rules, custom attrs
-      integrations: true,            // SSO, custom webhooks
+      experiments: 'advanced', // advanced reporting
+      advancedRules: true, // nested rules, custom attrs
+      integrations: true, // SSO, custom webhooks
       rbac: true,
       sso: true,
     },
   },
 };
 
-
 @Injectable()
 export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   // --------------------------
   // Helpers
@@ -117,7 +146,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     if (!slug) slug = 'workspace';
     let suffix = 0;
 
-    const db = tx ?? this.prisma
+    const db = tx ?? this.prisma;
 
     // Try slug, slug-2, slug-3 ...
     // Use findUnique on slug since it’s unique
@@ -141,13 +170,12 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     };
   }
 
-
   private toInviteSummary(row: any): InviteSummary {
     return {
       id: row.id,
       email: row.email,
       role: row.roleKey.toLowerCase(),
-      invitedByUserId: row.invitedByUserId ?? "",   // if you added invitedByUserId
+      invitedByUserId: row.invitedByUserId ?? '', // if you added invitedByUserId
       expiresAt: row.expiresAt,
       createdAt: row.createdAt,
     };
@@ -157,11 +185,16 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   // Methods
   // --------------------------
 
-  async create(dto: CreateWorkspaceDto, tx?: PrismaTx): Promise<WorkspaceEntity> {
-    const slug = dto.slug ? this.slugify(dto.slug) : await this.ensureUniqueSlug(dto.name, tx);
+  async create(
+    dto: CreateWorkspaceDto,
+    tx?: PrismaTx,
+  ): Promise<WorkspaceEntity> {
+    const slug = dto.slug
+      ? this.slugify(dto.slug)
+      : await this.ensureUniqueSlug(dto.name, tx);
     const finalSlug = dto.slug ? await this.ensureUniqueSlug(slug, tx) : slug;
 
-    const db = tx ?? this.prisma
+    const db = tx ?? this.prisma;
 
     const row = await db.workspace.create({
       data: {
@@ -184,8 +217,8 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   }
 
   async get(dto: GetWorkspaceDto): Promise<WorkspaceEntity | null> {
-
-    if (!dto.id && !dto.slug) throw new BadRequestException('id or slug required');
+    if (!dto.id && !dto.slug)
+      throw new BadRequestException('id or slug required');
 
     const row = await this.prisma.workspace.findFirst({
       where: {
@@ -202,7 +235,8 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     const data: any = {};
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.planKey !== undefined) data.planKey = dto.planKey;
-    if (dto.billingStatus !== undefined) data.billingStatus = dto.billingStatus as any;
+    if (dto.billingStatus !== undefined)
+      data.billingStatus = dto.billingStatus as any;
     if (dto.slug !== undefined) {
       const desired = this.slugify(dto.slug);
       data.slug = await this.ensureUniqueSlug(desired);
@@ -231,7 +265,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     });
   }
 
-  async listMine(dto: ListMyWorkspacesDto): Promise<{ items: WorkspaceSummary[]; nextCursor: string | null }> {
+  async listMine(
+    dto: ListMyWorkspacesDto,
+  ): Promise<{ items: WorkspaceSummary[]; nextCursor: string | null }> {
     const take = dto.pagination?.take ?? 20;
     const order = dto.pagination?.order === 'asc' ? 'asc' : 'desc';
     const cursor = dto.pagination?.cursor ?? null;
@@ -256,9 +292,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       take,
       ...(cursor
         ? {
-          skip: 1,
-          cursor: { id: cursor },
-        }
+            skip: 1,
+            cursor: { id: cursor },
+          }
         : {}),
       select: {
         id: true,
@@ -285,19 +321,21 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   }
 
   // If your port defines runInTransaction, you can add:
-  async runInTransaction<T>(fn: (tx: WorkspacesmoduleRepo) => Promise<T>): Promise<T> {
+  async runInTransaction<T>(
+    fn: (tx: WorkspacesmoduleRepo) => Promise<T>,
+  ): Promise<T> {
     return this.prisma.$transaction(async (prisma) => {
       const child = new PrismaWorkspacesmoduleRepo(prisma as any);
       return fn(child as any);
     });
   }
 
-  // Membership 
+  // Membership
 
   async addMember(dto: AddMemberDto, tx?: PrismaTx): Promise<void> {
     // Expect a UNIQUE index on (workspaceId, userId)
     try {
-      const db = tx ?? this.prisma
+      const db = tx ?? this.prisma;
       await db.workspaceMember.create({
         data: {
           workspaceId: dto.workspaceId,
@@ -309,7 +347,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     } catch (e: any) {
       // Prisma P2002 = unique constraint failed
       if (e.code === 'P2002') {
-        throw new ConflictException('User is already a member of this workspace');
+        throw new ConflictException(
+          'User is already a member of this workspace',
+        );
       }
       throw e;
     }
@@ -346,10 +386,13 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       },
       select: { roleKey: true },
     });
-    return m ? (m.roleKey as RoleKey) : null;
+    return m ? m.roleKey : null;
   }
 
-  async listMembers(dto: { workspaceId: string; pagination?: PaginationDto }): Promise<{ items: MemberSummary[]; nextCursor: string | null }> {
+  async listMembers(dto: {
+    workspaceId: string;
+    pagination?: PaginationDto;
+  }): Promise<{ items: MemberSummary[]; nextCursor: string | null }> {
     const take = dto.pagination?.take ?? 20;
     const order = dto.pagination?.order === 'asc' ? 'asc' : 'desc';
     const cursor = dto.pagination?.cursor ?? null;
@@ -360,9 +403,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       take,
       ...(cursor
         ? {
-          skip: 1,
-          cursor: { id: cursor }, // assumes `id` on WorkspaceMember
-        }
+            skip: 1,
+            cursor: { id: cursor }, // assumes `id` on WorkspaceMember
+          }
         : {}),
       select: {
         id: true,
@@ -382,7 +425,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   async transferOwnership(dto: TransferOwnershipDto): Promise<void> {
     const { workspaceId, fromUserId, toUserId } = dto;
     if (fromUserId === toUserId) {
-      throw new BadRequestException('fromUserId and toUserId cannot be the same');
+      throw new BadRequestException(
+        'fromUserId and toUserId cannot be the same',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -393,7 +438,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       });
       if (!ws) throw new NotFoundException('Workspace not found');
       if (ws.ownerUserId !== fromUserId) {
-        throw new ForbiddenException('Only the current owner can transfer ownership');
+        throw new ForbiddenException(
+          'Only the current owner can transfer ownership',
+        );
       }
 
       // 2) Ensure target user is (or becomes) a member
@@ -412,7 +459,11 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       // 3) Ensure the current owner has a membership row (upsert), then demote
       await tx.workspaceMember.upsert({
         where: { workspaceId_userId: { workspaceId, userId: fromUserId } },
-        create: { workspaceId, userId: fromUserId, roleKey: 'owner' as RoleKey },
+        create: {
+          workspaceId,
+          userId: fromUserId,
+          roleKey: 'owner' as RoleKey,
+        },
         update: {}, // no-op if exists
       });
 
@@ -437,7 +488,11 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       // (Optional) 7) Enforce invariant: exactly one OWNER in this workspace
       // If you want to be extra safe, flip any accidental owner roles:
       await tx.workspaceMember.updateMany({
-        where: { workspaceId, userId: { not: toUserId }, roleKey: 'owner' as RoleKey },
+        where: {
+          workspaceId,
+          userId: { not: toUserId },
+          roleKey: 'owner' as RoleKey,
+        },
         data: { roleKey: 'admin' as RoleKey },
       });
 
@@ -445,7 +500,6 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       // await tx.auditLog.create({ data: { ... } });
     });
   }
-
 
   // =============================
   // Invites
@@ -467,15 +521,17 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       select: { id: true, expiresAt: true },
     });
     if (existing) {
-      throw new ConflictException('An active invite already exists for this email');
+      throw new ConflictException(
+        'An active invite already exists for this email',
+      );
     }
 
     const row = await this.prisma.invite.create({
       data: {
         workspaceId: dto.workspaceId,
         email: dto.email.toLowerCase(),
-        roleKey: dto.role as RoleKey,          // 'admin' | 'editor' | 'viewer'
-        tokenHash: dto.tokenHash,                   // store only hash
+        roleKey: dto.role, // 'admin' | 'editor' | 'viewer'
+        tokenHash: dto.tokenHash, // store only hash
         invitedByUserId: dto.invitedByUserId,
         expiresAt: dto.expiresAt,
       },
@@ -493,7 +549,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
   }
 
   async acceptInvite(
-    dto: AcceptInviteDto
+    dto: AcceptInviteDto,
   ): Promise<{ workspaceId: string; role: Exclude<RoleKey, 'OWNER'> } | null> {
     const now = new Date();
 
@@ -532,8 +588,10 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     }
   }
 
-  async listInvites(dto: { workspaceId: string; pagination?: PaginationDto })
-    : Promise<{ items: InviteSummary[]; nextCursor: string | null }> {
+  async listInvites(dto: {
+    workspaceId: string;
+    pagination?: PaginationDto;
+  }): Promise<{ items: InviteSummary[]; nextCursor: string | null }> {
     const take = dto.pagination?.take ?? 20;
     const order = dto.pagination?.order === 'asc' ? 'asc' : 'desc';
     const cursor = dto.pagination?.cursor ?? null;
@@ -544,9 +602,9 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       take,
       ...(cursor
         ? {
-          skip: 1,
-          cursor: { id: cursor },
-        }
+            skip: 1,
+            cursor: { id: cursor },
+          }
         : {}),
       select: {
         id: true,
@@ -564,20 +622,18 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     return { items, nextCursor };
   }
 
-
-
   private async getCurrentPlanKey(workspaceId: string): Promise<any> {
     const now = new Date();
     // prefer an active/trialing subscription in current period
     const sub = await this.prisma.subscription.findFirst({
       where: {
         workspaceId,
-        status: { in: ["active", "trialing"] },
+        status: { in: ['active', 'trialing'] },
         periodStart: { lte: now },
         periodEnd: { gt: now },
         cancelAtPeriodEnd: false,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: { planKey: true },
     });
 
@@ -588,7 +644,7 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       where: { id: workspaceId },
       select: { planKey: true },
     });
-    if (!ws) throw new NotFoundException("Workspace not found");
+    if (!ws) throw new NotFoundException('Workspace not found');
     return ws.planKey as any;
   }
 
@@ -596,7 +652,6 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     const planKey = await this.getCurrentPlanKey(dto.workspaceId);
     return PLAN_LIMITS[planKey] ?? PLAN_LIMITS.starter;
   }
-
 
   async getUsageCounts(dto: { workspaceId: string }): Promise<UsageCounts> {
     const { workspaceId } = dto;
@@ -619,10 +674,20 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
       this.prisma.webhookEndpoint.count({ where: { workspaceId } }),
     ]);
 
-    return { members, projects, environments, flags, segments, apiTokens, webhooks };
+    return {
+      members,
+      projects,
+      environments,
+      flags,
+      segments,
+      apiTokens,
+      webhooks,
+    };
   }
 
-  async checkLimit(dto: CheckLimitDto): Promise<{ allowed: boolean; limit: number; used: number }> {
+  async checkLimit(
+    dto: CheckLimitDto,
+  ): Promise<{ allowed: boolean; limit: number; used: number }> {
     const limits = await this.getPlanLimits({ workspaceId: dto.workspaceId });
     const usage = await this.getUsageCounts({ workspaceId: dto.workspaceId });
 
@@ -631,27 +696,35 @@ export class PrismaWorkspacesmoduleRepo implements WorkspacesmoduleRepo {
     // map kind -> {limit, used}
     const read = (k: keyof PlanLimits, usedCount: number) => {
       const lim = limits[k];
-      if (lim === "unlimited" || lim === "custom") {
-        return { allowed: true, limit: Number.POSITIVE_INFINITY, used: usedCount };
+      if (lim === 'unlimited' || lim === 'custom') {
+        return {
+          allowed: true,
+          limit: Number.POSITIVE_INFINITY,
+          used: usedCount,
+        };
       }
-      return { allowed: usedCount + delta <= (lim as number), limit: lim as number, used: usedCount };
+      return {
+        allowed: usedCount + delta <= (lim as number),
+        limit: lim as number,
+        used: usedCount,
+      };
     };
 
     switch (dto.kind) {
-      case "members":
-        return read("seats", usage.members);
-      case "projects":
-        return read("projects", usage.projects);
-      case "environments":
-        return read("environmentsPerWorkspace", usage.environments);
-      case "flags":
-        return read("flags", usage.flags);
-      case "segments":
-        return read("segments", usage.segments);
+      case 'members':
+        return read('seats', usage.members);
+      case 'projects':
+        return read('projects', usage.projects);
+      case 'environments':
+        return read('environmentsPerWorkspace', usage.environments);
+      case 'flags':
+        return read('flags', usage.flags);
+      case 'segments':
+        return read('segments', usage.segments);
       // case "apiTokens":
       //   return read("apiTokens", usage.apiTokens);
-      case "webhooks":
-        return read("webhooks", usage.webhooks);
+      case 'webhooks':
+        return read('webhooks', usage.webhooks);
       default:
         // never here if dto.kind is validated
         return { allowed: false, limit: 0, used: 0 };

@@ -41,8 +41,8 @@ export class EnvironmentDto {
   @IsString() @IsNotEmpty() key: string;
   @IsString() @IsNotEmpty() displayName: string;
 
-  isDefault:boolean
-  isProd:boolean
+  isDefault: boolean;
+  isProd: boolean;
 
   createdAt: Date;
   updatedAt: Date;
@@ -170,15 +170,13 @@ export class UpdateEnvironmentDto {
 export class IssueSdkKeyDto {
   @IsUUID() projectId: string;
   @IsUUID() workspaceId: string;
-  @IsString() key:string
+  @IsString() key: string;
   @IsString() @IsNotEmpty() envId: string;
   @IsEnum(SdkKeyType) type: SdkKeyType;
-
 }
 
 export class RevokeSdkKeyDto {
   @IsString() sdkKeyId: string;
-
 }
 
 export class RotateSdkKeyDto {

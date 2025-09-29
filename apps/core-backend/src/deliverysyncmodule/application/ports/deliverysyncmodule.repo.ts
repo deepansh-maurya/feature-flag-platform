@@ -5,4 +5,3 @@ export interface DeliverysyncmoduleRepo {
   get(id: string): Promise<any | null>;
   create(dto: any): Promise<any>;
 }
-

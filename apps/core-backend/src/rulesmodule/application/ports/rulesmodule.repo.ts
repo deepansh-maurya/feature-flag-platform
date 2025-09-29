@@ -7,7 +7,7 @@ export interface RuleSetRecord {
   flagId: string;
   envKey: EnvKey;
   version: number;
-  rules: unknown;              // JSON stored
+  rules: unknown; // JSON stored
   killswitch: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -19,9 +19,7 @@ export interface SaveDraftInput {
   projectId: string;
   flagId: string;
   envKey: EnvKey;
-  patch: Partial<Pick<RuleSetRecord,
-    'rules' | 'killswitch'
-  >>;
+  patch: Partial<Pick<RuleSetRecord, 'rules' | 'killswitch'>>;
   actorUserId: string;
   previousRuleSetId?: string;
 }
@@ -34,7 +32,6 @@ export interface PublishResult {
 export interface RulesmoduleRepo {
   // Save a new ruleset draft (creates a new version entry)
   saveDraft(input: SaveDraftInput): Promise<RuleSetRecord>;
-
 }
 
 export const RulesmoduleRepoToken = Symbol('RulesmoduleRepo');

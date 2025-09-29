@@ -17,7 +17,7 @@ export const handler: CacheUpdaterHandlers = {
         );
       }
 
-      await updateFlagRules(userId, envId, flagId, JSON.parse(rules), version);
+      await updateFlagRules(flagId, JSON.parse(rules), version);
 
       return callback(null, {
         success: true,

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { AnalyticsmoduleRepo } from '../../application/ports/analyticsmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { GetFlagMetricsDto, GetOverviewDto, RecordEvaluationDto } from 'src/analyticsmodule/interface/dto/create-analyticsmodule.dto';
+import {
+  GetFlagMetricsDto,
+  GetOverviewDto,
+  RecordEvaluationDto,
+} from 'src/analyticsmodule/interface/dto/create-analyticsmodule.dto';
 
 @Injectable()
 export class PrismaAnalyticsmoduleRepo implements AnalyticsmoduleRepo {
@@ -11,7 +15,7 @@ export class PrismaAnalyticsmoduleRepo implements AnalyticsmoduleRepo {
     await this.prisma.flagEvaluation.create({ data: dto });
   }
 
-  async getOverview(dto:GetOverviewDto) {
+  async getOverview(dto: GetOverviewDto) {
     // Total evaluations
     const total = await this.prisma.flagEvaluation.count({
       where: {
@@ -49,7 +53,7 @@ export class PrismaAnalyticsmoduleRepo implements AnalyticsmoduleRepo {
     };
   }
 
-  async getFlagMetrics(dto:GetFlagMetricsDto) {
+  async getFlagMetrics(dto: GetFlagMetricsDto) {
     const evaluations = await this.prisma.flagEvaluation.findMany({
       where: {
         flagId: dto.flagId,

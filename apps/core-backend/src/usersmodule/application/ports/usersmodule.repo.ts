@@ -1,4 +1,10 @@
-import { CreateUserDto, GetUserByEmailDto, SoftDeleteUserDto, UpdateUserDto, UserDto } from '../../interface/dto/create-usersmodule.dto'
+import {
+  CreateUserDto,
+  GetUserByEmailDto,
+  SoftDeleteUserDto,
+  UpdateUserDto,
+  UserDto,
+} from '../../interface/dto/create-usersmodule.dto';
 export const USER_REPO = Symbol('USER_REPO');
 
 export interface UserRepo {

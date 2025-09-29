@@ -7,7 +7,7 @@ import {
   ListResult,
 } from '../../application/ports/auditmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { AuditActionType } from 'generated/prisma'
+import { AuditActionType } from 'generated/prisma';
 
 @Injectable()
 export class PrismaAuditModuleRepo implements AuditModuleRepo {
@@ -57,7 +57,7 @@ export class PrismaAuditModuleRepo implements AuditModuleRepo {
     const where: any = { workspaceId };
     if (projectId) where.projectId = projectId;
     if (envKey) where.envKey = envKey;
-    if (actionType) where.actionType = actionType as AuditActionType;
+    if (actionType) where.actionType = actionType;
     if (entityType) where.entityType = entityType;
     if (actorUserId) where.actorUserId = actorUserId;
     if (search) {
@@ -68,7 +68,9 @@ export class PrismaAuditModuleRepo implements AuditModuleRepo {
       ];
     }
 
-    const orderBy = { createdAt: direction === 'backward' ? 'desc' : 'asc' } as const;
+    const orderBy = {
+      createdAt: direction === 'backward' ? 'desc' : 'asc',
+    } as const;
 
     const results = await this.prisma.auditLog.findMany({
       where,

@@ -45,7 +45,7 @@ export class ProjectmoduleService {
     return this.repo.addEnvironment(dto);
   }
 
-    listEnvironments(projectId: string) {
+  listEnvironments(projectId: string) {
     return this.repo.listEnvironments(projectId);
   }
 
@@ -66,7 +66,7 @@ export class ProjectmoduleService {
     return this.repo.issueSdkKey(dto);
   }
 
- async revokeSdkKey(dto: RevokeSdkKeyDto) {
+  async revokeSdkKey(dto: RevokeSdkKeyDto) {
     return await this.repo.revokeSdkKey(dto);
   }
 

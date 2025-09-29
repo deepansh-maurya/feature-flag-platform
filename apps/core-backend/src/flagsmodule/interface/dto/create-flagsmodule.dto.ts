@@ -16,7 +16,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { EnvKey, FlagType } from 'generated/prisma'
+import { EnvKey, FlagType } from 'generated/prisma';
 
 export class CreateFlagEnvConfigDto {
   @IsEnum(EnvKey)
@@ -106,7 +106,6 @@ export class CreateFlagRequestDto {
   @Length(1, 100)
   key!: string;
 
-
   @IsOptional()
   @IsString()
   @Length(0, 500)
@@ -122,10 +121,6 @@ export class CreateFlagRequestDto {
   @ArrayMaxSize(20)
   @IsString({ each: true })
   tags?: string[];
-
-
-  
-
 }
 
 export class CreateVersionEnvConfigDto {

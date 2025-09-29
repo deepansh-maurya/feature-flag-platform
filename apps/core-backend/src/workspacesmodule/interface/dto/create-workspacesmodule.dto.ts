@@ -1,7 +1,16 @@
-import { IsString, IsOptional, IsUUID, IsEmail, IsEnum, IsNumber, IsBoolean, IsDateString } from "class-validator";
-import { Type } from "class-transformer";
-import { LimitKind } from "src/workspacesmodule/application/ports/workspacesmodule.repo";
-import { BillingStatus, RoleKey } from "generated/prisma";
+import {
+  IsString,
+  IsOptional,
+  IsUUID,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsBoolean,
+  IsDateString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { LimitKind } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
+import { BillingStatus, RoleKey } from 'generated/prisma';
 //import { BillingStatus, RoleKey } from "generated/prisma";
 
 // ---------- Generic DTOs ----------
@@ -16,7 +25,7 @@ export class PaginationDto {
 
   @IsOptional()
   @IsString()
-  order?: "asc" | "desc" = "desc";
+  order?: 'asc' | 'desc' = 'desc';
 }
 
 export class ByWorkspaceDto {
@@ -43,7 +52,7 @@ export class CreateWorkspaceDto {
 
   @IsOptional()
   @IsString()
-  planKey?: string = "default";
+  planKey?: string = 'default';
 
   @IsOptional()
   @IsString()
@@ -74,7 +83,7 @@ export class ArchiveWorkspaceDto extends ByWorkspaceDto {
   reason?: string;
 }
 
-export class RestoreWorkspaceDto extends ByWorkspaceDto { }
+export class RestoreWorkspaceDto extends ByWorkspaceDto {}
 
 export class GetWorkspaceDto {
   @IsOptional()
@@ -109,7 +118,7 @@ export class AddMemberDto extends ByWorkspaceDto {
   userId!: string;
 
   @IsEnum(RoleKey)
-  role!: Exclude<RoleKey, "owner">;
+  role!: Exclude<RoleKey, 'owner'>;
 }
 
 export class ChangeMemberRoleDto extends ByWorkspaceDto {
@@ -117,7 +126,7 @@ export class ChangeMemberRoleDto extends ByWorkspaceDto {
   userId!: string;
 
   @IsEnum(RoleKey)
-  role!: Exclude<RoleKey, "owner">;   
+  role!: Exclude<RoleKey, 'owner'>;
 }
 
 export class RemoveMemberDto extends ByWorkspaceDto {
@@ -125,7 +134,7 @@ export class RemoveMemberDto extends ByWorkspaceDto {
   userId!: string;
 }
 
-export class GetMemberRoleDto extends ByWorkspaceAndUserDto { }
+export class GetMemberRoleDto extends ByWorkspaceAndUserDto {}
 
 // ---------- Ownership DTOs ----------
 export class TransferOwnershipDto extends ByWorkspaceDto {
@@ -142,7 +151,7 @@ export class InviteMemberDto extends ByWorkspaceDto {
   email!: string;
 
   @IsEnum(RoleKey)
-  role!: Exclude<RoleKey, "OWNER">;
+  role!: Exclude<RoleKey, 'OWNER'>;
 
   @IsString()
   tokenHash!: string;
@@ -177,4 +186,4 @@ export class CheckLimitDto extends ByWorkspaceDto {
   delta?: number = 1;
 }
 
-export class GetUsageCountsDto extends ByWorkspaceDto { }
+export class GetUsageCountsDto extends ByWorkspaceDto {}

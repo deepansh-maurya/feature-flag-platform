@@ -14,5 +14,4 @@ import PrismaService from 'src/infra/prisma/prisma.service';
   ],
   exports: [AuditModuleService],
 })
-export class Auditmodule {}
-
+export class Auditmodule {} 

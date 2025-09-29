@@ -13,4 +13,3 @@
 //   exports: [DeliverysyncmoduleService],
 // })
 // export class DeliverysyncmoduleModule {}
-

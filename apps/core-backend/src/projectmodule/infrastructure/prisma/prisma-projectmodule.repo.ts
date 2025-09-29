@@ -29,7 +29,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
       data: {
         workspaceId,
         name,
-        rolloutPollicies: guardrails as any,
+        rolloutPollicies: guardrails,
         // DB currently stores langSupport as TEXT (JSON string). stringify here so writes succeed.
         langSupport: Array.isArray(langSupport)
           ? JSON.stringify(langSupport)
@@ -71,7 +71,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     const data: any = {};
     if (input.name) data.name = input.name;
     if (input.timeZone) data.timeZone = input.timeZone;
-    if (input.guardrails) data.rolloutPollicies = input.guardrails as any;
+    if (input.guardrails) data.rolloutPollicies = input.guardrails;
     if (input.langSupport) {
       // stringify array into JSON to match DB TEXT column
       data.langSupport = Array.isArray(input.langSupport)
@@ -289,7 +289,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
         projectId,
         ...(envId ? { envId } : {}),
         ...(type ? { type } : {}),
-        status:"active"
+        status: 'active',
       },
       orderBy: [{ envId: 'asc' }, { type: 'asc' }, { createdAt: 'asc' }],
     });

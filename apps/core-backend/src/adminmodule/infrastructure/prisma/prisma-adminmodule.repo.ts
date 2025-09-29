@@ -1,15 +1,38 @@
-import { Injectable, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { AdminmoduleRepo, PlanAggregate } from '../../application/ports/adminmodule.repo';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import {
+  AdminmoduleRepo,
+  PlanAggregate,
+} from '../../application/ports/adminmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { ArchivePlanDto, CreatePlanDto, DeleteFeatureDto, DeleteLimitDto, DeletePriceDto, EnrollDto, GetPlanByIdDto, GetPlanByKeyDto, ListPlansDto, PublishPlanDto, SetPriceActiveDto, UpsertFeaturesDto, UpsertLimitsDto, UpsertPriceDto } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
-import { PlanStatus } from 'generated/prisma'
-import * as bcrypt from "bcrypt"
+import {
+  ArchivePlanDto,
+  CreatePlanDto,
+  DeleteFeatureDto,
+  DeleteLimitDto,
+  DeletePriceDto,
+  EnrollDto,
+  GetPlanByIdDto,
+  GetPlanByKeyDto,
+  ListPlansDto,
+  PublishPlanDto,
+  SetPriceActiveDto,
+  UpsertFeaturesDto,
+  UpsertLimitsDto,
+  UpsertPriceDto,
+} from 'src/adminmodule/interface/dto/create-adminmodule.dto';
+import { PlanStatus } from 'generated/prisma';
+import * as bcrypt from 'bcrypt';
 
 type DbPlanAgg = any;
 
 @Injectable()
 export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
-  constructor(private readonly db: PrismaService) { }
+  constructor(private readonly db: PrismaService) {}
 
   // ---------- helpers ----------
   private toAggregate(p: DbPlanAgg): PlanAggregate {
@@ -79,7 +102,9 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
     });
     if (!plan) throw new NotFoundException('Plan not found');
     if (!plan.prices.length) {
-      throw new BadRequestException('Plan must have at least one active price to publish');
+      throw new BadRequestException(
+        'Plan must have at least one active price to publish',
+      );
     }
     if (plan.status === PlanStatus.archived) {
       throw new BadRequestException('Archived plan cannot be published');
@@ -205,7 +230,9 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
       const results: any = [];
       for (const item of dto.items) {
         const res = await tx.planLimit.upsert({
-          where: { planId_resource: { planId: dto.planId, resource: item.resource } },
+          where: {
+            planId_resource: { planId: dto.planId, resource: item.resource },
+          },
           create: {
             planId: dto.planId,
             resource: item.resource.trim(),
@@ -239,23 +266,25 @@ export class PrismaAdminmoduleRepo implements AdminmoduleRepo {
 
   async deleteLimit(dto: DeleteLimitDto): Promise<void> {
     await this.db.planLimit.delete({
-      where: { planId_resource: { planId: dto.planId, resource: dto.resource } },
+      where: {
+        planId_resource: { planId: dto.planId, resource: dto.resource },
+      },
     });
   }
 
-  async enroll(dto: EnrollDto): Promise<{ deviceId: string, id: string }> {
-    const admin = await this.db.admin.findFirst()
-    const ok = await bcrypt.compare(dto.passKey, admin?.passKey!)
+  async enroll(dto: EnrollDto): Promise<{ deviceId: string; id: string }> {
+    const admin = await this.db.admin.findFirst();
+    const ok = await bcrypt.compare(dto.passKey, admin?.passKey!);
 
     if (!ok) {
       throw new UnauthorizedException('Invalid passkey');
     }
-    const deviceId = crypto.randomUUID()
+    const deviceId = crypto.randomUUID();
     await this.db.admin.update({
       where: { id: admin?.id },
-      data: { deviceId: deviceId, isUsable: false }
-    })
+      data: { deviceId: deviceId, isUsable: false },
+    });
 
-    return { deviceId, id: admin?.id! }
+    return { deviceId, id: admin?.id! };
   }
 }

@@ -82,7 +82,7 @@ export class FlagsmoduleController {
     @Body() dto: any,
   ) {
     // simple pass-through; validation happens in service/repo
-   return await this.svc.updateFlag(flagId, dto);
+    return await this.svc.updateFlag(flagId, dto);
   }
 
   @Delete(':flagId')

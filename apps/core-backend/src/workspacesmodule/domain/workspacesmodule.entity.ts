@@ -1,6 +1,6 @@
 // domain/workspacesmodule.entity.ts
 
-import { BillingStatus } from "generated/prisma";
+import { BillingStatus } from 'generated/prisma';
 
 export class WorkspaceEntity {
   // ----------------------

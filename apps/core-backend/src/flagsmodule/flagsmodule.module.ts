@@ -15,4 +15,3 @@ import PrismaService from 'src/infra/prisma/prisma.service';
   exports: [FlagsmoduleService],
 })
 export class FlagsmoduleModule {}
-

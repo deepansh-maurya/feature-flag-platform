@@ -1,8 +1,18 @@
+/* eslint-disable */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { UnauthorizedException, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
+import { Request, Response, NextFunction } from 'express';
+import * as grpc from '@grpc/grpc-js';
+import * as protoLoader from '@grpc/proto-loader';
+import { CacheUpdaterClient } from 'src/grpc/generated/cache/CacheUpdater';
+import { ProtoGrpcType } from './grpc/generated/cache';
+const PROTO_PATH = '../core-backend/proto/cache.proto';
+
+export let client: CacheUpdaterClient;
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -21,7 +31,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     console.log('Incoming:', req.method, req.url);
     next();
   });
@@ -31,5 +41,26 @@ async function bootstrap() {
 
   await app.listen(8000, '0.0.0.0');
   console.log('Listening at:', await app.getUrl());
+
+  // ---------------------------------------------------- //
+  // **************************************************** //
+  // ---------------------------------------------------- //
+
+  const packageDef = protoLoader.loadSync(PROTO_PATH, {
+    keepCase: true,
+    longs: String,
+    enums: String,
+    defaults: true,
+    oneofs: true,
+  });
+
+  const grpcObj = grpc.loadPackageDefinition(
+    packageDef,
+  ) as unknown as ProtoGrpcType;
+
+  client = new grpcObj.cache.CacheUpdater(
+    'localhost:50051',
+    grpc.credentials.createInsecure(),
+  );
 }
 bootstrap();

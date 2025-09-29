@@ -1,7 +1,6 @@
 import { IsEmail, IsJWT, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class RegisterDto {
-
   @IsString()
   workspace: string;
 
@@ -12,21 +11,17 @@ export class RegisterDto {
   @MinLength(8)
   password: string;
 
-
   @IsString()
   fullName: string;
 }
 
 export class RefreshDto {
   @IsString()
-  
-  userId:string 
+  userId: string;
   @IsString()
-
-  email:string
+  email: string;
   @IsString()
-
-  workspaceId:string
+  workspaceId: string;
 }
 
 export class LoginDto {
@@ -43,7 +38,6 @@ export class LogoutDto {
   refreshToken: string;
 }
 export class ChangePasswordDto {
-
   @IsString()
   @MinLength(8)
   password: string;

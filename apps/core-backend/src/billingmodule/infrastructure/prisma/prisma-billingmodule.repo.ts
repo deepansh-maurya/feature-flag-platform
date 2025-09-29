@@ -216,9 +216,9 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
       orderBy: { createdAt: 'desc' },
     });
 
-  console.log(row, 219);
+    console.log(row, 219);
 
-  if (!row) throw new NotFoundException('no plans found');
+    if (!row) throw new NotFoundException('no plans found');
 
     console.log('reached here 223', row);
 
@@ -227,8 +227,8 @@ export default class RazorpayBillingModuleRepo implements BillingmoduleRepo {
 
   async getEntitlements(workspaceId: string): Promise<EntitlementsDto> {
     const sub = await this.getCurrentSubscription(workspaceId);
-    const plan = (sub?.planKey ?? 'STARTER') as PlanKey;
-    const status = (sub?.status ?? 'canceled') as SubscriptionStatus;
+    const plan = sub?.planKey ?? 'STARTER';
+    const status = sub?.status ?? 'canceled';
 
     const PLAN_LIMITS: Record<PlanKey, Record<string, number | boolean>> = {
       STARTER: { projects: 3, customDomain: false, aiTokens: 100_000 },

@@ -6,7 +6,7 @@ import { handler } from "./server/grpcServer";
 import express from "express";
 import { handleEvaluator } from "./server/restServer";
 const packageDefinition = protoLoader.loadSync(
-  path.join(__dirname, "./proto/cache.proto")
+  path.join(__dirname, "./protos/cache.proto")
 );
 
 const personProto = grpc.loadPackageDefinition(
@@ -16,8 +16,9 @@ const personProto = grpc.loadPackageDefinition(
 const server = new grpc.Server();
 
 server.addService(personProto.cache.CacheUpdater.service, handler);
+
 server.bindAsync(
-  "0.0.0.0:50051",
+  "localhost:50051",
   grpc.ServerCredentials.createInsecure(),
   () => {
     server.start();

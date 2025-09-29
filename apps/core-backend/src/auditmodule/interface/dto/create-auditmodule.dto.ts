@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import { AuditActionType } from 'generated/prisma'
+import { AuditActionType } from 'generated/prisma';
 
 export class AppendAuditLogDto {
   @IsString() @IsNotEmpty() workspaceId!: string;

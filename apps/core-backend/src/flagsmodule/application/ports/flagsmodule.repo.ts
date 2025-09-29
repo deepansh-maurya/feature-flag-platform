@@ -1,13 +1,18 @@
 // apps/core-backend/src/flagsmodule/application/ports/flagsmodule.repo.ts
-import { FlagType } from 'generated/prisma'
-import { CreateFlagDto, CreateFlagRequestDto, CreateVersionDto, UpsertFlagMetaDto } from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';
+import { FlagType } from 'generated/prisma';
+import {
+  CreateFlagDto,
+  CreateFlagRequestDto,
+  CreateVersionDto,
+  UpsertFlagMetaDto,
+} from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';
 
 export const FLAGS_REPO = Symbol('FLAGS_REPO');
 
 export type FlagMetaDTO = {
   id: string;
   key: string;
-  type?: FlagType;   // 👈 make it optional if not implemented yet
+  type?: FlagType; // 👈 make it optional if not implemented yet
   description?: string | null;
   archived: boolean;
   createdAt: Date;
@@ -15,7 +20,7 @@ export type FlagMetaDTO = {
   workspaceId: string;
   projectId: string;
   displayName?: string;
-  name?: string;     // 👈 add if you want to expose "name"
+  name?: string; // 👈 add if you want to expose "name"
   tags?: string[];
   createdBy?: string | null;
 };
@@ -28,10 +33,18 @@ export interface FlagsRepository {
   listByProject(projectId: string): Promise<FlagMetaDTO[]>;
 
   // mutations
-  createFlag(input: CreateFlagRequestDto ): Promise<{ flagId: string }>;
+  createFlag(input: CreateFlagRequestDto): Promise<{ flagId: string }>;
 
   // update flag (name, description, tags, archived)
-  updateFlag(flagId: string, data: { name?: string; description?: string | null; tags?: string[]; archived?: boolean }): Promise<void>;
+  updateFlag(
+    flagId: string,
+    data: {
+      name?: string;
+      description?: string | null;
+      tags?: string[];
+      archived?: boolean;
+    },
+  ): Promise<void>;
   // delete flag permanently
   deleteFlag(flagId: string): Promise<void>;
 

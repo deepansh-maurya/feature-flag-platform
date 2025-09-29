@@ -1,4 +1,3 @@
-
 import { IsBoolean, IsDateString, IsOptional, IsString } from 'class-validator';
 
 export class RecordEvaluationDto {
@@ -37,7 +36,8 @@ export class GetOverviewDto {
 
   @IsDateString()
   to: Date; // ISO string
-}export class GetFlagMetricsDto {
+}
+export class GetFlagMetricsDto {
   @IsString()
   flagId: string;
 

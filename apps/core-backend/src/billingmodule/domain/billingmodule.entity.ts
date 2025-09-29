@@ -1,4 +1,4 @@
-import { BillingCycle, PlanKey, SubscriptionStatus } from "generated/prisma";
+import { BillingCycle, PlanKey, SubscriptionStatus } from 'generated/prisma';
 
 export class BillingEntity {
   private constructor(
@@ -15,7 +15,7 @@ export class BillingEntity {
     readonly cancelsAt?: Date | null,
     readonly createdAt?: Date,
     readonly updatedAt?: Date,
-  ) { }
+  ) {}
 
   static create(params: {
     id: string;
@@ -33,16 +33,16 @@ export class BillingEntity {
     updatedAt?: Date;
   }) {
     if (!params.workspaceId) {
-      throw new Error("workspaceId required");
+      throw new Error('workspaceId required');
     }
     if (!params.planKey) {
-      throw new Error("planKey required");
+      throw new Error('planKey required');
     }
     if (!params.periodStart || !params.periodEnd) {
-      throw new Error("periodStart and periodEnd required");
+      throw new Error('periodStart and periodEnd required');
     }
     if (params.periodEnd <= params.periodStart) {
-      throw new Error("periodEnd must be after periodStart");
+      throw new Error('periodEnd must be after periodStart');
     }
 
     return new BillingEntity(

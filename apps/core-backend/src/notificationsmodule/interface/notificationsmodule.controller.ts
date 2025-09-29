@@ -20,4 +20,3 @@ export class NotificationsmoduleController {
     return this.svc.get(id);
   }
 }
-

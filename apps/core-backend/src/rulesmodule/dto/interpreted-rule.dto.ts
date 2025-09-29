@@ -10,7 +10,14 @@ export class RuleCondition {
   @ApiProperty({
     description: 'The operator to use in the condition',
     example: 'greaterThan',
-    enum: ['equals', 'notEquals', 'greaterThan', 'lessThan', 'contains', 'notContains'],
+    enum: [
+      'equals',
+      'notEquals',
+      'greaterThan',
+      'lessThan',
+      'contains',
+      'notContains',
+    ],
   })
   operator: string;
 

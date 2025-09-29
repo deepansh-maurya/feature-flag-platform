@@ -1,4 +1,4 @@
-import { SdkKeyType } from 'generated/prisma'
+import { SdkKeyType } from 'generated/prisma';
 import {
   ProjectSummaryDto,
   EnvironmentDto,
@@ -29,13 +29,26 @@ export interface ProjectmoduleRepo {
   // Environments
   addEnvironment(input: AddEnvironmentDto): Promise<EnvironmentDto>;
   listEnvironments(projectId: string): Promise<EnvironmentDto[]>;
-  findEnvironment(projectId: string, envKey: string): Promise<EnvironmentDto | null>;
-  updateEnvironment(projectId: string, envId: string, patch: any): Promise<EnvironmentDto>;
+  findEnvironment(
+    projectId: string,
+    envKey: string,
+  ): Promise<EnvironmentDto | null>;
+  updateEnvironment(
+    projectId: string,
+    envId: string,
+    patch: any,
+  ): Promise<EnvironmentDto>;
   deleteEnvironment(projectId: string, envId: string): Promise<void>;
 
   // SDK Keys
   issueSdkKey(input: IssueSdkKeyDto): Promise<SdkKeyDto>;
   revokeSdkKey(input: RevokeSdkKeyDto): Promise<void>;
-  rotateSdkKey(input: RotateSdkKeyDto): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }>;
-  listSdkKeys(projectId: string, envKey?: string, type?: SdkKeyType): Promise<SdkKeyDto[]>;
+  rotateSdkKey(
+    input: RotateSdkKeyDto,
+  ): Promise<{ newKey: SdkKeyDto; oldKey?: SdkKeyDto }>;
+  listSdkKeys(
+    projectId: string,
+    envKey?: string,
+    type?: SdkKeyType,
+  ): Promise<SdkKeyDto[]>;
 }

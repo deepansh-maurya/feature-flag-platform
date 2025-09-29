@@ -75,8 +75,8 @@ export class BillingmoduleService {
   }
 
   async currentPlan(workspaceId: string) {
-    console.log("reached0");
-    
+    console.log('reached0');
+
     return this.repo.getCurrentSubscription(workspaceId);
   }
 }

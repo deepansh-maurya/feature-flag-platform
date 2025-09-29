@@ -20,4 +20,3 @@ export class DeliverysyncmoduleController {
     return this.svc.get(id);
   }
 }
-
