@@ -1,112 +1,39 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./TargetingRulesPage.module.css";
-import { rid } from "./utils";
 import FlagRulesBuilder from "./FlagRulesBuilder";
-import { Flag, Segment } from "../../types";
-
-const initialFlag1: Flag = {
-  key: "dark_mode_v2",
-  envRules: {
-    dev: [
-      {
-        id: rid(),
-        name: "Dev: everyone",
-        text: "turn on for all in dev",
-        conditions: ["*"],
-        priority: 1,
-        enabled: true,
-        source: { kind: "local" }
-      }
-    ],
-    stage: [
-      {
-        id: rid(),
-        name: "Stage: pro users",
-        text: "enable for pro users",
-        conditions: ["plan=pro"],
-        priority: 1,
-        enabled: true,
-        source: { kind: "local" }
-      }
-    ],
-    prod: []
-  },
-  updatedAt: "2 min ago"
-};
-
-const initialFlag2: Flag = {
-  key: "beta_feature_x",
-  envRules: {
-    dev: [
-      {
-        id: rid(),
-        name: "Dev: India only",
-        text: "enable for users in India",
-        conditions: ["region=IN"],
-        priority: 1,
-        enabled: true,
-        source: { kind: "local" }
-      }
-    ],
-    stage: [
-      {
-        id: rid(),
-        name: "Stage: free plan",
-        text: "turn on for free plan users",
-        conditions: ["plan=free"],
-        priority: 1,
-        enabled: true,
-        source: { kind: "local" }
-      }
-    ],
-    prod: []
-  },
-  updatedAt: "5 min ago"
-};
-
-const initialFlag3: Flag = {
-  key: "new_dashboard_ui",
-  envRules: {
-    dev: [
-      {
-        id: rid(),
-        name: "Dev: Android users",
-        text: "enable for Android users only",
-        conditions: ["platform=Android"],
-        priority: 1,
-        enabled: true,
-        source: { kind: "local" }
-      }
-    ],
-    stage: [
-      {
-        id: rid(),
-        name: "Stage: US Pro users",
-        text: "turn on for Pro users in US",
-        conditions: ["plan=pro", "region=US"],
-        priority: 1,
-        enabled: true,
-        source: { kind: "local" }
-      }
-    ],
-    prod: []
-  },
-  updatedAt: "10 min ago"
-};
-
-const INITIAL_FLAGS: Flag[] = [initialFlag1, initialFlag2, initialFlag3];
+import { Flag } from "../../types";
+import { useFlags } from "../../../flag/hooks";
+import { AppConst } from "@/app/constants";
 
 export default function TargetingRulesPage() {
-  const [flags, setFlags] = useState<Flag[]>([
-    initialFlag1,
-    initialFlag2,
-    initialFlag3
-  ]);
-  const [openKeys, setOpenKeys] = useState<Record<string, boolean>>({
-    [INITIAL_FLAGS[0].key]: true
-  });
+  const [flags, setFlags] = useState<Flag[]>([]);
+  const [openKeys, setOpenKeys] = useState<Record<string, boolean>>({});
+
+  // Try to load real flags for the current project (if available).
+  // We look for NEXT_PUBLIC_PROJECT_ID at runtime/build-time. If not set,
+  // we keep the local static sample flags.
+  const projectId = sessionStorage.getItem(AppConst.curPro)!;
+  const flagsQuery = useFlags(projectId);
+
+  useEffect(() => {
+    const rows = flagsQuery.data;
+    if (rows && rows.length > 0) {
+      const mapped: Flag[] = rows.map((f) => ({
+        key: f.key,
+        envRules: {
+          dev: [],
+          stage: [],
+          prod: []
+        },
+        updatedAt: f.updatedAt ? new Date(f.updatedAt).toLocaleString() : ""
+      }));
+      setFlags(mapped);
+      setOpenKeys(() => ({ [mapped[0].key]: true }));
+    }
+    // keep fallback to initial flags when no projectId or empty response
+  }, [flagsQuery.data]);
 
   function updateFlag(updated: Flag) {
     setFlags((prev) => prev.map((f) => (f.key === updated.key ? updated : f)));

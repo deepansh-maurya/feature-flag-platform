@@ -19,7 +19,7 @@ export class RulesmoduleController {
     private readonly interpreter: RuleInterpreterService,
   ) {}
 
-  @Post()
+  @Post('create')
   @HttpCode(HttpStatus.CREATED)
   async createRules(@Body() dto: CreateRulesmoduleDto) {
     // First interpret and validate rules

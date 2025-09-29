@@ -16,12 +16,12 @@ export let client: CacheUpdaterClient;
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api/v1'); // version later e.g., api/v1
+  app.setGlobalPrefix('api/v1'); 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // strips unknown props
-      forbidNonWhitelisted: true, // throw error on extra props
-      transform: true, // transform payloads to DTO instances
+      whitelist: true, 
+      forbidNonWhitelisted: true, 
+      transform: true,
     }),
   );
   app.use(cookieParser());

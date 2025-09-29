@@ -1,18 +1,16 @@
 import styles from "./TargetingRulesPage.module.css";
-import { useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { humanize, parseTokens, renumber, rid } from "./utils";
 import CopyFromEnvPrompt from "./CopyFromEnvPrompt";
-import EmptyRules from "./EmptyRules";
 import InlineAdd from "./InlineAdd";
 import VersionHistoryModal from "./VersionHistoryModel";
 import RulesTestModal from "./RulesTestModal";
-import PrerequisitesPicker, {
-  FlagMeta,
-  Prereq
-} from "../PrerequisitesPicker/PrerequisitesPicker";
 import RuleSetPreview from "../RuleSetPreview/RuleSetPreview";
 import { withModal } from "../../../../shared/components/WithModel/withModal";
-import { EnvKey, Flag, Rule, Segment, Version } from "../../types";
+import { EnvKey, Flag, Rule, Version } from "../../types";
+import { useCreateRules } from "../../hooks";
+import { AppConst } from "@/app/constants";
+import { useAppContext } from "@/src/shared/context/AppContext";
 
 const RuleSetPreviewModal = withModal(RuleSetPreview);
 
@@ -23,41 +21,15 @@ export default function FlagRulesBuilder({
   flag: Flag;
   onChange: (f: Flag) => void;
 }) {
-  const [editingIdx, setEditingIdx] = useState<number | null>(null);
-  const flags: FlagMeta[] = [
-    {
-      key: "enable_checkout",
-      name: "Enable Checkout",
-      variations: [{ key: "on" }, { key: "off" }]
-    },
-    {
-      key: "checkout_redesign",
-      name: "Checkout Redesign",
-      variations: [{ key: "control" }, { key: "new" }]
-    },
-    {
-      key: "dark_mode",
-      name: "Dark Mode",
-      variations: [{ key: "on" }, { key: "off" }]
-    },
-    {
-      key: "ios_gate",
-      name: "iOS Gate",
-      variations: [{ key: "allow" }, { key: "deny" }]
-    }
-  ];
-
-  const [state, setState] = useState<Prereq[]>([]);
   const [openModel, setOpenModel] = useState(false);
   const [activeEnv, setActiveEnv] = useState<EnvKey>("dev");
-  const [showSegments, setShowSegments] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const [showCopyPrompt, setShowCopyPrompt] = useState(false);
   const [showTester, setShowTester] = useState(false);
   const lastSavedRulesRef = useRef<Rule[] | null>(null);
   const [isDirty, setIsDirty] = useState(false);
-  // first-time copy/scratch prompt per env (per-flag)
+  const { user, workspace } = useAppContext();
   const seenEnv = useRef<Record<EnvKey, boolean>>({
     dev: true,
     stage: true,
@@ -74,6 +46,9 @@ export default function FlagRulesBuilder({
     }
   }, [activeEnv, flag.envRules]);
 
+  console.log(activeEnv,isDirty,flag);
+  
+
   // initialize lastSavedRulesRef when flag or environment changes
   useEffect(() => {
     const current = JSON.parse(
@@ -81,7 +56,7 @@ export default function FlagRulesBuilder({
     ) as Rule[];
     lastSavedRulesRef.current = current;
     setIsDirty(false);
-  }, [flag.key, activeEnv]);
+  }, [flag.key, activeEnv, flag.envRules]);
 
   // recompute dirty when rules change
   useEffect(() => {
@@ -92,6 +67,13 @@ export default function FlagRulesBuilder({
 
   const rules: Rule[] = flag.envRules[activeEnv] || [];
   const setFlag = (updater: (f: Flag) => Flag) => onChange(updater(flag));
+
+  const createRulesMut = useCreateRules();
+  const [submitting, setSubmitting] = useState(false);
+
+  const workspaceId = workspace?.id;
+  const projectId = sessionStorage.getItem(AppConst.curPro)!;
+  const actorUserId = user?.id;
 
   function removeRule(idx: number) {
     const arr = rules.filter((_, i) => i !== idx);
@@ -220,13 +202,43 @@ export default function FlagRulesBuilder({
           >
             History
           </button>
+        
           <button
             className={styles.primaryBtn}
-            onClick={() => saveSnapshot("auto save")}
-            disabled={!isDirty}
-            title={!isDirty ? 'No changes to save' : 'Save changes'}
+            onClick={() => {
+              console.log("clicked");
+              
+              // Collect raw rule texts
+              const rawRules = (flag.envRules[activeEnv] || []).map(
+                (r) => r.text || ""
+              );
+              console.log(rawRules, projectId, workspaceId, actorUserId);
+
+              if (!projectId || !workspaceId || !actorUserId) {
+                alert("error")
+                // fallback: still fire without server ids, backend may reject
+              }
+              setSubmitting(true);
+              createRulesMut
+                .mutateAsync({
+                  workspaceId: workspaceId ?? "",
+                  projectId: projectId ?? "",
+                  flagId: flag.key,
+                  envKey: activeEnv,
+                  actorUserId: actorUserId ?? "",
+                  rawRules
+                })
+                .then(() => {
+                  saveSnapshot("saved via server");
+                })
+                .catch(() => {
+                  // TODO: surface error to user (toast)
+                })
+                .finally(() => setSubmitting(false));
+            }}
+            title={!isDirty ? "No changes to submit" : "Submit rules to server"}
           >
-            Save
+            {submitting ? "Submitting..." : "Submit"}
           </button>
         </div>
         <button

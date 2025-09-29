@@ -26,7 +26,7 @@ export class OpenAIService {
     const prompt = this.buildPrompt(rawRules);
 
     const response = await this.openai.chat.completions.create({
-      model: 'gpt-4',
+      model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
@@ -45,33 +45,35 @@ export class OpenAIService {
     try {
       return JSON.parse(content);
     } catch (err) {
-      throw new Error('Failed to parse OpenAI response as JSON');
+      throw new Error('Failed to parse OpenAI response as JSON', err);
     }
   }
 
   private buildPrompt(rawRules: string[]): string {
     return `
-      Convert the following natural-language rules into a JSON object with keys "inputs" and "rules".
+    Convert the following natural-language rules into a JSON object with keys "inputs" and "rules".
 
-      - "inputs" must be an array of unique attribute names that the rules depend on.
-      - "rules" must be an array of atomic rules. Each rule should include:
+    - "inputs" must be an array of unique attribute names that the rules depend on.
+    - "rules" must be an array of atomic rules. Each rule should include:
 
-        - "id": a unique identifier for the rule (string, e.g. "rule_1")
-        - "shortName": a short machine-friendly name for the rule (string, e.g. "plan_rule")
-        - "rawRule": the original natural-language rule as given by the user
-        - "field": the attribute name (string, e.g. "plan", "country", "age")
-        - "op": the operator (one of: eq, neq, gt, gte, lt, lte, in, nin, contains, regex)
-        - "value": the comparison value
-        - "rollout": boolean (true if rollout should apply, false otherwise)
+      - "id": a unique identifier for the rule (string, e.g. "rule_1")
+      - "shortName": a short machine-friendly name for the rule (string, e.g. "plan_rule")
+      - "rawRule": the original natural-language rule as given by the user
+      - "field": the attribute name (string, e.g. "plan", "country", "age")
+      - "op": the operator (one of: eq, neq, gt, gte, lt, lte, in, nin, contains, regex)
+      - "value": the comparison value
+      - "rollout": boolean (true if rollout should apply, false otherwise)
 
-      Rules must be atomic (only one condition per rule). 
-      If a rule contains multiple conditions or nesting (like "and"/"or"), reject it and return an error object like:
+    Rules must be atomic (only one condition per rule).
+    - If a rule contains multiple conditions in a single line (e.g., "if country=US and plan=premium"),
+      split it into multiple separate rules, one per condition.
+    - If a rule is deeply nested or cannot be split cleanly, return an error object like:
       { "error": "Only single-condition rules are allowed. Please simplify your rule." }
 
-      Return ONLY valid JSON, no explanations.
+    Return ONLY valid JSON, no explanations.
 
-      Rules:
-      ${rawRules.map((r, i) => `- (${i + 1}) "${r.replace(/"/g, '\\"')}"`).join('\n')}
-    `;
+    Rules:
+    ${rawRules.map((r, i) => `- (${i + 1}) "${r.replace(/"/g, '\\"')}"`).join('\n')}
+  `;
   }
 }

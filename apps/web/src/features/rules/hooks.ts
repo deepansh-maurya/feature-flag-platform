@@ -18,6 +18,8 @@ import {
   // draft lifecycle
   ensureDraftFromActive,
   saveDraft,
+  // create
+  createRules,
   // publish
   publishDraft,
   // hash
@@ -105,7 +107,11 @@ export function usePrefetchRules(flagId?: string, envKey?: EnvKey) {
 function invalidateRules(qc: ReturnType<typeof useQueryClient>, flagId: string, envKey: EnvKey) {
   qc.invalidateQueries({ queryKey: QK.active(flagId, envKey) });
   qc.invalidateQueries({ queryKey: QK.draft(flagId, envKey) });
-  qc.invalidateQueries({ predicate: q => (q.queryKey as any)[0] === "rules" && (q.queryKey as any)[1] === "history" });
+  qc.invalidateQueries({ predicate: (q) => {
+    const k = q.queryKey as unknown;
+    if (!Array.isArray(k)) return false;
+    return k[0] === "rules" && k[1] === "history";
+  } });
 }
 
 export function useEnsureDraftFromActive(flagId: string, envKey: EnvKey) {
@@ -131,6 +137,19 @@ export function useSaveDraft(flagId: string, envKey: EnvKey) {
     onSuccess: () => {
       // refresh draft view; active remains until publish
       qc.invalidateQueries({ queryKey: QK.draft(flagId, envKey) });
+    },
+  });
+}
+
+export function useCreateRules() {
+  const qc = useQueryClient();
+  return useMutation<unknown, Error, import('./types').CreateRulesInput>({
+    mutationFn: (dto) => createRules(dto),
+    onSuccess: (_data, vars) => {
+      if (vars?.flagId && vars?.envKey) {
+        qc.invalidateQueries({ queryKey: QK.active(vars.flagId, vars.envKey) });
+        qc.invalidateQueries({ queryKey: QK.draft(vars.flagId, vars.envKey) });
+      }
     },
   });
 }

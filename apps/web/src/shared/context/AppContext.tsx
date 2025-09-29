@@ -34,9 +34,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isSuccess && data) {
-      //@ts-ignore
       setUser((prev) => prev ?? data.user);
-      //@ts-ignore
       setWorkspace((prev) => prev ?? data.workspace);
     }
   }, [isSuccess, data, setUser, setWorkspace]);

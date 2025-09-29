@@ -70,3 +70,13 @@ export type Version = {
   note?: string;
   snapshot: Flag;
 };
+
+export interface CreateRulesInput {
+  workspaceId: string;
+  projectId: string;
+  flagId: string;
+  envKey: EnvKey;
+  actorUserId: string;
+  rawRules: string[];
+  previousRuleSetId?: string | null;
+}

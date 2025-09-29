@@ -1,4 +1,4 @@
-import { IsString, IsArray, IsNotEmpty } from 'class-validator';
+import { IsString, IsArray, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EnvKey } from 'generated/prisma';
 
@@ -37,5 +37,6 @@ export class CreateRulesmoduleDto {
     description: 'Optional existing ruleset id to replace',
     required: false,
   })
+  @IsOptional()
   previousRuleSetId?: string;
 }

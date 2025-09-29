@@ -7,12 +7,11 @@ import { AppConst, Routes } from "../../../../app/constants";
 import { useRouter } from "next/navigation";
 import { useLogin } from "../hooks";
 import { useAppContext } from "@/src/shared/context/AppContext";
-import { useWorkspace } from "../../settings/hook";
 
 export default function LoginPage() {
   const [show, setShow] = useState(false);
   const router = useRouter();
-  const { user, setUser, setWorkspace } = useAppContext();
+  const { setUser, setWorkspace } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true); // visual only for now
@@ -35,8 +34,7 @@ export default function LoginPage() {
       {
         onSuccess: async (data) => {
           console.log(data);
-          
-          //@ts-ignore
+
           const user = data.user as any;
           setUser({
             email: user?.email,
@@ -44,13 +42,12 @@ export default function LoginPage() {
             name: user.name
           });
 
-          //@ts-ignore
-          const workspace = data.workspace
+          const workspace = data.workspace;
 
           setWorkspace({
             id: workspace!.id,
             name: workspace!.name,
-            plan:workspace.planKey
+            plan: workspace.planKey
           });
 
           router.push(Routes.dashboard());

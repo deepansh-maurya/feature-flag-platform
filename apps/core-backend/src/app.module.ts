@@ -10,6 +10,8 @@ import { WorkspacesmoduleModule } from './workspacesmodule/workspacesmodule.modu
 import { BillingModule } from './billingmodule/billingmodule.module';
 import { Auditmodule } from './auditmodule/auditmodule.module';
 import PrismaModule from './infra/prisma/prisma.module';
+import { RulesmoduleModule } from './rulesmodule/rulesmodule.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -24,6 +26,10 @@ import PrismaModule from './infra/prisma/prisma.module';
     UserModule,
     WorkspacesmoduleModule,
     PrismaModule,
+    RulesmoduleModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
 })
 export class AppModule {}
