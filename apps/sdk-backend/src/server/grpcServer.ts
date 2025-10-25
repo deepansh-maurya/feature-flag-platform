@@ -1,7 +1,12 @@
 import * as grpc from "@grpc/grpc-js";
 import { CacheUpdaterHandlers } from "./proto/generated/cache/CacheUpdater";
-import { updateConfig, updateFlagRules } from "../cache/cacheOps";
+import {
+  updateConfig,
+  updateFlagRules,
+  updateUsersApiKeys
+} from "../cache/cacheOps";
 import { ConfiUpdatorHandlers } from "./proto/generated/cache/ConfiUpdator";
+import { ApiKeyUpdatorHandlers } from "./proto/generated/cache/ApiKeyUpdator";
 
 export const ruleshandler: CacheUpdaterHandlers = {
   UpdateFlagRules: async (call, callback) => {
@@ -44,7 +49,7 @@ export const configHandler: ConfiUpdatorHandlers = {
         return callback(
           {
             code: grpc.status.INVALID_ARGUMENT,
-            message: "userId, envId, flagId, and rules are required"
+            message: " envId, envName, and config are required"
           },
           null
         );
@@ -54,6 +59,38 @@ export const configHandler: ConfiUpdatorHandlers = {
       return callback(null, {
         success: true,
         message: `config updated for envid=${envId},  envName=${envName}`
+      });
+    } catch (err: any) {
+      return callback(
+        {
+          code: grpc.status.INTERNAL,
+          message: err.message || "Failed to update rules"
+        },
+        null
+      );
+    }
+  }
+};
+
+export const apiKeyHandler: ApiKeyUpdatorHandlers = {
+  UpdateApiKey: async (call, callback) => {
+    try {
+      const { apiKey, userId } = call.request;
+      if (!apiKey || !userId) {
+        return callback(
+          {
+            code: grpc.status.INVALID_ARGUMENT,
+            message: " apiKey, userId are required"
+          },
+          null
+        );
+      }
+
+      await updateUsersApiKeys(apiKey, userId);
+
+      return callback(null, {
+        success: true,
+        message: `config updated for apiKey=${apiKey},  userId=${userId}`
       });
     } catch (err: any) {
       return callback(

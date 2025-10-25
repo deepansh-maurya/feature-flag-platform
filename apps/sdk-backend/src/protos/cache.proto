@@ -33,3 +33,17 @@ message ConfigResponse {
   bool success = 1;      
   string message = 2;    
 }
+
+service ApiKeyUpdator {
+  rpc  UpdateApiKey(ApiKeyRequest) returns (ApiKeyResponse);
+}
+
+message ApiKeyRequest {
+  string apiKey = 1;
+ string userId  = 2;
+}
+
+message ApiKeyResponse {
+    bool success = 1;      
+  string message = 2;    
+}

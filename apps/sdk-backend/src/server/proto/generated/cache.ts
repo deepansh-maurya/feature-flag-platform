@@ -1,6 +1,9 @@
 import type * as grpc from '@grpc/grpc-js';
 import type { MessageTypeDefinition } from '@grpc/proto-loader';
 
+import type { ApiKeyRequest as _cache_ApiKeyRequest, ApiKeyRequest__Output as _cache_ApiKeyRequest__Output } from './cache/ApiKeyRequest';
+import type { ApiKeyResponse as _cache_ApiKeyResponse, ApiKeyResponse__Output as _cache_ApiKeyResponse__Output } from './cache/ApiKeyResponse';
+import type { ApiKeyUpdatorClient as _cache_ApiKeyUpdatorClient, ApiKeyUpdatorDefinition as _cache_ApiKeyUpdatorDefinition } from './cache/ApiKeyUpdator';
 import type { CacheUpdaterClient as _cache_CacheUpdaterClient, CacheUpdaterDefinition as _cache_CacheUpdaterDefinition } from './cache/CacheUpdater';
 import type { ConfiUpdatorClient as _cache_ConfiUpdatorClient, ConfiUpdatorDefinition as _cache_ConfiUpdatorDefinition } from './cache/ConfiUpdator';
 import type { ConfigRequest as _cache_ConfigRequest, ConfigRequest__Output as _cache_ConfigRequest__Output } from './cache/ConfigRequest';
@@ -14,6 +17,9 @@ type SubtypeConstructor<Constructor extends new (...args: any) => any, Subtype> 
 
 export interface ProtoGrpcType {
   cache: {
+    ApiKeyRequest: MessageTypeDefinition<_cache_ApiKeyRequest, _cache_ApiKeyRequest__Output>
+    ApiKeyResponse: MessageTypeDefinition<_cache_ApiKeyResponse, _cache_ApiKeyResponse__Output>
+    ApiKeyUpdator: SubtypeConstructor<typeof grpc.Client, _cache_ApiKeyUpdatorClient> & { service: _cache_ApiKeyUpdatorDefinition }
     CacheUpdater: SubtypeConstructor<typeof grpc.Client, _cache_CacheUpdaterClient> & { service: _cache_CacheUpdaterDefinition }
     ConfiUpdator: SubtypeConstructor<typeof grpc.Client, _cache_ConfiUpdatorClient> & { service: _cache_ConfiUpdatorDefinition }
     ConfigRequest: MessageTypeDefinition<_cache_ConfigRequest, _cache_ConfigRequest__Output>

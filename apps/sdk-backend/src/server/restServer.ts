@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { evaluateRules } from "../core/evaluator";
 import { redis } from "../cache/redisClient";
 
@@ -50,3 +50,28 @@ export async function getCOnfigForEnv(req: Request, res: Response) {
       .json({ error: error.message || "Internal server error" });
   }
 }
+
+export const verifyApiKey = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const apiKey = req.header("authorization");
+    if (!apiKey) {
+      return res.status(401).json({ error: "Missing API key" });
+    }
+
+    const isUserAvail = await redis.get(`user:${apiKey}`);
+
+    if (!isUserAvail) {
+      return res.status(404).json({ error: "user not available" });
+    }
+
+    next();
+  } catch (error: any) {
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
+  }
+};

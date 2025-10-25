@@ -19,12 +19,23 @@ export async function updateFlagRules(
 
 export async function updateConfig(
   envId: string,
-  envName: string,  
+  envName: string,
   config: string
 ) {
   try {
     const key = `env:${envId}:${envName}`;
     const value = JSON.stringify({ ...JSON.parse(config) });
     await redis.set(key, value);
-  } catch (error) {}
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function updateUsersApiKeys(apiKey: string, userId: string) {
+  try {
+    const key = `user:${apiKey}`;
+    await redis.set(key, userId);
+  } catch (error) {
+    console.log(error);
+  }
 }
