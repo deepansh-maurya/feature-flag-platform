@@ -28,3 +28,25 @@ export async function handleEvaluator(req: Request, res: Response) {
       .json({ error: error.message || "Internal server error" });
   }
 }
+
+export async function getCOnfigForEnv(req: Request, res: Response) {
+  try {
+    const { envId, envName } = req.body;
+    if (!envId || !envName) {
+      return res.status(400).json({ error: "env id and name required " });
+    }
+
+    const config = await redis.get(`env:${envId}:${envName}`);
+
+    if (!config)
+      return res
+        .status(404)
+        .json({ error: "not config present for this env id and name" });
+
+    return res.status(200).json({ config: config });
+  } catch (error: any) {
+    return res
+      .status(500)
+      .json({ error: error.message || "Internal server error" });
+  }
+}

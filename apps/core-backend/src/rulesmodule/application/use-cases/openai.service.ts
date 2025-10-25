@@ -13,7 +13,7 @@ export interface InterpretedRule {
 }
 
 @Injectable()
-export class OpenAIService {
+export class OpenAIService {32 
   private openai: OpenAI;
 
   constructor(private configService: ConfigService) {

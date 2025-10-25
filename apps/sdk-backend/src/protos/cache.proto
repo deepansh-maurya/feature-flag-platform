@@ -18,3 +18,18 @@ message UpdateFlagResponse {
   bool success = 1;      
   string message = 2;    
 }
+
+service ConfiUpdator {
+  rpc UpdateEnvConfig (ConfigRequest) returns (ConfigResponse);
+}
+
+message ConfigRequest {
+  string envId = 1;
+  string envName = 2;
+  string config = 3;
+}
+
+message ConfigResponse {
+  bool success = 1;      
+  string message = 2;    
+}

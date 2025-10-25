@@ -5,7 +5,7 @@ export interface Rule {
   shortName: string;
   rawRule: string;
   field: string;
-  op:
+  op:   
     | "eq"
     | "neq"
     | "gt"

@@ -3,7 +3,7 @@ info:
   title: Feature Flags API
   version: 1.0.0
 servers:
-  - url: https://sdk.yourdomain.com
+  - url: http://localhost:8080
 paths:
   /v1/evaluate:
     post:
