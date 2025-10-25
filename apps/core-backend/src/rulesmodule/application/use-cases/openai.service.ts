@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import OpenAI from 'openai';
-import { ConfigService } from '@nestjs/config';
 
 export interface InterpretedRule {
   rawRule: string;
@@ -13,40 +11,29 @@ export interface InterpretedRule {
 }
 
 @Injectable()
-export class OpenAIService {32 
-  private openai: OpenAI;
-
-  constructor(private configService: ConfigService) {
-    this.openai = new OpenAI({
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
-    });
-  }
-
+export class OpenAIService {
   async interpretRules(rawRules: string[]): Promise<any> {
-    const prompt = this.buildPrompt(rawRules);
-
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a rule interpreter — respond ONLY with valid JSON.',
-        },
-        { role: 'user', content: prompt },
-      ],
-      temperature: 0.1,
-    });
-
-    const content = response.choices?.[0]?.message?.content as
-      | string
-      | undefined;
-    if (!content) throw new Error('No response from OpenAI');
-
     try {
-      return JSON.parse(content);
+      return await this.convertRuleToJson(rawRules);
     } catch (err) {
       throw new Error('Failed to parse OpenAI response as JSON', err);
     }
+  }
+
+  private async convertRuleToJson(naturalRule: string[]) {
+    const prompt = this.buildPrompt(naturalRule);
+    const res = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama3',
+        prompt,
+        stream: false,
+      }),
+    });
+
+    const data = await res.json();
+    return JSON.parse(data.response);
   }
 
   private buildPrompt(rawRules: string[]): string {
