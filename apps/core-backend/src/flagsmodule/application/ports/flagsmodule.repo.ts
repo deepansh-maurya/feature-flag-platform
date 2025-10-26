@@ -30,6 +30,9 @@ export interface FlagsRepository {
   isKeyTaken(params: { projectId: string; key: string }): Promise<boolean>;
   getById(id: string): Promise<FlagMetaDTO | null>;
   getByKey(projectId: string, key: string): Promise<FlagMetaDTO | null>;
+
+  getEnvFromFlag(flagId: string): Promise<any | null>;
+
   listByProject(projectId: string): Promise<FlagMetaDTO[]>;
 
   // mutations

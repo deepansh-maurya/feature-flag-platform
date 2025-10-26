@@ -18,4 +18,33 @@ message UpdateFlagResponse {
   bool success = 1;      
   string message = 2;    
 }
-  
+
+service ConfiUpdator {
+  rpc UpdateEnvConfig (ConfigRequest) returns (ConfigResponse);
+}
+
+message ConfigRequest {
+  string envId = 1;
+  string envName = 2;
+  string config = 3;
+  string type = 4;
+}
+
+message ConfigResponse {
+  bool success = 1;      
+  string message = 2;    
+}
+
+service ApiKeyUpdator {
+  rpc  UpdateApiKey(ApiKeyRequest) returns (ApiKeyResponse);
+}
+
+message ApiKeyRequest {
+  string apiKey = 1;
+ string userId  = 2;
+}
+
+message ApiKeyResponse {
+    bool success = 1;      
+  string message = 2;    
+}

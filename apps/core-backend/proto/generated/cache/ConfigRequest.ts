@@ -1,4 +1,4 @@
-// Original file: src/protos/cache.proto
+// Original file: proto/cache.proto
 
 
 export interface ConfigRequest {

@@ -10,6 +10,7 @@ import {
   CreateFlagRequestDto,
   CreateVersionDto,
 } from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';
+import { UpdateFlagCache } from 'grpcClient';
 
 @Injectable()
 export class PrismaFlagsRepository implements FlagsRepository {
@@ -49,6 +50,17 @@ export class PrismaFlagsRepository implements FlagsRepository {
     });
 
     return rows;
+  }
+
+  async getEnvFromFlag(flagId: string): Promise<any | null> {
+    const flag = await this.prisma.flag.findUnique({
+      where: { id: flagId },
+      include: { Environment: true },
+    });
+
+    const environment = flag?.Environment ?? null;
+
+    return environment
   }
 
   async createFlag(input: CreateFlagRequestDto): Promise<{ flagId: string }> {

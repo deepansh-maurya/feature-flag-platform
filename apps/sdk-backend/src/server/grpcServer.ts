@@ -44,7 +44,7 @@ export const ruleshandler: CacheUpdaterHandlers = {
 export const configHandler: ConfiUpdatorHandlers = {
   UpdateEnvConfig: async (call, callback) => {
     try {
-      const { envId, envName, config } = call.request;
+      const { envId, envName, config, type } = call.request;
       if (!envId || !envName || !config) {
         return callback(
           {
@@ -55,7 +55,7 @@ export const configHandler: ConfiUpdatorHandlers = {
         );
       }
 
-      await updateConfig(envId, envName, config);
+      await updateConfig(envId, envName, config, type as any);
       return callback(null, {
         success: true,
         message: `config updated for envid=${envId},  envName=${envName}`

@@ -48,6 +48,14 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
     return p ? this.toProjectSummaryDto(p) : null;
   }
 
+  async findEnvById(envId: string): Promise<EnvironmentDto | null> {
+    const p = await this.prisma.environment.findUnique({
+      where: { id: envId, },
+    });
+
+    return p ? this.toEnvironmentDto(p) : null;
+  }
+
   async listProjects(
     workspaceId: string,
     limit: number,

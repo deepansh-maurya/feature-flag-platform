@@ -27,6 +27,7 @@ message ConfigRequest {
   string envId = 1;
   string envName = 2;
   string config = 3;
+  string type = 4;
 }
 
 message ConfigResponse {

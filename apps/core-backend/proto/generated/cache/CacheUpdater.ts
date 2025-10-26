@@ -1,3 +1,5 @@
+// Original file: proto/cache.proto
+
 import type * as grpc from '@grpc/grpc-js'
 import type { MethodDefinition } from '@grpc/proto-loader'
 import type { UpdateFlagRequest as _cache_UpdateFlagRequest, UpdateFlagRequest__Output as _cache_UpdateFlagRequest__Output } from '../cache/UpdateFlagRequest';

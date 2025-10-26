@@ -51,4 +51,6 @@ export interface ProjectmoduleRepo {
     envKey?: string,
     type?: SdkKeyType,
   ): Promise<SdkKeyDto[]>;
+
+  findEnvById(envId: string): Promise<EnvironmentDto | null>;
 }

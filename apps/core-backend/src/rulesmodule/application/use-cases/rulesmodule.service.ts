@@ -1,16 +1,20 @@
-// application/use-cases/rulesmodule.service.ts
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import {
   EnvKey,
   RulesmoduleRepo,
   RulesmoduleRepoToken,
 } from '../ports/rulesmodule.repo';
-import { client } from 'src/main';
+import { UpdateConfig, UpdateFlagCache } from 'grpcClient';
+import {
+  FLAGS_REPO,
+  FlagsRepository,
+} from 'src/flagsmodule/application/ports/flagsmodule.repo';
 
 @Injectable()
 export class RulesmoduleService {
   constructor(
     @Inject(RulesmoduleRepoToken) private readonly repo: RulesmoduleRepo,
+    @Inject(FLAGS_REPO) private readonly flagRepo: FlagsRepository,
   ) {}
 
   async createRules(input: {
@@ -23,7 +27,6 @@ export class RulesmoduleService {
     actorUserId: string;
     previousRuleSetId?: string;
   }) {
-    // Basic validation
     if (!input.rawRules || input.rawRules.length === 0) {
       throw new BadRequestException('rawRules must be a non-empty array');
     }
@@ -44,16 +47,11 @@ export class RulesmoduleService {
       previousRuleSetId: input.previousRuleSetId,
     });
 
-    client.UpdateFlagRules(
-      { flagId: input.flagId, rules: JSON.stringify(draft) },
-      (error, response) => {
-        if (error) {
-          console.log(error);
-        }
-        console.log(response);
-      },
-    );
+    await UpdateFlagCache(input.flagId, JSON.stringify(payload));
 
+    const env = await this.flagRepo.getEnvFromFlag(input.flagId);
+
+    await UpdateConfig(env.id, env.displayName, JSON.stringify(payload));
     return draft;
   }
 }

@@ -1,9 +1,6 @@
-// rulesmodule/infrastructure/prisma/prisma-rulesmodule.repo.ts
 import { Injectable } from '@nestjs/common';
 import { createHash } from 'crypto';
 import {
-  EnvKey,
-  PublishResult,
   RuleSetRecord,
   RulesmoduleRepo,
   RulesmoduleRepoToken,
@@ -60,6 +57,7 @@ export class PrismaRulesmoduleRepository implements RulesmoduleRepo {
         publishedAt: now,
       },
     });
+
 
     return record as unknown as RuleSetRecord;
   }
