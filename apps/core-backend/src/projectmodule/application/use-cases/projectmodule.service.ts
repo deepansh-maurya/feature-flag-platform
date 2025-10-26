@@ -11,6 +11,7 @@ import {
   RevokeSdkKeyDto,
   RotateSdkKeyDto,
 } from '../../interface/dto/create-projectmodule.dto';
+import { UpdateConfig } from 'grpcClient';
 
 @Injectable()
 export class ProjectmoduleService {
@@ -41,8 +42,12 @@ export class ProjectmoduleService {
   }
 
   /* ------------------ Environments ------------------ */
-  addEnvironment(dto: AddEnvironmentDto) {
-    return this.repo.addEnvironment(dto);
+  async addEnvironment(dto: AddEnvironmentDto) {
+    const env = await this.repo.addEnvironment(dto);
+
+    await UpdateConfig(env.id, env.displayName, JSON.stringify(env));
+
+    return env;
   }
 
   listEnvironments(projectId: string) {
@@ -53,8 +58,12 @@ export class ProjectmoduleService {
     return this.repo.findEnvironment(projectId, envKey);
   }
 
-  updateEnvironment(projectId: string, envId: string, patch: any) {
-    return this.repo.updateEnvironment(projectId, envId, patch);
+  async updateEnvironment(projectId: string, envId: string, patch: any) {
+    const env = await this.repo.updateEnvironment(projectId, envId, patch);
+
+    await UpdateConfig(env.id, env.displayName, JSON.stringify(env));
+
+    return env;
   }
 
   deleteEnvironment(projectId: string, envId: string) {

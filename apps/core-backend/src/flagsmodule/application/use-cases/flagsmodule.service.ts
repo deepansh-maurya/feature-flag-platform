@@ -1,4 +1,3 @@
-// apps/core-backend/src/flagsmodule/application/use-cases/flagsmodule.service.ts
 import {
   BadRequestException,
   ConflictException,
@@ -6,28 +5,22 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { EnvKey, FlagType } from 'generated/prisma';
-import {
-  CreateFlagDto,
-  CreateFlagEnvConfigDto,
-  CreateFlagRequestDto,
-  CreateVersionDto,
-  CreateVersionEnvConfigDto,
-  UpsertFlagMetaDto,
-} from '../../interface/dto/create-flagsmodule.dto';
+import { CreateFlagRequestDto } from '../../interface/dto/create-flagsmodule.dto';
 import {
   FlagMetaDTO,
   FLAGS_REPO,
   FlagsRepository,
 } from '../ports/flagsmodule.repo';
+import { UpdateConfig } from 'grpcClient';
+import { Flag } from 'generated/prisma';
 
 @Injectable()
 export class FlagsmoduleService {
-  constructor(@Inject(FLAGS_REPO) private readonly repo: FlagsRepository) {}
+  constructor(
+    @Inject(FLAGS_REPO) private readonly repo: FlagsRepository,
+    @Inject(FLAGS_REPO) private readonly flagRepo: FlagsRepository,
+  ) {}
 
-  // ---------------------------------------------------------------------------
-  // Queries
-  // ---------------------------------------------------------------------------
   async isKeyAvailable(projectId: string, key: string): Promise<boolean> {
     const taken = await this.repo.isKeyTaken({ projectId, key });
     return !taken;
@@ -49,7 +42,7 @@ export class FlagsmoduleService {
     return this.repo.listByProject(projectId);
   }
 
-  async createFlag(dto: CreateFlagRequestDto): Promise<{ flagId: string }> {
+  async createFlag(dto: CreateFlagRequestDto): Promise<Flag> {
     if (
       await this.repo.isKeyTaken({ projectId: dto.projectId, key: dto.key })
     ) {
@@ -57,11 +50,15 @@ export class FlagsmoduleService {
         `A flag with key "${dto.key}" already exists in this project.`,
       );
     }
-    return this.repo.createFlag(dto);
+
+    const flag = await this.repo.createFlag(dto);
+    const env = await this.flagRepo.getEnvFromFlag(flag.id);
+    await UpdateConfig(env.id, env.displayName, JSON.stringify(flag));
+
+    return flag;
   }
 
   async archive(flagId: string): Promise<void> {
-    // Ensure flag exists
     const flag = await this.repo.getById(flagId);
     if (!flag) throw new NotFoundException('Flag not found');
     await this.repo.archive(flagId);
@@ -76,16 +73,16 @@ export class FlagsmoduleService {
       archived?: boolean;
     },
   ): Promise<void> {
-    // Ensure flag exists
     const flag = await this.repo.getById(flagId);
     if (!flag) throw new NotFoundException('Flag not found');
 
-    // Basic validation: name if provided must be non-empty
     if (dto.name !== undefined && String(dto.name).trim().length === 0) {
       throw new BadRequestException('Name cannot be empty');
     }
 
-    return await this.repo.updateFlag(flagId, dto);
+    const dbFlag = await this.repo.updateFlag(flagId, dto);
+    const env = await this.flagRepo.getEnvFromFlag(flagId);
+    await UpdateConfig(env.id, env.displayName, JSON.stringify(dbFlag));
   }
 
   async deleteFlag(flagId: string): Promise<void> {

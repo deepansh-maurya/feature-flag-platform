@@ -4,7 +4,7 @@ import {
   FlagMetaDTO,
 } from '../../application/ports/flagsmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { EnvKey } from 'generated/prisma';
+import { EnvKey, Flag } from 'generated/prisma';
 import {
   CreateFlagDto,
   CreateFlagRequestDto,
@@ -63,7 +63,7 @@ export class PrismaFlagsRepository implements FlagsRepository {
     return environment
   }
 
-  async createFlag(input: CreateFlagRequestDto): Promise<{ flagId: string }> {
+  async createFlag(input: CreateFlagRequestDto): Promise<Flag> {
     const { projectId, key, description, name, tags = [] } = input;
 
     try {
@@ -79,7 +79,7 @@ export class PrismaFlagsRepository implements FlagsRepository {
           },
         });
 
-        return { flagId: flag.id };
+        return flag
       });
 
       return result;

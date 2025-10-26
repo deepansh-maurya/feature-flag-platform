@@ -1,5 +1,5 @@
 // apps/core-backend/src/flagsmodule/application/ports/flagsmodule.repo.ts
-import { FlagType } from 'generated/prisma';
+import { Flag, FlagType } from 'generated/prisma';
 import {
   CreateFlagDto,
   CreateFlagRequestDto,
@@ -36,7 +36,7 @@ export interface FlagsRepository {
   listByProject(projectId: string): Promise<FlagMetaDTO[]>;
 
   // mutations
-  createFlag(input: CreateFlagRequestDto): Promise<{ flagId: string }>;
+  createFlag(input: CreateFlagRequestDto): Promise<Flag>;
 
   // update flag (name, description, tags, archived)
   updateFlag(
