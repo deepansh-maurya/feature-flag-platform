@@ -4,13 +4,12 @@ import {
   FlagMetaDTO,
 } from '../../application/ports/flagsmodule.repo';
 import PrismaService from 'src/infra/prisma/prisma.service';
-import { EnvKey, Flag } from 'generated/prisma';
 import {
   CreateFlagDto,
   CreateFlagRequestDto,
   CreateVersionDto,
 } from 'src/flagsmodule/interface/dto/create-flagsmodule.dto';
-import { UpdateFlagCache } from 'grpcClient';
+import { Flag } from '@prisma/client';
 
 @Injectable()
 export class PrismaFlagsRepository implements FlagsRepository {
@@ -60,7 +59,7 @@ export class PrismaFlagsRepository implements FlagsRepository {
 
     const environment = flag?.Environment ?? null;
 
-    return environment
+    return environment;
   }
 
   async createFlag(input: CreateFlagRequestDto): Promise<Flag> {
@@ -79,7 +78,7 @@ export class PrismaFlagsRepository implements FlagsRepository {
           },
         });
 
-        return flag
+        return flag;
       });
 
       return result;

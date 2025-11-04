@@ -28,9 +28,16 @@ server.addService(personProto.cache.ConfiUpdator.service, configHandler);
 server.addService(personProto.cache.ApiKeyUpdator.service, apiKeyHandler);
 
 server.bindAsync(
-  "localhost:50051",
+  "localhost:5001",
   grpc.ServerCredentials.createInsecure(),
-  () => {
+  (err: Error | null, port: number) => {
+     if (err) {
+      console.error("gRPC bind failed:", err);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log(`gRPC server bound on port: ${port}`);
     server.start();
   }
 );

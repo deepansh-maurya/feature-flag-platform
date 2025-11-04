@@ -4,11 +4,11 @@ import {
   RulesmoduleRepo,
   RulesmoduleRepoToken,
 } from '../ports/rulesmodule.repo';
-import { UpdateConfig, UpdateFlagCache } from 'grpcClient';
 import {
   FLAGS_REPO,
   FlagsRepository,
 } from 'src/flagsmodule/application/ports/flagsmodule.repo';
+import { UpdateConfig, UpdateFlagCache } from 'src/grpcClient';
 
 @Injectable()
 export class RulesmoduleService {

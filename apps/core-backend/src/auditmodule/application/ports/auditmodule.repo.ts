@@ -1,4 +1,4 @@
-import { AuditActionType } from 'generated/prisma';
+import { AuditActionType } from '@prisma/client';
 
 export interface CreateAuditLog {
   workspaceId: string;

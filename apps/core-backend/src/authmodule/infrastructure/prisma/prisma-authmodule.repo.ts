@@ -14,7 +14,7 @@ import {
   WorkspacesmoduleRepo,
   WorkspacesmoduleRepoToken,
 } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
-import { BillingStatus, RoleKey, User, Workspace } from 'generated/prisma';
+import { BillingStatus, RoleKey, User, Workspace } from '@prisma/client';
 
 export const BCRYPT_ROUNDS = 12;
 

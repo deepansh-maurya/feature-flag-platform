@@ -1,6 +1,8 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { PrismaClient } from '../../../generated/prisma';
-import { Prisma } from '../../../generated/prisma';
+import { Prisma, PrismaClient } from '@prisma/client';
+
+import * as bcrypt from "bcrypt";
+import { BCRYPT_ROUNDS } from 'src/authmodule/infrastructure/prisma/prisma-authmodule.repo';
 
 @Injectable()
 export default class PrismaService
@@ -17,3 +19,5 @@ export default class PrismaService
 }
 
 export type PrismaTx = PrismaClient | Prisma.TransactionClient;
+
+export const prismaService = new PrismaService()

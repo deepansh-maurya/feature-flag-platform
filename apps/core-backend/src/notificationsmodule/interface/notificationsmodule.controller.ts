@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { NotificationsmoduleService } from '../application/notificationsmodule.service';
+import { NotificationsmoduleService } from '../application/use-cases/notificationsmodule.service';
 
 @Controller('notificationsmodule')
 export class NotificationsmoduleController {

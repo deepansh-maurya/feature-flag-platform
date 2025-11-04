@@ -1,15 +1,17 @@
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import path from 'path';
+import * as path from 'path';
+import { ProtoGrpcType } from './proto/generated/cache';
+import { CacheUpdaterClient } from './proto/generated/cache/CacheUpdater';
+import { ConfiUpdatorClient } from './proto/generated/cache/ConfiUpdator';
+import { ApiKeyUpdatorClient } from './proto/generated/cache/ApiKeyUpdator';
 
-import { ProtoGrpcType } from '../proto/generated/cache';
-import { CacheUpdaterClient } from '../proto/generated/cache/CacheUpdater';
-import { ConfiUpdatorClient } from 'proto/generated/cache/ConfiUpdator';
-import { ApiKeyUpdatorClient } from 'proto/generated/cache/ApiKeyUpdator';
 
-const PROTO_PATH = path.resolve(__dirname, './protos/cache.proto');
+const PROTO_PATH = path.resolve(__dirname, './proto/cache.proto');
 
 const packageDef = protoLoader.loadSync(PROTO_PATH);
+
+
 const grpcObj = grpc.loadPackageDefinition(
   packageDef,
 ) as unknown as ProtoGrpcType;

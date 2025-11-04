@@ -7,6 +7,8 @@ import { RulesmoduleService } from './application/use-cases/rulesmodule.service'
 import { RuleInterpreterService } from './application/use-cases/rule-interpreter.service';
 import { OpenAIService } from './application/use-cases/openai.service';
 import PrismaService from 'src/infra/prisma/prisma.service';
+import { PrismaFlagsRepository } from 'src/flagsmodule/infrastructure/prisma/prisma-flagsmodule.repo';
+import { FLAGS_REPO } from 'src/flagsmodule/application/ports/flagsmodule.repo';
 
 @Module({
   imports: [ConfigModule],
@@ -17,6 +19,7 @@ import PrismaService from 'src/infra/prisma/prisma.service';
     RuleInterpreterService,
     OpenAIService,
     { provide: RulesmoduleRepoToken, useClass: PrismaRulesmoduleRepository },
+    { provide: FLAGS_REPO, useClass: PrismaFlagsRepository },
   ],
   exports: [RulesmoduleService],
 })

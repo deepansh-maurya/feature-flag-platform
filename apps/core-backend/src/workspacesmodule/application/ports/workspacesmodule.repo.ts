@@ -1,6 +1,6 @@
 // application/ports/workspacesmodule.repo.ts
-//import { RoleKey } from "generated/prisma";
-import { BillingStatus, RoleKey } from 'generated/prisma';
+//import { RoleKey } from "@prisma/client";
+import { BillingStatus, RoleKey } from '@prisma/client';
 import { PrismaTx } from 'src/infra/prisma/prisma.service';
 import { WorkspaceEntity } from 'src/workspacesmodule/domain/workspacesmodule.entity';
 import {

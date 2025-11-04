@@ -14,11 +14,12 @@ import {
   SdkKeyDto,
   UpdateProjectDto,
 } from '../../interface/dto/create-projectmodule.dto';
-import { KeyStatus, SdkKeyType } from 'generated/prisma';
+import { KeyStatus, SdkKeyType } from '@prisma/client';
 
 @Injectable()
 export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+  }
 
   /* ========================= Projects ========================= */
 
@@ -50,7 +51,7 @@ export class PrismaProjectmoduleRepo implements ProjectmoduleRepo {
 
   async findEnvById(envId: string): Promise<EnvironmentDto | null> {
     const p = await this.prisma.environment.findUnique({
-      where: { id: envId, },
+      where: { id: envId },
     });
 
     return p ? this.toEnvironmentDto(p) : null;

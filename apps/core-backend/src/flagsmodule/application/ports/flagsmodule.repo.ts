@@ -1,5 +1,5 @@
 // apps/core-backend/src/flagsmodule/application/ports/flagsmodule.repo.ts
-import { Flag, FlagType } from 'generated/prisma';
+import { Flag, FlagType } from '@prisma/client';
 import {
   CreateFlagDto,
   CreateFlagRequestDto,

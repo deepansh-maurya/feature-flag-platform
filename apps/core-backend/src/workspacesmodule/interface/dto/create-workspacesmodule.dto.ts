@@ -10,8 +10,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LimitKind } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
-import { BillingStatus, RoleKey } from 'generated/prisma';
-//import { BillingStatus, RoleKey } from "generated/prisma";
+import { BillingStatus, RoleKey } from '@prisma/client';
+//import { BillingStatus, RoleKey } from "@prisma/client";
 
 // ---------- Generic DTOs ----------
 export class PaginationDto {

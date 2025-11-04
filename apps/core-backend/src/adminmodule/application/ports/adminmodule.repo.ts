@@ -1,4 +1,4 @@
-import { Plan, PlanFeature, PlanLimit, Price } from 'generated/prisma';
+import { Plan, PlanFeature, PlanLimit, Price } from '@prisma/client';
 import {
   ArchivePlanDto,
   CreatePlanDto,

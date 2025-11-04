@@ -13,6 +13,10 @@ import PrismaModule from './infra/prisma/prisma.module';
 import { RulesmoduleModule } from './rulesmodule/rulesmodule.module';
 import { ConfigModule } from '@nestjs/config';
 
+
+
+
+
 @Module({
   imports: [
     Authmodule,
@@ -33,3 +37,4 @@ import { ConfigModule } from '@nestjs/config';
   ],
 })
 export class AppModule {}
+

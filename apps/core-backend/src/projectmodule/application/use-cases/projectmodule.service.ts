@@ -11,7 +11,7 @@ import {
   RevokeSdkKeyDto,
   RotateSdkKeyDto,
 } from '../../interface/dto/create-projectmodule.dto';
-import { UpdateConfig } from 'grpcClient';
+import { UpdateConfig } from 'src/grpcClient';
 
 @Injectable()
 export class ProjectmoduleService {

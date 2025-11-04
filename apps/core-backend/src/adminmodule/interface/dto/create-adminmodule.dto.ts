@@ -11,7 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { BillingCycle, PlanStatus } from 'generated/prisma';
+import { BillingCycle, PlanStatus } from '@prisma/client';
 
 export class PriceInputDto {
   @IsEnum(BillingCycle) recurringInterval!: BillingCycle; // "monthly" | "yearly"

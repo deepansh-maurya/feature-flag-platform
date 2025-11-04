@@ -1,13 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
-  WebhooksmoduleRepo,
-  WebhooksmoduleRepoToken,
-} from './ports/webhooksmodule.repo';
+  NotificationsmoduleRepo,
+  NotificationsmoduleRepoToken,
+} from '../ports/notificationsmodule.repo';
 
 @Injectable()
-export class WebhooksmoduleService {
+export class NotificationsmoduleService {
   constructor(
-    @Inject(WebhooksmoduleRepoToken) private readonly repo: WebhooksmoduleRepo,
+    @Inject(NotificationsmoduleRepoToken)
+    private readonly repo: NotificationsmoduleRepo,
   ) {}
 
   async list() {

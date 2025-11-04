@@ -1,6 +1,6 @@
 import { IsString, IsArray, IsNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { EnvKey } from 'generated/prisma';
+import { EnvKey } from '@prisma/client';
 
 export class CreateRulesmoduleDto {
   @ApiProperty({ example: 'workspace_123' })

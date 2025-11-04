@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { RuleSetRecord } from '../ports/rulesmodule.repo';
-import { EnvKey } from 'generated/prisma';
+import { EnvKey } from '@prisma/client';
 import { OpenAIService } from './openai.service';
 
 export interface InterpretRulesInput {

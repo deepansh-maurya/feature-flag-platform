@@ -1,4 +1,4 @@
-import { BillingCycle, PlanKey, SubscriptionStatus } from 'generated/prisma';
+import { BillingCycle, PlanKey, SubscriptionStatus } from '@prisma/client';
 
 export class BillingEntity {
   private constructor(

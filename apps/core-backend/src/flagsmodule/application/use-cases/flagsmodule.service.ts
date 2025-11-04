@@ -11,8 +11,8 @@ import {
   FLAGS_REPO,
   FlagsRepository,
 } from '../ports/flagsmodule.repo';
-import { UpdateConfig } from 'grpcClient';
-import { Flag } from 'generated/prisma';
+import { Flag } from '@prisma/client';
+import { UpdateConfig } from 'src/grpcClient';
 
 @Injectable()
 export class FlagsmoduleService {

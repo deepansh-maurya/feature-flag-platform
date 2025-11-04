@@ -6,8 +6,8 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { BillingStatus, PlanKey, RoleKey } from 'generated/prisma';
-//import { billingStatus, planKey, roleKey } from 'generated/prisma';
+import { BillingStatus, PlanKey, RoleKey } from '@prisma/client';
+//import { billingStatus, planKey, roleKey } from '@prisma/client';
 import PrismaService, { PrismaTx } from 'src/infra/prisma/prisma.service';
 import {
   InviteSummary,

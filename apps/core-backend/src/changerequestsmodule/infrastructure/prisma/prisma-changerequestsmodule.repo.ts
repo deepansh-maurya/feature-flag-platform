@@ -9,7 +9,7 @@ import {
   MarkAppliedChangeRequestDto,
   RejectChangeRequestDto,
 } from '../../interface/dto/create-changerequestsmodule.dto';
-import { ChangeRequestStatus } from 'generated/prisma';
+import { ChangeRequestStatus } from '@prisma/client';
 
 @Injectable()
 export class PrismaChangeRequestRepository implements ChangeRequestRepo {

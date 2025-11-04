@@ -25,7 +25,7 @@ import {
   UpsertLimitsDto,
   UpsertPriceDto,
 } from 'src/adminmodule/interface/dto/create-adminmodule.dto';
-import { PlanStatus } from 'generated/prisma';
+import { PlanStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 type DbPlanAgg = any;

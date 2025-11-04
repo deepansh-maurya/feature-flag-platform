@@ -6,7 +6,7 @@ import {
   Min,
   IsEnum,
 } from 'class-validator';
-import { ChangeRequestStatus } from 'generated/prisma';
+import { ChangeRequestStatus } from '@prisma/client';
 
 /* ---------- Inputs ---------- */
 

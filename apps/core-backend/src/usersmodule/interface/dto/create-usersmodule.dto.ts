@@ -6,8 +6,8 @@ import {
   IsString,
   IsUUID,
 } from 'class-validator';
-import { UserStatus } from 'generated/prisma';
-//import { UserStatus } from 'generated/prisma'
+import { UserStatus } from '@prisma/client';
+//import { UserStatus } from '@prisma/client'
 
 /* ---------- Inputs ---------- */
 export class CreateUserDto {
