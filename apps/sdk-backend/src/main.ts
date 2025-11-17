@@ -28,7 +28,7 @@ server.addService(personProto.cache.ConfiUpdator.service, configHandler);
 server.addService(personProto.cache.ApiKeyUpdator.service, apiKeyHandler);
 
 server.bindAsync(
-  "localhost:5001",
+  "localhost:0",
   grpc.ServerCredentials.createInsecure(),
   (err: Error | null, port: number) => {
      if (err) {
