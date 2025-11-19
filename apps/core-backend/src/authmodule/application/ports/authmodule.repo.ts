@@ -36,4 +36,5 @@ export interface AuthmoduleRepo {
     expiresAt: Date,
     workspaceId: string,
   ): Promise<void>;
+  handleExternalLogin(): Promise<any>;
 }

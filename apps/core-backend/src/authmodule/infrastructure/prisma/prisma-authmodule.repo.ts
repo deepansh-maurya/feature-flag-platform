@@ -312,4 +312,8 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
 
     return { user: dbUser, workspace: dbWorkspace };
   }
+
+  async handleExternalLogin(): Promise<any> {
+    
+  }
 }

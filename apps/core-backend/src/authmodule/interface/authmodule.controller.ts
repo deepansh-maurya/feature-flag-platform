@@ -211,4 +211,52 @@ export class AuthmoduleController {
       ? this.buildGoogleAuthUrl({ state, code_challenge })
       : this.buildGithubAuthUrl({ state, code_challenge });
   }
+
+  @Get('auth/:provider/callback')
+  @Redirect(undefined, 302)
+  async oauthCallback(
+    @Param('provider') provider: string,
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Query('error') error: string,
+    @Res() res: Response,
+  ) {
+    const providerRaw = String(provider || '').toLowerCase();
+    if (providerRaw !== 'google' && providerRaw !== 'github')
+      return new BadRequestException('unsupported provider');
+    const authProvider = providerRaw as 'google' | 'github';
+
+    if (error) {
+      console.warn('provider returned error:', error);
+      return new BadRequestException(`Provider error: ${error}`);
+    }
+
+    if (!code || !state)
+      return new BadRequestException('missing code or state');
+
+    const raw = await this.redis.get(`oauth:state:${state}`);
+    if (!raw)
+      return new BadRequestException(
+        'invalid or expired state (possible CSRF)',
+      );
+
+    await this.redis.del(`oauth:state:${state}`);
+    const meta = JSON.parse(raw);
+    const code_verifier = meta.code_verifier;
+    const returnTo = meta.returnTo || '/';
+
+    const session = this.svc.oauthCallback(
+      authProvider,
+      code,
+      code_verifier,
+      returnTo,
+    );
+
+    res.cookie(
+      'refresh_token',
+      session.refreshTokenPlain,
+      this.svc.refreshCookieOptions(),
+    );
+    return returnTo;
+  }
 }
