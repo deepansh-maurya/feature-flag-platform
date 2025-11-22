@@ -272,6 +272,7 @@ model Environment {
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
+  isVerified   Boolean    @default(false)
   name         String
   passwordHash String?
   isDeleted    Boolean    @default(false)
@@ -286,6 +287,13 @@ model User {
   // other relations to Workspace through join tables
   memberships WorkspaceMember[] @relation("UserMemberships")
   invites     Invite[]          @relation("UserInvitesByEmail")
+}
+
+model Oauth {
+  id             String @id @default(uuid())
+  provider       String
+  providerUserId String
+  rawProfile     Json
 }
 
 model RefreshToken {
@@ -460,23 +468,23 @@ model SegmentMember {
 }
 
 enum RuleStatus {
-  active 
+  active
   disabled
 }
 
 model FlagRuleSet {
-  id          String    @id @default(uuid())
+  id          String     @id @default(uuid())
   workspaceId String
   projectId   String
   flagId      String
-  envKey      String 
+  envKey      String
   version     Int
-  rules       Json 
-  status      RuleStatus 
-  killswitch  Boolean   @default(false)
+  rules       Json
+  status      RuleStatus
+  killswitch  Boolean    @default(false)
   publishedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@unique([flagId, envKey, version])
   @@index([workspaceId, projectId, flagId, envKey])

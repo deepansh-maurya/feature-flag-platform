@@ -122,47 +122,6 @@ export class AuthmoduleController {
     return this.svc.getUser(userId);
   }
 
-  buildGoogleAuthUrl({
-    state,
-    code_challenge,
-  }: {
-    state: string;
-    code_challenge?: string;
-  }) {
-    const params: Record<string, string> = {
-      client_id: this.GOOGLE_CLIENT_ID!,
-      redirect_uri: `${this.BASE_URL}/auth/google/callback`,
-      response_type: 'code',
-      scope: 'openid email profile',
-      state,
-    };
-    if (code_challenge) {
-      params['code_challenge'] = code_challenge;
-      params['code_challenge_method'] = 'S256';
-    }
-    return `https://accounts.google.com/o/oauth2/v2/auth?${qs.stringify(params)}`;
-  }
-
-  buildGithubAuthUrl({
-    state,
-    code_challenge,
-  }: {
-    state: string;
-    code_challenge?: string;
-  }) {
-    const params: Record<string, string> = {
-      client_id: this.GITHUB_CLIENT_ID!,
-      redirect_uri: `${this.BASE_URL}/auth/github/callback`,
-      scope: 'read:user user:email',
-      state,
-    };
-    if (code_challenge) {
-      params['code_challenge'] = code_challenge;
-      params['code_challenge_method'] = 'S256';
-    }
-    return `https://github.com/login/oauth/authorize?${qs.stringify(params)}`;
-  }
-
   @Get('auth/:provider')
   @Redirect(undefined, 302)
   async oauth(
@@ -208,8 +167,8 @@ export class AuthmoduleController {
     );
 
     return providerRaw === 'google'
-      ? this.buildGoogleAuthUrl({ state, code_challenge })
-      : this.buildGithubAuthUrl({ state, code_challenge });
+      ? this.svc.buildGoogleAuthUrl({ state, code_challenge })
+      : this.svc.buildGithubAuthUrl({ state, code_challenge });
   }
 
   @Get('auth/:provider/callback')
@@ -245,7 +204,7 @@ export class AuthmoduleController {
     const code_verifier = meta.code_verifier;
     const returnTo = meta.returnTo || '/';
 
-    const session = this.svc.oauthCallback(
+    const session = await this.svc.oauthCallback(
       authProvider,
       code,
       code_verifier,
@@ -254,9 +213,22 @@ export class AuthmoduleController {
 
     res.cookie(
       'refresh_token',
-      session.refreshTokenPlain,
+      session.refreshToken,
       this.svc.refreshCookieOptions(),
     );
-    return returnTo;
+
+    return res.redirect(302, returnTo);
+  }
+
+  @Get('auth/sso-check')
+  async ssoCheck(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    const session = await this.redis.get(user.id);
+
+    this.redis.del(user.id);
+
+    return res.json({
+      accessToken: session,
+    });
   }
 }

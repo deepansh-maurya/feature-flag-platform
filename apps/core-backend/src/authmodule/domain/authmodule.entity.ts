@@ -1,8 +1,9 @@
 export class AuthEntity {
   private constructor(
     readonly email: string,
-    readonly password: string,
+    readonly password: string | undefined,
     readonly fullName?: string,
+    readonly email_verified?:boolean,
     readonly workspace?: string,
     readonly id?: string,
   ) {}
@@ -13,6 +14,7 @@ export class AuthEntity {
     fullName?: string;
     id?: string;
     workspace?: string;
+    email_verified?:boolean
   }) {
     if (!params.email || !params.password) {
       throw new Error('creds required ');
@@ -22,6 +24,7 @@ export class AuthEntity {
       params.email,
       params.password,
       params.fullName,
+      params.email_verified,
       params.workspace,
       params.id,
     );

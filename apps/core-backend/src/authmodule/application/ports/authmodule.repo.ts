@@ -1,3 +1,4 @@
+import { User } from '@prisma/client';
 import { AuthEntity } from 'src/authmodule/domain/authmodule.entity';
 
 export const AuthmoduleRepoToken = Symbol('AuthmoduleRepo');
@@ -36,5 +37,11 @@ export interface AuthmoduleRepo {
     expiresAt: Date,
     workspaceId: string,
   ): Promise<void>;
-  handleExternalLogin(): Promise<any>;
+  handleExternalLogin(
+    provider: string,
+    providerUserId: string,
+    email: string,
+    email_verified: boolean,
+    rawProfile: JSON,
+  ): Promise<{ id: string; wid: string }>
 }

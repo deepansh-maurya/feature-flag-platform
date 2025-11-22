@@ -10,8 +10,11 @@ import {
 } from 'src/authmodule/interface/dto/create-authmodule.dto';
 import { CookieOptions } from 'express';
 import axios from 'axios';
+import Redis from 'ioredis';
 @Injectable()
 export class AuthmoduleService {
+  private redis: Redis;
+
   constructor(
     @Inject(AuthmoduleRepoToken) private readonly repo: AuthmoduleRepo,
     private readonly GOOGLE_CLIENT_ID = process.env.GOOGLE_CONSOLE_CLIENT_ID,
@@ -19,8 +22,11 @@ export class AuthmoduleService {
       .GOOGLE_CONSOLE_CLIENT_SECRET,
     private readonly BASE_URL = process.env.BASE_URL,
     private readonly GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID,
+    private readonly REDIS_URL = process.env.REDIS_URL,
     private readonly GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET,
-  ) {}
+  ) {
+    this.redis = new Redis(REDIS_URL!);
+  }
 
   async register(data: RegisterDto) {
     const user = AuthEntity.create(data);
@@ -99,6 +105,47 @@ export class AuthmoduleService {
       maxAge: 15 * 24 * 60 * 60 * 1000, // align with refresh exp
       // domain: '.yourdomain.com' // set when using subdomains
     };
+  }
+
+  buildGithubAuthUrl({
+    state,
+    code_challenge,
+  }: {
+    state: string;
+    code_challenge?: string;
+  }) {
+    const params: Record<string, string> = {
+      client_id: this.GITHUB_CLIENT_ID!,
+      redirect_uri: `${this.BASE_URL}/auth/github/callback`,
+      scope: 'read:user user:email',
+      state,
+    };
+    if (code_challenge) {
+      params['code_challenge'] = code_challenge;
+      params['code_challenge_method'] = 'S256';
+    }
+    return `https://github.com/login/oauth/authorize?${qs.stringify(params)}`;
+  }
+
+  buildGoogleAuthUrl({
+    state,
+    code_challenge,
+  }: {
+    state: string;
+    code_challenge?: string;
+  }) {
+    const params: Record<string, string> = {
+      client_id: this.GOOGLE_CLIENT_ID!,
+      redirect_uri: `${this.BASE_URL}/auth/google/callback`,
+      response_type: 'code',
+      scope: 'openid email profile',
+      state,
+    };
+    if (code_challenge) {
+      params['code_challenge'] = code_challenge;
+      params['code_challenge_method'] = 'S256';
+    }
+    return `https://accounts.google.com/o/oauth2/v2/auth?${qs.stringify(params)}`;
   }
 
   async exchangeCodeForToken(
@@ -190,7 +237,10 @@ export class AuthmoduleService {
     code: string,
     code_verifier: string,
     returnTo: string,
-  ) {
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const tokens = await this.exchangeCodeForToken(
       provider,
       String(code),
@@ -200,7 +250,7 @@ export class AuthmoduleService {
     const profile = await this.fetchProfile(provider, tokens);
     if (!profile.providerUserId) throw new Error('missing provider user id');
     if (!profile.email) {
-      return new BadRequestException(
+      new BadRequestException(
         'Provider did not return email. Please use another login method or provide email.',
       );
     }
@@ -211,11 +261,13 @@ export class AuthmoduleService {
       profile.email,
       profile.email_verified,
       profile.raw,
-      tokens,
     );
 
-    const session = await this.createSessionForUser(user);
+    const session = await this.issueTokens(user.id, user.wid);
+
+    await this.redis.set(user.id, session.accessToken);
 
     return session;
   }
 }
+  

@@ -15,6 +15,7 @@ import {
   WorkspacesmoduleRepoToken,
 } from 'src/workspacesmodule/application/ports/workspacesmodule.repo';
 import { BillingStatus, RoleKey, User, Workspace } from '@prisma/client';
+import { InputJsonValue } from '@prisma/client/runtime/library';
 
 export const BCRYPT_ROUNDS = 12;
 
@@ -39,8 +40,11 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
    * - Ensures unique email
    * - Hashes password
    */
+  //! handle email verified`
   async register(user: AuthEntity): Promise<{ id: string; wid: string }> {
-    const passwordHash = await bcrypt.hash(user.password, BCRYPT_ROUNDS);
+    const passwordHash = user.password
+      ? await bcrypt.hash(user.password, BCRYPT_ROUNDS)
+      : undefined;
     return await this.prisma.$transaction(async (tx) => {
       const email = user.email?.trim().toLowerCase();
       if (!email || !user.password) {
@@ -313,7 +317,64 @@ export class PrismaAuthmoduleRepo implements AuthmoduleRepo {
     return { user: dbUser, workspace: dbWorkspace };
   }
 
-  async handleExternalLogin(): Promise<any> {
-    
+  //! if email not verified then please verify it
+
+  async handleExternalLogin(
+    provider: string,
+    providerUserId: string,
+    email: string,
+    email_verified: boolean,
+    rawProfile: JSON,
+  ): Promise<{ id: string; wid: string }> {
+    let dbUser = await this.prisma.user.findFirst({
+      where: { email: email },
+    });
+
+    let dbProvider = await this.prisma.oauth.findFirst({
+      where: {
+        providerUserId: providerUserId,
+      },
+    });
+
+    if (!dbUser) {
+      //@ts-ignore
+      dbUser = (await this.register({
+        email,
+        password: undefined,
+        fullName: undefined,
+        email_verified,
+        id: undefined,
+        workspace: undefined,
+      })) as unknown as { id: string; wid: string };
+
+      dbProvider = await this.prisma.oauth.create({
+        data: {
+          provider: provider,
+          providerUserId: providerUserId,
+          rawProfile: rawProfile as unknown as InputJsonValue,
+        },
+      });
+
+      //@ts-ignore
+      return { id: dbUser?.id!, wid: dbUser!.wid };
+    }
+
+    if (!dbProvider) {
+      dbProvider = await this.prisma.oauth.create({
+        data: {
+          provider: provider,
+          providerUserId: providerUserId,
+          rawProfile: rawProfile as unknown as InputJsonValue,
+        },
+      });
+    }
+
+    const workspaceId = await this.prisma.workspace.findFirst({
+      where: {
+        ownerUserId: dbUser.id,
+      },
+    });
+
+    return { id: dbUser?.id!, wid: workspaceId?.id! };
   }
 }
